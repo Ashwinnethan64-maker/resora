@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useResora } from '@/context/ResoraContext';
 import { ResourceModel } from '@/types/database';
 import { RESOURCE_TYPE_CONFIGS } from '@/lib/resource-types';
+import { NeoBadge, NeoSticker } from '@/components/brand/NeoSticker';
 import {
   ExternalLink,
   Heart,
@@ -19,9 +20,7 @@ import {
   ArchiveRestore,
   Trash2,
   Bot,
-  Video,
-  File,
-  Folder
+  Video
 } from 'lucide-react';
 
 interface ResourceCardProps {
@@ -55,7 +54,7 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
     setIsMenuOpen(false);
   };
 
-  const handleOpenLink = (e: React.MouseEvent) => {
+  const handleOpenLink = () => {
     recordOpen(resource.id);
   };
 
@@ -77,126 +76,123 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
   const getSourceIcon = (type: string) => {
     switch (type) {
       case 'github':
-        return <Code2 className="w-3.5 h-3.5 text-emerald-400" />;
+        return <Code2 className="w-3.5 h-3.5 text-black" />;
       case 'ai_tool':
-        return <Bot className="w-3.5 h-3.5 text-violet-400" />;
+        return <Bot className="w-3.5 h-3.5 text-black" />;
       case 'video':
-        return <Video className="w-3.5 h-3.5 text-rose-400" />;
+        return <Video className="w-3.5 h-3.5 text-black" />;
       case 'pdf':
       case 'document':
-        return <FileText className="w-3.5 h-3.5 text-amber-400" />;
+        return <FileText className="w-3.5 h-3.5 text-black" />;
       default:
-        return <Globe className="w-3.5 h-3.5 text-slate-400" />;
+        return <Globe className="w-3.5 h-3.5 text-black" />;
     }
   };
 
-  const getGeometricMarker = (type: string) => {
+  const getStickerColor = (type: string) => {
     switch (type) {
       case 'ai_tool':
-        return <span className="w-2.5 h-2.5 rounded-full bg-[#F0C020] border border-[#121212] inline-block shrink-0 shadow-[1px_1px_0px_#121212]" title="AI Tool" />;
+        return 'yellow';
       case 'github':
-        return <span className="w-2.5 h-2.5 rounded-none bg-[#1040C0] border border-[#121212] inline-block shrink-0 shadow-[1px_1px_0px_#121212]" title="Code / Dev" />;
+        return 'red';
       case 'pdf':
       case 'document':
-        return <span className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[9px] border-b-[#D02020] inline-block shrink-0 drop-shadow-[1px_1px_0px_#121212]" title="Document / PDF" />;
+        return 'violet';
       default:
-        return <span className="w-2.5 h-2.5 rounded-none bg-[#121212] border border-[#121212] inline-block shrink-0" title="Resource" />;
+        return 'white';
     }
   };
 
   if (viewMode === 'list') {
     return (
-      <div className="group relative flex flex-col md:flex-row md:items-center justify-between gap-4 p-3.5 rounded-none bg-[#FFFFFF] hover:bg-[#F0F0F0] border-2 md:border-4 border-[#121212] shadow-bauhaus-sm transition-all duration-150">
+      <div className="group relative flex flex-col md:flex-row md:items-center justify-between gap-4 p-3.5 rounded-none bg-white hover:bg-[#FFFDF5] border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#000] transition-all duration-100">
         <Link
           href={`/app/library/${resource.id}`}
           onClick={handleOpenLink}
           className="flex items-start md:items-center gap-3.5 flex-1 min-w-0"
         >
-          <div className="w-9 h-9 rounded-none bg-[#121212] text-[#FFFFFF] border-2 border-[#121212] flex items-center justify-center shrink-0 font-mono text-xs font-black">
+          <div className="w-9 h-9 rounded-none bg-black text-white border-2 border-black flex items-center justify-center shrink-0 font-mono text-xs font-black">
             {resource.title ? resource.title.slice(0, 2).toUpperCase() : 'RE'}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              {getGeometricMarker(resource.resource_type)}
-              <h3 className="text-sm font-bold text-[#121212] group-hover:text-[#1040C0] transition-colors truncate">
+              <h3 className="text-sm font-black text-black group-hover:underline truncate">
                 {resource.title}
               </h3>
-              <span className="text-[10px] px-2 py-0.5 rounded-none border border-[#121212] font-bold uppercase tracking-wider bg-[#F0F0F0] text-[#121212]">
-                {typeConfig.label}
-              </span>
+              <NeoBadge label={typeConfig.label} type={resource.resource_type} />
               {resource.is_archived && (
-                <span className="text-[10px] px-2 py-0.5 rounded-none border border-[#121212] bg-[#E0E0E0] text-[#121212] font-mono font-bold uppercase">
+                <span className="text-[10px] px-2 py-0.5 rounded-none border-2 border-black bg-[#E0E0E0] text-black font-mono font-black uppercase">
                   Archived
                 </span>
               )}
             </div>
-            <p className="text-xs text-[#121212]/70 truncate mt-0.5">
+            <p className="text-xs font-bold text-black/70 truncate mt-0.5">
               {resource.description || 'No description provided.'}
             </p>
           </div>
         </Link>
 
-        <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 pt-2 md:pt-0 border-t-2 md:border-t-0 border-[#121212]">
-          <span className="font-mono text-xs font-bold text-[#121212]/60">{resource.domain}</span>
+        <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 pt-2 md:pt-0 border-t-2 md:border-t-0 border-black">
+          <span className="font-mono text-xs font-black text-black/60">{resource.domain}</span>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => toggleFavorite(resource.id)}
               title={resource.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
-              className={`p-1.5 rounded-none border-2 border-[#121212] transition-transform active:translate-x-0.5 active:translate-y-0.5 ${
+              className={`p-1.5 rounded-none border-2 border-black transition-transform active:translate-x-0.5 active:translate-y-0.5 ${
                 resource.is_favorite
-                  ? 'bg-[#D02020] text-[#FFFFFF]'
-                  : 'bg-[#FFFFFF] text-[#121212] hover:bg-[#F0C020]'
+                  ? 'bg-[#FF6B6B] text-black'
+                  : 'bg-white text-black hover:bg-[#FFD93D]'
               }`}
             >
-              <Heart className={`w-3.5 h-3.5 ${resource.is_favorite ? 'fill-[#FFFFFF]' : ''}`} />
+              <Heart className={`w-3.5 h-3.5 ${resource.is_favorite ? 'fill-black' : ''}`} />
             </button>
             <a
               href={resource.url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={handleOpenLink}
-              className="p-1.5 rounded-none border-2 border-[#121212] bg-[#FFFFFF] text-[#121212] hover:bg-[#1040C0] hover:text-[#FFFFFF] transition-colors"
+              className="p-1.5 rounded-none border-2 border-black bg-white text-black hover:bg-[#C4B5FD] transition-colors"
               title="Open external link"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-3.5 h-3.5 stroke-[2.5]" />
             </a>
 
             {/* Menu Trigger */}
             <div className="relative">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-1.5 rounded-none border-2 border-[#121212] bg-[#FFFFFF] text-[#121212] hover:bg-[#E0E0E0] transition-colors"
+                className="p-1.5 rounded-none border-2 border-black bg-white text-black hover:bg-[#FFFDF5] transition-colors"
               >
-                <MoreVertical className="w-3.5 h-3.5" />
+                <MoreVertical className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
               {isMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-20" onClick={() => setIsMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 w-44 rounded-none bg-[#FFFFFF] border-4 border-[#121212] shadow-bauhaus-md py-1 z-30 font-sans text-xs">
+                  <div className="absolute right-0 top-full mt-1 w-44 rounded-none bg-white border-4 border-black shadow-[6px_6px_0px_0px_#000] py-1 z-30 font-sans text-xs">
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
                         openEditModal(resource);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[#121212] font-bold hover:bg-[#F0C020] text-left"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-black font-black hover:bg-[#FFD93D] text-left"
                     >
-                      <Edit2 className="w-3.5 h-3.5" /> EDIT
+                      <Edit2 className="w-3.5 h-3.5 stroke-[2.5]" /> EDIT
                     </button>
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
                         archiveResource(resource.id, !resource.is_archived);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[#121212] font-bold hover:bg-[#1040C0] hover:text-white text-left"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-black font-black hover:bg-[#C4B5FD] text-left"
                     >
-                      {resource.is_archived ? <ArchiveRestore className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                      {resource.is_archived ? <ArchiveRestore className="w-3.5 h-3.5 stroke-[2.5]" /> : <Archive className="w-3.5 h-3.5 stroke-[2.5]" />}
                       {resource.is_archived ? 'UNARCHIVE' : 'ARCHIVE'}
                     </button>
                     <button
                       onClick={handleCopyLink}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[#121212] font-bold hover:bg-[#F0F0F0] text-left"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-black font-black hover:bg-[#FFFDF5] text-left"
                     >
-                      {copied ? <Check className="w-3.5 h-3.5 text-[#121212]" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : <Copy className="w-3.5 h-3.5 stroke-[2.5]" />}
                       {copied ? 'COPIED' : 'COPY LINK'}
                     </button>
                     <button
@@ -204,9 +200,9 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
                         setIsMenuOpen(false);
                         openDeleteDialog(resource);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[#D02020] font-black hover:bg-[#D02020] hover:text-white text-left border-t-2 border-[#121212]"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-black font-black bg-[#FF6B6B] hover:bg-black hover:text-white text-left border-t-2 border-black"
                     >
-                      <Trash2 className="w-3.5 h-3.5" /> DELETE
+                      <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" /> DELETE
                     </button>
                   </div>
                 </>
@@ -218,87 +214,78 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
     );
   }
 
-  // Default Grid View: Physical Bauhaus Research Index Card
+  // Default Grid View: Neo-Brutalist Research Card with Physical Lift
   return (
-    <div className="group relative flex flex-col justify-between p-4 rounded-none bg-[#FFFFFF] border-4 border-[#121212] shadow-bauhaus-sm hover:shadow-bauhaus-md hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all duration-200">
-      {/* Corner geometric indicator */}
-      <div className="absolute -top-2.5 -right-2.5">
-        {resource.resource_type === 'ai_tool' && (
-          <div className="w-5 h-5 rounded-full bg-[#F0C020] border-2 border-[#121212] shadow-[2px_2px_0px_#121212]" title="AI Intelligence Tool" />
-        )}
-        {resource.resource_type === 'github' && (
-          <div className="w-5 h-5 rounded-none bg-[#1040C0] border-2 border-[#121212] shadow-[2px_2px_0px_#121212]" title="Code Repository" />
-        )}
-        {(resource.resource_type === 'pdf' || resource.resource_type === 'document') && (
-          <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-[#D02020] drop-shadow-[2px_2px_0px_#121212]" title="Research Document" />
-        )}
-        {resource.resource_type !== 'ai_tool' && resource.resource_type !== 'github' && resource.resource_type !== 'pdf' && resource.resource_type !== 'document' && (
-          <div className="w-5 h-5 rounded-none bg-[#121212] border-2 border-[#121212]" title="Web Resource" />
-        )}
+    <div className="card-neo group relative flex flex-col justify-between p-5 rounded-none bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000]">
+      {/* Corner Sticker Badge */}
+      <div className="absolute -top-3 -right-2 z-10">
+        <NeoSticker color={getStickerColor(resource.resource_type) as any} rotate={resource.resource_type === 'ai_tool' ? '2' : '-1'} size="sm">
+          {typeConfig.label}
+        </NeoSticker>
       </div>
 
       <div>
-        {/* Top bar: Domain, Favicon, Favorite & More */}
-        <div className="flex items-center justify-between gap-2 mb-2.5 pr-3">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <div className="w-6 h-6 rounded-none bg-[#F0F0F0] border-2 border-[#121212] flex items-center justify-center shrink-0">
+        {/* Top bar: Domain, Icon, Favorite & More */}
+        <div className="flex items-center justify-between gap-2 mb-3 pr-8">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-none bg-[#FFD93D] border-2 border-black flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#000]">
               {getSourceIcon(resource.resource_type)}
             </div>
-            <span className="font-mono text-[11px] font-bold text-[#121212] truncate max-w-[130px]">
+            <span className="font-mono text-xs font-black text-black truncate max-w-[130px]">
               {resource.domain}
             </span>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => toggleFavorite(resource.id)}
               title={resource.is_favorite ? 'Favorited' : 'Favorite'}
-              className={`p-1 rounded-none border border-[#121212] transition-colors ${
+              className={`p-1.5 rounded-none border-2 border-black transition-colors ${
                 resource.is_favorite
-                  ? 'bg-[#D02020] text-[#FFFFFF]'
-                  : 'bg-[#FFFFFF] text-[#121212] hover:bg-[#F0C020]'
+                  ? 'bg-[#FF6B6B] text-black shadow-[2px_2px_0px_#000]'
+                  : 'bg-white text-black hover:bg-[#FFD93D]'
               }`}
             >
-              <Heart className={`w-3.5 h-3.5 ${resource.is_favorite ? 'fill-[#FFFFFF]' : ''}`} />
+              <Heart className={`w-3.5 h-3.5 ${resource.is_favorite ? 'fill-black' : ''}`} />
             </button>
 
             {/* Menu trigger */}
             <div className="relative">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-1 rounded-none border border-[#121212] bg-[#FFFFFF] text-[#121212] hover:bg-[#E0E0E0] transition-colors"
+                className="p-1.5 rounded-none border-2 border-black bg-white text-black hover:bg-[#FFD93D] transition-colors"
               >
-                <MoreVertical className="w-3.5 h-3.5" />
+                <MoreVertical className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
 
               {isMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-20" onClick={() => setIsMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 w-44 rounded-none bg-[#FFFFFF] border-4 border-[#121212] shadow-bauhaus-md py-1 z-30 font-sans text-xs">
+                  <div className="absolute right-0 top-full mt-1 w-44 rounded-none bg-white border-4 border-black shadow-[6px_6px_0px_0px_#000] py-1 z-30 font-sans text-xs">
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
                         openEditModal(resource);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[#121212] font-bold hover:bg-[#F0C020] text-left"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-black font-black hover:bg-[#FFD93D] text-left"
                     >
-                      <Edit2 className="w-3.5 h-3.5" /> EDIT
+                      <Edit2 className="w-3.5 h-3.5 stroke-[2.5]" /> EDIT
                     </button>
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
                         archiveResource(resource.id, !resource.is_archived);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[#121212] font-bold hover:bg-[#1040C0] hover:text-white text-left"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-black font-black hover:bg-[#C4B5FD] text-left"
                     >
-                      {resource.is_archived ? <ArchiveRestore className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                      {resource.is_archived ? <ArchiveRestore className="w-3.5 h-3.5 stroke-[2.5]" /> : <Archive className="w-3.5 h-3.5 stroke-[2.5]" />}
                       {resource.is_archived ? 'UNARCHIVE' : 'ARCHIVE'}
                     </button>
                     <button
                       onClick={handleCopyLink}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[#121212] font-bold hover:bg-[#F0F0F0] text-left"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-black font-black hover:bg-[#FFFDF5] text-left"
                     >
-                      {copied ? <Check className="w-3.5 h-3.5 text-[#121212]" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : <Copy className="w-3.5 h-3.5 stroke-[2.5]" />}
                       {copied ? 'COPIED' : 'COPY LINK'}
                     </button>
                     <a
@@ -306,18 +293,18 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={handleOpenLink}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[#121212] font-bold hover:bg-[#1040C0] hover:text-white text-left"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-black font-black hover:bg-[#C4B5FD] text-left"
                     >
-                      <ExternalLink className="w-3.5 h-3.5" /> OPEN EXTERNAL
+                      <ExternalLink className="w-3.5 h-3.5 stroke-[2.5]" /> OPEN LINK
                     </a>
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
                         openDeleteDialog(resource);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[#D02020] font-black hover:bg-[#D02020] hover:text-white text-left border-t-2 border-[#121212]"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-black font-black bg-[#FF6B6B] hover:bg-black hover:text-white text-left border-t-2 border-black"
                     >
-                      <Trash2 className="w-3.5 h-3.5" /> DELETE
+                      <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" /> DELETE
                     </button>
                   </div>
                 </>
@@ -332,29 +319,26 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
           onClick={handleOpenLink}
           className="block group/link"
         >
-          <h3 className="text-sm font-bold text-[#121212] group-hover/link:text-[#1040C0] transition-colors line-clamp-1">
+          <h3 className="text-base font-black text-black group-hover/link:underline leading-tight line-clamp-1">
             {resource.title}
           </h3>
-          <p className="text-xs text-[#121212]/80 mt-1 line-clamp-2 leading-relaxed">
+          <p className="text-xs font-bold text-black/80 mt-1.5 line-clamp-2 leading-relaxed">
             {resource.description || 'No description captured.'}
           </p>
         </Link>
 
         {/* Tags & Use Case Badges */}
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] px-2 py-0.5 rounded-none border border-[#121212] font-black uppercase tracking-wider bg-[#F0F0F0] text-[#121212]">
-            {typeConfig.label}
-          </span>
+        <div className="mt-4 flex flex-wrap items-center gap-1.5">
           {resource.tags?.slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-none bg-[#FFFFFF] text-[#121212] border border-[#121212]"
+              className="text-[10px] font-mono font-black px-2 py-0.5 rounded-none bg-[#FFFDF5] text-black border-2 border-black shadow-[1px_1px_0px_#000]"
             >
               #{tag}
             </span>
           ))}
           {resource.use_cases && resource.use_cases.length > 0 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-none bg-[#F0C020] text-[#121212] border border-[#121212] font-bold uppercase">
+            <span className="text-[10px] px-2 py-0.5 rounded-none bg-[#C4B5FD] text-black border-2 border-black font-black uppercase shadow-[1px_1px_0px_#000]">
               {resource.use_cases[0]}
             </span>
           )}
@@ -362,17 +346,16 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
       </div>
 
       {/* Card Footer: Saved Date & Detail Anchor */}
-      <div className="mt-3.5 pt-2.5 border-t-2 border-[#121212] flex items-center justify-between text-[11px] text-[#121212]/70 font-mono font-bold">
+      <div className="mt-4 pt-3 border-t-4 border-black flex items-center justify-between text-xs text-black/80 font-mono font-black">
         <span>SAVED {formatSavedDate(resource.created_at).toUpperCase()}</span>
         <Link
           href={`/app/library/${resource.id}`}
           onClick={handleOpenLink}
-          className="text-[#121212] hover:text-[#1040C0] flex items-center gap-1 font-black uppercase tracking-wider group-hover:translate-x-0.5 transition-transform"
+          className="btn-neo px-2.5 py-1 bg-[#FFD93D] hover:bg-[#ffe366] text-black border-2 border-black font-black text-[11px] uppercase tracking-wider flex items-center gap-1 shadow-[2px_2px_0px_#000]"
         >
-          DOSSIER →
+          VIEW →
         </Link>
       </div>
     </div>
   );
 }
-

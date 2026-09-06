@@ -11,7 +11,6 @@ import {
   ArrowRight,
   Clock,
   Layers,
-  Sparkles,
   Trophy,
   Rocket,
   BookOpen,
@@ -36,131 +35,133 @@ export default function ProjectsPage() {
     const s = String(status).toLowerCase();
     switch (s) {
       case 'active':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25';
+        return 'bg-[#FFD93D] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]';
       case 'planning':
       case 'planned':
-        return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/25';
+        return 'bg-[#C4B5FD] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]';
       case 'in review':
       case 'paused':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/25';
+        return 'bg-white text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]';
       case 'completed':
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/25';
+        return 'bg-[#FF6B6B] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]';
       case 'archived':
-        return 'bg-slate-800 text-slate-400 border-slate-700';
+        return 'bg-black text-white border-2 border-black shadow-[2px_2px_0px_0px_#000]';
       default:
-        return 'bg-slate-800 text-slate-400 border-slate-700';
+        return 'bg-[#FFFDF5] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]';
     }
   };
 
   const getProjectTypeIcon = (type?: ProjectType) => {
     switch (type) {
       case 'hackathon':
-        return <Trophy className="w-3.5 h-3.5 text-amber-400" />;
+        return <Trophy className="w-4 h-4 text-black" />;
       case 'startup':
-        return <Rocket className="w-3.5 h-3.5 text-rose-400" />;
+        return <Rocket className="w-4 h-4 text-black" />;
       case 'research':
-        return <BookOpen className="w-3.5 h-3.5 text-emerald-400" />;
+        return <BookOpen className="w-4 h-4 text-black" />;
       case 'freelance':
-        return <Briefcase className="w-3.5 h-3.5 text-sky-400" />;
+        return <Briefcase className="w-4 h-4 text-black" />;
       case 'learning':
-        return <GraduationCap className="w-3.5 h-3.5 text-purple-400" />;
+        return <GraduationCap className="w-4 h-4 text-black" />;
       default:
-        return <Layers className="w-3.5 h-3.5 text-indigo-400" />;
+        return <Layers className="w-4 h-4 text-black" />;
     }
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#1c2132]">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-200">
+      {/* Header: Neo-Brutalist Research Boards */}
+      <div className="border-b-4 border-black pb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-100">
-              Project Workspaces
-            </h1>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
-              Phase 5
-            </span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFD93D] text-black border-2 border-black text-xs font-black uppercase tracking-wider mb-3 shadow-[3px_3px_0px_0px_#000] -rotate-1">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B6B] border border-black" />
+            RESEARCH BOARDS
           </div>
-          <p className="text-xs md:text-sm text-slate-400 mt-1">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-black leading-none">
+            PROJECT<br />
+            WORKSPACES.
+          </h1>
+          <p className="text-sm md:text-base font-bold text-black mt-3 max-w-xl">
             Contextual research environments. Organize your global library around active objectives without duplicating data.
           </p>
         </div>
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-md shadow-indigo-900/30 transition-all self-start sm:self-auto"
+          className="btn-neo flex items-center gap-2 px-6 py-4 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-4 border-black shadow-[6px_6px_0px_0px_#000] self-start sm:self-auto"
         >
-          <Plus className="w-3.5 h-3.5" />
-          <span>+ New project</span>
+          <Plus className="w-5 h-5 stroke-[3px]" />
+          <span>+ NEW PROJECT BOARD</span>
         </button>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#1c2132] pb-3 text-xs overflow-x-auto">
+      <div className="flex items-center gap-3 border-b-4 border-black pb-4 text-xs overflow-x-auto">
         <button
           onClick={() => setActiveTab('all')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none border-2 border-black font-black uppercase text-xs tracking-wider transition-all ${
             activeTab === 'all'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#FFD93D] text-black shadow-[4px_4px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          All Projects ({projects.length})
+          ALL PROJECTS ({projects.length})
         </button>
         <button
           onClick={() => setActiveTab('active')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none border-2 border-black font-black uppercase text-xs tracking-wider transition-all ${
             activeTab === 'active'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#FF6B6B] text-black shadow-[4px_4px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          Active Workspaces
+          ACTIVE BOARDS
         </button>
         <button
           onClick={() => setActiveTab('hackathon')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1.5 whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none border-2 border-black font-black uppercase text-xs tracking-wider transition-all flex items-center gap-1.5 ${
             activeTab === 'hackathon'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#C4B5FD] text-black shadow-[4px_4px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          <Trophy className="w-3 h-3 text-amber-400" />
-          <span>Hackathons</span>
+          <Trophy className="w-4 h-4 stroke-[3px]" />
+          <span>HACKATHONS</span>
         </button>
         <button
           onClick={() => setActiveTab('archived')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none border-2 border-black font-black uppercase text-xs tracking-wider transition-all ${
             activeTab === 'archived'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-black text-white shadow-[4px_4px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          Archived
+          ARCHIVED
         </button>
       </div>
 
       {/* Projects Grid */}
       {filteredProjects.length === 0 ? (
-        <div className="py-16 text-center rounded-2xl border border-dashed border-[#23293c] p-8 space-y-3">
-          <FolderKanban className="w-10 h-10 text-slate-600 mx-auto stroke-1" />
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-slate-300">No project workspaces found</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+        <div className="py-16 text-center rounded-none border-4 border-black bg-white shadow-[8px_8px_0px_0px_#000] p-8 space-y-5">
+          <div className="w-16 h-16 bg-[#FFD93D] border-4 border-black flex items-center justify-center mx-auto shadow-[4px_4px_0px_0px_#000] rotate-2">
+            <FolderKanban className="w-8 h-8 text-black stroke-[2.5px]" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-2xl font-black uppercase text-black">NO PROJECT WORKSPACES FOUND</h3>
+            <p className="text-xs md:text-sm font-bold text-black max-w-sm mx-auto">
               Create a project workspace to describe what you are building and let Resora recommend relevant library resources.
             </p>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium"
+            className="btn-neo inline-flex items-center gap-2 px-6 py-3 bg-[#FF6B6B] text-black border-4 border-black font-black uppercase text-xs tracking-wider shadow-[4px_4px_0px_0px_#000]"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Create First Project</span>
+            <Plus className="w-4 h-4 stroke-[3px]" />
+            <span>CREATE FIRST PROJECT</span>
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredProjects.map((proj) => {
             const docCount = resources.filter(
               (r) => proj.resource_ids?.includes(r.id) && (r.resource_type === 'pdf' || r.resource_type === 'document')
@@ -170,53 +171,53 @@ export default function ProjectsPage() {
               <Link
                 key={proj.id}
                 href={`/app/projects/${proj.id}`}
-                className="p-5 rounded-2xl bg-[#11131c] hover:bg-[#151825] border border-[#1f2433] hover:border-[#30384f] transition-all group flex flex-col justify-between space-y-4 shadow-sm"
+                className="card-neo p-6 rounded-none bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] group flex flex-col justify-between space-y-4 relative"
               >
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="p-1.5 rounded-lg bg-[#0e1017] border border-[#1f2536] shrink-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="p-2.5 rounded-none bg-[#FFD93D] border-2 border-black shadow-[2px_2px_0px_0px_#000] shrink-0">
                         {getProjectTypeIcon(proj.project_type)}
                       </div>
                       <div className="min-w-0">
-                        <h3 className="text-base font-semibold text-slate-100 group-hover:text-indigo-300 transition-colors truncate">
+                        <h3 className="text-lg md:text-xl font-black uppercase text-black group-hover:text-[#FF6B6B] transition-colors truncate">
                           {proj.name}
                         </h3>
                         {proj.project_type && (
-                          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-                            {proj.project_type.replace('_', ' ')}
+                          <span className="text-[11px] font-mono font-black text-black uppercase tracking-wider bg-[#FFFDF5] px-2 py-0.5 border border-black inline-block mt-0.5">
+                            TYPE: {proj.project_type.replace('_', ' ')}
                           </span>
                         )}
                       </div>
                     </div>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border capitalize shrink-0 ${getStatusColor(proj.status)}`}>
+                    <span className={`text-[10px] font-mono font-black px-2.5 py-1 rounded-none uppercase shrink-0 ${getStatusColor(proj.status)}`}>
                       {proj.status}
                     </span>
                   </div>
 
                   {proj.objective ? (
-                    <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed bg-[#0e1018] p-2.5 rounded-xl border border-[#1a1f2e]">
-                      <strong className="text-slate-400 font-mono text-[10px] uppercase block mb-0.5">Objective</strong>
+                    <div className="text-xs md:text-sm font-medium text-black leading-relaxed bg-[#FFFDF5] p-3 border-2 border-black shadow-[2px_2px_0px_0px_#000]">
+                      <strong className="text-black font-mono font-black text-[10px] uppercase block mb-1 bg-[#FFD93D] px-1 w-max border border-black">OBJECTIVE</strong>
                       {proj.objective}
-                    </p>
+                    </div>
                   ) : (
-                    <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                    <p className="text-xs md:text-sm font-medium text-black line-clamp-2 leading-relaxed">
                       {proj.description || 'Custom project workspace.'}
                     </p>
                   )}
 
                   {proj.technologies && proj.technologies.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
+                    <div className="flex flex-wrap gap-1.5 pt-1">
                       {proj.technologies.slice(0, 4).map((tech) => (
                         <span
                           key={tech}
-                          className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#161a27] text-slate-300 border border-[#242c42]"
+                          className="text-[10px] font-mono font-black px-2 py-0.5 rounded-none bg-[#C4B5FD] text-black border-2 border-black shadow-[1px_1px_0px_0px_#000]"
                         >
                           {tech}
                         </span>
                       ))}
                       {proj.technologies.length > 4 && (
-                        <span className="text-[10px] font-mono text-slate-500 self-center">
+                        <span className="text-[10px] font-mono font-black text-black self-center px-1">
                           +{proj.technologies.length - 4}
                         </span>
                       )}
@@ -224,27 +225,27 @@ export default function ProjectsPage() {
                   )}
                 </div>
 
-                <div className="pt-3 border-t border-[#1c2132] flex items-center justify-between text-xs text-slate-500">
-                  <div className="flex items-center gap-3 font-mono text-[11px]">
-                    <span className="flex items-center gap-1">
-                      <Layers className="w-3 h-3 text-slate-400" />
-                      {proj.resource_ids?.length || 0} resources
+                <div className="pt-4 border-t-2 border-black flex items-center justify-between text-xs text-black">
+                  <div className="flex items-center gap-3 font-mono font-bold text-[11px]">
+                    <span className="flex items-center gap-1 bg-[#FFFDF5] px-2 py-0.5 border border-black font-black">
+                      <Layers className="w-3.5 h-3.5 text-black" />
+                      {proj.resource_ids?.length || 0} RESOURCES
                     </span>
                     {docCount > 0 && (
-                      <span className="flex items-center gap-1 text-indigo-400">
-                        <FileText className="w-3 h-3" />
-                        {docCount} {docCount === 1 ? 'doc' : 'docs'}
+                      <span className="flex items-center gap-1 bg-[#FF6B6B] text-black px-2 py-0.5 border border-black font-black">
+                        <FileText className="w-3.5 h-3.5" />
+                        {docCount} DOCS
                       </span>
                     )}
-                    <span className="flex items-center gap-1 text-slate-500">
-                      <Clock className="w-3 h-3" />
+                    <span className="flex items-center gap-1 text-black font-bold">
+                      <Clock className="w-3.5 h-3.5" />
                       {new Date(proj.updated_at).toLocaleDateString()}
                     </span>
                   </div>
 
-                  <div className="text-slate-400 group-hover:text-indigo-400 flex items-center gap-1 font-medium text-xs">
-                    <span>Open workspace</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  <div className="text-black group-hover:text-[#FF6B6B] flex items-center gap-1.5 font-black text-xs uppercase tracking-wider group-hover:translate-x-1 transition-all">
+                    <span>OPEN BOARD</span>
+                    <ArrowRight className="w-4 h-4 stroke-[3px]" />
                   </div>
                 </div>
               </Link>

@@ -89,29 +89,29 @@ export function DocumentViewerModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 animate-in fade-in duration-100">
       <div className="fixed inset-0" onClick={onClose} />
-      <div className="relative w-full max-w-5xl h-[92vh] rounded-2xl bg-[#0f111a] border border-[#23293e] shadow-2xl shadow-black/95 flex flex-col overflow-hidden z-10">
+      <div className="relative w-full max-w-5xl h-[92vh] rounded-none bg-[#FFFDF5] border-4 border-black shadow-[12px_12px_0px_0px_#000] flex flex-col overflow-hidden z-10">
         {/* Header Bar */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1c2236] bg-[#0c0e16]">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b-4 border-black bg-white">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
-              <FileText className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-none bg-[#FFD93D] border-2 border-black flex items-center justify-center text-black shrink-0 shadow-[2px_2px_0px_0px_#000]">
+              <FileText className="w-4 h-4 stroke-[3px]" />
             </div>
             <div className="truncate">
-              <h2 className="text-sm font-semibold text-slate-100 truncate">
+              <h2 className="text-sm font-black text-black truncate uppercase tracking-tight">
                 {resource.file_name || resource.title}
               </h2>
-              <div className="flex items-center gap-2 font-mono text-[10px] text-slate-500">
-                <span>{resource.resource_type.toUpperCase()}</span>
+              <div className="flex items-center gap-2 font-mono text-[10px] font-bold text-black uppercase">
+                <span className="bg-[#C4B5FD] px-1.5 py-0.5 border border-black">{resource.resource_type.toUpperCase()}</span>
                 <span>•</span>
-                <span>
-                  Page {currentPageNum} of {totalPages}
+                <span className="bg-white px-1.5 py-0.5 border border-black">
+                  Page {currentPageNum} / {totalPages}
                 </span>
                 {resource.file_size && (
                   <>
                     <span>•</span>
-                    <span>{(resource.file_size / 1024 / 1024).toFixed(1)} MB</span>
+                    <span className="bg-[#FFD93D] px-1.5 py-0.5 border border-black">{(resource.file_size / 1024 / 1024).toFixed(1)} MB</span>
                   </>
                 )}
               </div>
@@ -122,19 +122,19 @@ export function DocumentViewerModal({
             {/* Download */}
             <button
               onClick={handleDownloadOriginal}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#171b29] hover:bg-[#1f2538] border border-[#242b3e] text-slate-300 text-xs font-medium transition-colors"
+              className="btn-neo flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-white hover:bg-[#FFD93D] border-2 border-black text-black text-xs font-black uppercase shadow-[2px_2px_0px_0px_#000] transition-all"
               title="Download original file"
             >
-              <Download className="w-3.5 h-3.5 text-indigo-400" />
+              <Download className="w-3.5 h-3.5 stroke-[3px]" />
               <span className="hidden sm:inline">Download</span>
             </button>
 
             {/* Close */}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-[#181c2b] transition-colors"
+              className="p-1.5 rounded-none text-black hover:bg-[#FF6B6B] border-2 border-black transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 stroke-[3px]" />
             </button>
           </div>
         </div>
@@ -142,43 +142,43 @@ export function DocumentViewerModal({
         {/* Content Body: Sidebar (Page Search & Thumbnails) + Reader Pane */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel: Search & Page Index */}
-          <aside className="hidden md:flex w-64 flex-col border-r border-[#1a1f2e] bg-[#0d0f17] p-3 space-y-3 shrink-0">
+          <aside className="hidden md:flex w-64 flex-col border-r-4 border-black bg-white p-3 space-y-3 shrink-0">
             {/* In-Document Search */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-black absolute left-2.5 top-1/2 -translate-y-1/2 stroke-[3px]" />
               <input
                 type="text"
-                placeholder="Find in document..."
+                placeholder="FIND IN DOCUMENT..."
                 value={pageSearchQuery}
                 onChange={(e) => setPageSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#141824] border border-[#202638] text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-sans"
+                className="w-full pl-8 pr-3 py-2 rounded-none bg-[#FFFDF5] border-2 border-black text-xs text-black placeholder-black/50 font-mono font-bold focus:bg-[#FFD93D] focus:outline-none"
               />
             </div>
 
             {/* Page Jump List / Search Matches */}
-            <div className="flex-1 overflow-y-auto space-y-1 pr-1">
+            <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
               {pageSearchQuery ? (
                 <div>
-                  <div className="text-[10px] font-mono text-slate-500 uppercase px-1 pb-1">
+                  <div className="text-[10px] font-mono font-black text-black uppercase px-1 pb-1">
                     Matches ({matchingPages.length})
                   </div>
                   {matchingPages.length === 0 ? (
-                    <div className="text-xs text-slate-500 p-2 italic">No matches on any page</div>
+                    <div className="text-xs text-black font-bold p-2 italic bg-[#FFFDF5] border border-black">No matches on any page</div>
                   ) : (
                     matchingPages.map((mp) => (
                       <button
                         key={mp.id}
                         onClick={() => setCurrentPageNum(mp.page_number)}
-                        className={`w-full text-left p-2 rounded-lg text-xs transition-colors ${
+                        className={`w-full text-left p-2 rounded-none text-xs transition-colors border-2 border-black ${
                           currentPageNum === mp.page_number
-                            ? 'bg-indigo-600/20 text-indigo-200 border border-indigo-500/30'
-                            : 'text-slate-400 hover:bg-[#151928]'
+                            ? 'bg-[#FFD93D] text-black font-black shadow-[2px_2px_0px_0px_#000]'
+                            : 'bg-white text-black hover:bg-[#FFFDF5]'
                         }`}
                       >
-                        <div className="font-semibold text-[11px] text-indigo-400 font-mono">
+                        <div className="font-black text-[11px] text-black font-mono uppercase">
                           Page {mp.page_number}
                         </div>
-                        <div className="line-clamp-2 text-[11px] text-slate-400 mt-0.5 font-sans">
+                        <div className="line-clamp-2 text-[11px] text-black mt-0.5 font-mono">
                           {mp.content}
                         </div>
                       </button>
@@ -187,22 +187,22 @@ export function DocumentViewerModal({
                 </div>
               ) : (
                 <div>
-                  <div className="text-[10px] font-mono text-slate-500 uppercase px-1 pb-1">
+                  <div className="text-[10px] font-mono font-black text-black uppercase px-1 pb-1">
                     Document Pages
                   </div>
                   {pages.map((p) => (
                     <button
                       key={p.id}
                       onClick={() => setCurrentPageNum(p.page_number)}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center justify-between ${
+                      className={`w-full text-left px-2.5 py-2 rounded-none text-xs font-mono transition-colors flex items-center justify-between border-2 border-black mb-1.5 ${
                         currentPageNum === p.page_number
-                          ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-medium'
-                          : 'text-slate-400 hover:bg-[#151928] hover:text-slate-200'
+                          ? 'bg-[#FF6B6B] text-black font-black shadow-[2px_2px_0px_0px_#000]'
+                          : 'bg-white text-black hover:bg-[#FFD93D]'
                       }`}
                     >
-                      <span>Page {p.page_number}</span>
-                      <span className="text-[10px] text-slate-600">
-                        {p.content.split(/\s+/).length} words
+                      <span className="font-black uppercase">Page {p.page_number}</span>
+                      <span className="text-[10px] font-bold bg-white px-1 border border-black">
+                        {p.content.split(/\s+/).length}w
                       </span>
                     </button>
                   ))}
@@ -212,26 +212,26 @@ export function DocumentViewerModal({
           </aside>
 
           {/* Main Reader View */}
-          <main className="flex-1 flex flex-col justify-between overflow-hidden bg-[#0a0c13]">
+          <main className="flex-1 flex flex-col justify-between overflow-hidden bg-[#FFFDF5]">
             {/* Top Toolbar: Navigation & Zoom */}
-            <div className="px-4 py-2 border-b border-[#181d2c] flex items-center justify-between text-xs text-slate-400 bg-[#0d0f17]/50">
+            <div className="px-4 py-2 border-b-2 border-black flex items-center justify-between text-xs text-black bg-white">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setCurrentPageNum((p) => Math.max(1, p - 1))}
                   disabled={currentPageNum <= 1}
-                  className="p-1 rounded-md hover:bg-[#1c2234] disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  className="btn-neo p-1 rounded-none border border-black hover:bg-[#FFD93D] disabled:opacity-40 disabled:pointer-events-none transition-colors"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-4 h-4 stroke-[3px]" />
                 </button>
-                <span className="font-mono text-xs">
-                  Page {currentPageNum} / {totalPages}
+                <span className="font-mono font-black text-xs uppercase bg-[#FFD93D] px-2 py-0.5 border border-black">
+                  PAGE {currentPageNum} / {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPageNum((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPageNum >= totalPages}
-                  className="p-1 rounded-md hover:bg-[#1c2234] disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  className="btn-neo p-1 rounded-none border border-black hover:bg-[#FFD93D] disabled:opacity-40 disabled:pointer-events-none transition-colors"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-4 h-4 stroke-[3px]" />
                 </button>
               </div>
 
@@ -239,35 +239,35 @@ export function DocumentViewerModal({
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setZoomLevel((z) => Math.max(70, z - 10))}
-                    className="p-1 rounded hover:bg-[#1c2234]"
+                    className="btn-neo p-1 rounded-none border border-black hover:bg-[#FFD93D]"
                     title="Zoom out"
                   >
-                    <ZoomOut className="w-3.5 h-3.5" />
+                    <ZoomOut className="w-3.5 h-3.5 stroke-[3px]" />
                   </button>
-                  <span className="font-mono text-[11px] w-10 text-center">{zoomLevel}%</span>
+                  <span className="font-mono font-black text-[11px] w-12 text-center bg-white px-1 border border-black">{zoomLevel}%</span>
                   <button
                     onClick={() => setZoomLevel((z) => Math.min(160, z + 10))}
-                    className="p-1 rounded hover:bg-[#1c2234]"
+                    className="btn-neo p-1 rounded-none border border-black hover:bg-[#FFD93D]"
                     title="Zoom in"
                   >
-                    <ZoomIn className="w-3.5 h-3.5" />
+                    <ZoomIn className="w-3.5 h-3.5 stroke-[3px]" />
                   </button>
                 </div>
 
                 <button
                   onClick={handleCopyPageText}
-                  className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200"
+                  className="btn-neo flex items-center gap-1 px-2.5 py-1 rounded-none border border-black bg-white hover:bg-[#C4B5FD] text-[11px] font-black uppercase"
                 >
-                  {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  {copied ? <Check className="w-3.5 h-3.5 stroke-[3px] text-black" /> : <Copy className="w-3.5 h-3.5 stroke-[3px]" />}
                   <span>{copied ? 'Copied' : 'Copy page'}</span>
                 </button>
               </div>
             </div>
 
             {/* Document Text Rendering Pane */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-10 flex justify-center">
+            <div className="flex-1 overflow-y-auto p-6 sm:p-10 flex justify-center bg-[#FFFDF5] bg-grid-paper">
               <div
-                className="w-full max-w-3xl rounded-xl bg-[#11131c] border border-[#1e2334] p-6 sm:p-8 shadow-md text-slate-200 font-sans leading-relaxed whitespace-pre-wrap select-text"
+                className="w-full max-w-3xl rounded-none bg-white border-4 border-black p-6 sm:p-8 shadow-[8px_8px_0px_0px_#000] text-black font-mono leading-relaxed whitespace-pre-wrap select-text"
                 style={{ fontSize: `${(zoomLevel / 100) * 14}px` }}
               >
                 {activePage?.content || 'No text extracted for this page.'}
@@ -275,9 +275,9 @@ export function DocumentViewerModal({
             </div>
 
             {/* Bottom Status Bar */}
-            <div className="px-4 py-2 border-t border-[#181d2c] bg-[#0c0e15] flex items-center justify-between text-[11px] text-slate-500 font-mono">
-              <span>Status: Text Indexed</span>
-              <span>Page-Aware Extraction</span>
+            <div className="px-4 py-2 border-t-2 border-black bg-white flex items-center justify-between text-[11px] text-black font-mono font-black uppercase">
+              <span className="bg-[#FFD93D] px-2 py-0.5 border border-black">Status: Text Indexed</span>
+              <span className="bg-[#C4B5FD] px-2 py-0.5 border border-black">Page-Aware Extraction</span>
             </div>
           </main>
         </div>

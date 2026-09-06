@@ -1,6 +1,8 @@
 import { ResourceIntelligence, ResourceModel } from '@/types/database';
 import { cleanHtmlContent, formatUntrustedContent } from './content-cleaner';
 import { RESOURCE_ANALYSIS_SYSTEM_PROMPT } from './prompts';
+import { AIProvider } from './provider';
+import * as Sentry from '@sentry/nextjs';
 
 export interface AIAnalysisRequest {
   resource: ResourceModel;
@@ -19,7 +21,7 @@ const activeLocks = new Set<string>();
 
 export class AIService {
   /**
-   * Analyzes a resource using OpenAI-compatible endpoint or intelligent local heuristic fallback
+   * Analyzes a resource using NVIDIA Nemotron or deterministic heuristic fallback
    */
   static async analyzeResource(req: AIAnalysisRequest): Promise<AIAnalysisResult> {
     const { resource, rawContent, forceReanalyze } = req;
@@ -34,7 +36,7 @@ export class AIService {
     const startTime = Date.now();
 
     try {
-      // 1. Clean and truncate content
+      // 1. Clean and truncate content (Prompt injection defense)
       const cleaned = cleanHtmlContent(rawContent || resource.content || '');
       const contentHash = cleaned.contentHash;
 
@@ -53,62 +55,54 @@ User Notes: ${resource.personal_note || 'None'}
         metaSummary
       );
 
-      // 3. Attempt LLM Provider (OpenAI compatible) if API key exists
-      const apiKey = process.env.OPENAI_API_KEY || process.env.AI_API_KEY;
-      const apiBase = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
-
-      if (apiKey) {
+      // 3. Attempt NVIDIA Provider if configured
+      if (AIProvider.isConfigured()) {
         try {
-          const response = await fetch(`${apiBase}/chat/completions`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model: process.env.AI_MODEL_NAME || 'gpt-4o-mini',
+          const rawResponse = await AIProvider.complete(
+            [
+              { role: 'system', content: RESOURCE_ANALYSIS_SYSTEM_PROMPT },
+              { role: 'user', content: sanitizedPrompt },
+            ],
+            {
               temperature: 0.2,
-              response_format: { type: 'json_object' },
-              messages: [
-                { role: 'system', content: RESOURCE_ANALYSIS_SYSTEM_PROMPT },
-                { role: 'user', content: sanitizedPrompt },
-              ],
-            }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const rawJson = data.choices?.[0]?.message?.content;
-            if (rawJson) {
-              const parsed = JSON.parse(rawJson);
-              return {
-                intelligence: {
-                  resource_id: resource.id,
-                  user_id: resource.user_id,
-                  status: 'completed',
-                  summary: parsed.summary || resource.description || 'Resource summary generated.',
-                  what_it_is: parsed.what_it_is || `${resource.title} is a ${resource.resource_type} on ${resource.domain}.`,
-                  best_for: Array.isArray(parsed.best_for) ? parsed.best_for : ['Software development'],
-                  key_points: Array.isArray(parsed.key_points) ? parsed.key_points : ['Provides core developer functionality'],
-                  topics: Array.isArray(parsed.topics) ? parsed.topics : ['Technology'],
-                  suggested_tags: Array.isArray(parsed.suggested_tags) ? parsed.suggested_tags : ['Research'],
-                  suggested_use_cases: Array.isArray(parsed.suggested_use_cases) ? parsed.suggested_use_cases : ['Build'],
-                  confidence: parsed.confidence || (cleaned.text ? 'high' : 'medium'),
-                  model: process.env.AI_MODEL_NAME || 'gpt-4o-mini',
-                  content_hash: contentHash,
-                },
-                model: process.env.AI_MODEL_NAME || 'gpt-4o-mini',
-                cached: false,
-              };
+              responseFormatJson: true,
+              maxTokens: 1200,
             }
+          );
+
+          const parsed = AIProvider.parseStructuredAnalysis(rawResponse);
+
+          if (parsed && parsed.summary) {
+            return {
+              intelligence: {
+                resource_id: resource.id,
+                user_id: resource.user_id,
+                status: 'completed',
+                summary: parsed.summary || resource.description || 'Resource summary generated.',
+                what_it_is: parsed.what_it_is || `${resource.title} is a ${resource.resource_type} on ${resource.domain}.`,
+                best_for: parsed.best_for.length > 0 ? parsed.best_for : ['Software development'],
+                key_points: parsed.key_points.length > 0 ? parsed.key_points : ['Core functionality indexed.'],
+                topics: parsed.topics.length > 0 ? parsed.topics : ['Technology'],
+                suggested_tags: parsed.suggested_tags.length > 0 ? parsed.suggested_tags : ['Research'],
+                suggested_use_cases: parsed.suggested_use_cases.length > 0 ? parsed.suggested_use_cases : ['Build'],
+                confidence: parsed.confidence || (cleaned.text ? 'high' : 'medium'),
+                model: AIProvider.model,
+                content_hash: contentHash,
+              },
+              model: AIProvider.model,
+              cached: false,
+            };
           }
-        } catch (llmErr) {
-          console.warn('LLM API call failed, falling back to deterministic intelligence heuristics:', llmErr);
+        } catch (nvidiaErr: any) {
+          console.warn('[AIService] NVIDIA call failed, falling back to deterministic heuristics:', nvidiaErr.message);
+          Sentry.captureException(nvidiaErr, {
+            tags: { component: 'AIService', provider: 'nvidia' },
+            extra: { resourceId: resource.id },
+          });
         }
       }
 
-      // 4. Intelligent Heuristic Rule Engine (Fallback & Local Development)
-      // Produces accurate structured intelligence based on domain, type, tags, and description
+      // 4. Intelligent Heuristic Rule Engine (Fallback & Local Offline Resilience)
       const heuristicResult = this.generateHeuristicIntelligence(resource, cleaned.text);
 
       return {
@@ -131,7 +125,7 @@ User Notes: ${resource.personal_note || 'None'}
   }
 
   /**
-   * Deterministic semantic extraction when no third-party API key is configured
+   * Deterministic semantic extraction when third-party provider is temporarily unavailable
    */
   private static generateHeuristicIntelligence(
     resource: ResourceModel,
@@ -159,7 +153,6 @@ User Notes: ${resource.personal_note || 'None'}
     const suggested_tags: string[] = [];
     const suggested_use_cases: string[] = [];
 
-    // Contextual classification based on domain & types
     if (domain.includes('github.com')) {
       what_it_is = `An open-source repository for ${title} providing developer source code, issues, and tooling.`;
       summary = desc || `${title} provides an open-source codebase for software engineers and autonomous systems.`;
@@ -194,7 +187,6 @@ User Notes: ${resource.personal_note || 'None'}
       suggested_use_cases.push('Build', 'Learn');
     }
 
-    // Merge existing user tags as base topics if relevant
     if (resource.tags) {
       for (const t of resource.tags) {
         if (!suggested_tags.includes(t)) suggested_tags.push(t);

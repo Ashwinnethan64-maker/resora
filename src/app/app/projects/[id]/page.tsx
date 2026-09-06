@@ -202,75 +202,75 @@ export default function ProjectWorkspacePage() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
       {/* Back Button */}
       <div>
         <Link
           href="/app/projects"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 font-medium transition-colors"
+          className="btn-neo inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-black text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_#000] hover:bg-[#FFD93D]"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Project Workspaces</span>
+          <ArrowLeft className="w-3.5 h-3.5 stroke-[3px]" />
+          <span>BACK TO WORKSPACES</span>
         </Link>
       </div>
 
       {/* Main Workspace Header Card */}
-      <div className="p-6 rounded-2xl bg-[#11131c] border border-[#1f2434] space-y-4">
+      <div className="p-6 md:p-8 rounded-none bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] space-y-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1.5 min-w-0 flex-1">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/25 uppercase font-medium">
+          <div className="space-y-2 min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-none bg-[#FFD93D] text-black border-2 border-black uppercase font-black shadow-[2px_2px_0px_0px_#000]">
                 {project.project_type || 'Software Project'}
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 capitalize">
-                {project.status}
+              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-none bg-[#C4B5FD] text-black border-2 border-black capitalize font-black shadow-[2px_2px_0px_0px_#000]">
+                STATUS: {project.status}
               </span>
               {project.template_id && (
-                <span className="text-[10px] font-mono text-slate-500">
-                  Template: {project.template_id}
+                <span className="text-[10px] font-mono text-black font-bold bg-[#FFFDF5] px-2 py-0.5 border border-black">
+                  TEMPLATE: {project.template_id.toUpperCase()}
                 </span>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-100">
+            <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tighter text-black leading-none">
               {project.name}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-3xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-black font-medium max-w-3xl leading-relaxed">
               {project.description}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start lg:self-auto flex-wrap">
+          <div className="flex items-center gap-2.5 self-start lg:self-auto flex-wrap">
             <Link
               href={`/app/assistant?scope=project&scopeId=${project.id}`}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 font-medium text-xs border border-indigo-500/30 transition-all shadow-sm"
+              className="btn-neo flex items-center gap-1.5 px-4 py-2.5 rounded-none bg-[#FFD93D] hover:bg-[#ffe169] text-black font-black text-xs border-4 border-black shadow-[4px_4px_0px_0px_#000] uppercase tracking-wider"
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Ask Resora</span>
+              <Sparkles className="w-4 h-4 stroke-[2.5px]" />
+              <span>ASK RESORA</span>
             </Link>
             <button
               onClick={() => setIsAddResourceOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-md shadow-indigo-900/30 transition-all"
+              className="btn-neo flex items-center gap-1.5 px-4 py-2.5 rounded-none bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black text-xs border-4 border-black shadow-[4px_4px_0px_0px_#000] uppercase tracking-wider"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add from Library</span>
+              <Plus className="w-4 h-4 stroke-[3px]" />
+              <span>+ FROM LIBRARY</span>
             </button>
             <button
               onClick={openSaveModal}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#181c2b] hover:bg-[#1e2336] text-slate-300 font-medium text-xs border border-[#252c40] transition-colors"
+              className="btn-neo flex items-center gap-1.5 px-4 py-2.5 rounded-none bg-white hover:bg-[#FFFDF5] text-black font-black text-xs border-4 border-black shadow-[4px_4px_0px_0px_#000] uppercase tracking-wider"
             >
-              <span>+ Save New Link</span>
+              <span>+ SAVE LINK</span>
             </button>
           </div>
         </div>
 
         {/* Objective & Context Strip */}
         {project.objective && (
-          <div className="p-3.5 rounded-xl bg-[#0d0f18] border border-[#1d2235] space-y-1">
-            <div className="text-[10px] font-mono uppercase tracking-wider text-indigo-400 font-semibold flex items-center gap-1.5">
+          <div className="p-4 rounded-none bg-[#FFFDF5] border-2 border-black shadow-[3px_3px_0px_0px_#000] space-y-1.5">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-black font-black flex items-center gap-1.5 bg-[#FFD93D] px-1.5 py-0.5 w-max border border-black">
               <Sparkles className="w-3.5 h-3.5" />
-              Workspace Objective
+              WORKSPACE OBJECTIVE
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed font-sans">
+            <p className="text-xs sm:text-sm text-black leading-relaxed font-bold">
               {project.objective}
             </p>
           </div>
@@ -279,11 +279,11 @@ export default function ProjectWorkspacePage() {
         {/* Technologies and Constraints Badges */}
         {project.technologies && project.technologies.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <span className="text-[11px] font-mono text-slate-500">Planned Stack:</span>
+            <span className="text-[11px] font-mono text-black font-bold uppercase">Planned Stack:</span>
             {project.technologies.map((tech) => (
               <span
                 key={tech}
-                className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#161925] text-slate-300 border border-[#242a3e]"
+                className="text-[10px] font-mono px-2.5 py-0.5 rounded-none bg-[#C4B5FD] text-black border-2 border-black font-black shadow-[1px_1px_0px_0px_#000]"
               >
                 {tech}
               </span>
@@ -292,90 +292,87 @@ export default function ProjectWorkspacePage() {
         )}
 
         {/* Metrics Overview Bar */}
-        <div className="flex items-center gap-4 text-xs font-mono text-slate-500 pt-3 border-t border-[#1c2132] overflow-x-auto">
-          <span className="flex items-center gap-1.5 text-slate-300">
-            <Layers className="w-3.5 h-3.5 text-indigo-400" />
-            {linkedResources.length} Resources
+        <div className="flex items-center gap-4 text-xs font-mono text-black pt-3 border-t-2 border-black overflow-x-auto">
+          <span className="flex items-center gap-1.5 font-black bg-[#FFFDF5] px-2 py-0.5 border border-black">
+            <Layers className="w-3.5 h-3.5 text-black" />
+            {linkedResources.length} RESOURCES
           </span>
-          <span>•</span>
-          <span className="flex items-center gap-1.5 text-slate-300">
-            <FileText className="w-3.5 h-3.5 text-emerald-400" />
-            {documentResources.length} Documents
+          <span className="flex items-center gap-1.5 font-black bg-[#FFFDF5] px-2 py-0.5 border border-black">
+            <FileText className="w-3.5 h-3.5 text-black" />
+            {documentResources.length} DOCUMENTS
           </span>
-          <span>•</span>
-          <span className="flex items-center gap-1.5 text-slate-300">
-            <Bookmark className="w-3.5 h-3.5 text-sky-400" />
-            {notes.length} Notes
+          <span className="flex items-center gap-1.5 font-black bg-[#FFFDF5] px-2 py-0.5 border border-black">
+            <Bookmark className="w-3.5 h-3.5 text-black" />
+            {notes.length} NOTES
           </span>
-          <span>•</span>
-          <span className="flex items-center gap-1.5 text-slate-300">
-            <CheckSquare className="w-3.5 h-3.5 text-amber-400" />
-            {decisions.length} Decisions
+          <span className="flex items-center gap-1.5 font-black bg-[#FFFDF5] px-2 py-0.5 border border-black">
+            <CheckSquare className="w-3.5 h-3.5 text-black" />
+            {decisions.length} DECISIONS
           </span>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#1c2132] pb-3 text-xs overflow-x-auto">
+      <div className="flex items-center gap-2 border-b-4 border-black pb-3 text-xs overflow-x-auto">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none transition-all font-black uppercase tracking-wider whitespace-nowrap border-2 border-black ${
             activeTab === 'overview'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#FFD93D] text-black shadow-[3px_3px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          Workspace Overview
+          OVERVIEW
         </button>
         <button
           onClick={() => setActiveTab('resources')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none transition-all font-black uppercase tracking-wider whitespace-nowrap border-2 border-black ${
             activeTab === 'resources'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#FF6B6B] text-black shadow-[3px_3px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          Resources ({linkedResources.length})
+          RESOURCES ({linkedResources.length})
         </button>
         <button
           onClick={() => setActiveTab('documents')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none transition-all font-black uppercase tracking-wider whitespace-nowrap border-2 border-black ${
             activeTab === 'documents'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#C4B5FD] text-black shadow-[3px_3px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          Documents ({documentResources.length})
+          DOCUMENTS ({documentResources.length})
         </button>
         <button
           onClick={() => setActiveTab('notes')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none transition-all font-black uppercase tracking-wider whitespace-nowrap border-2 border-black ${
             activeTab === 'notes'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#FFD93D] text-black shadow-[3px_3px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          Notes ({notes.length})
+          NOTES ({notes.length})
         </button>
         <button
           onClick={() => setActiveTab('decisions')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none transition-all font-black uppercase tracking-wider whitespace-nowrap border-2 border-black ${
             activeTab === 'decisions'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#FF6B6B] text-black shadow-[3px_3px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          Decision Log ({decisions.length})
+          DECISIONS ({decisions.length})
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none transition-all font-black uppercase tracking-wider whitespace-nowrap border-2 border-black ${
             activeTab === 'settings'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-black text-white shadow-[3px_3px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          Workspace Settings
+          SETTINGS
         </button>
       </div>
 

@@ -127,6 +127,7 @@ export function detectSourceAndType(url: string, domain: string): {
     lowerUrl.includes('agent') ||
     lowerDomain === 'anthropic.com' ||
     lowerDomain === 'openai.com' ||
+    lowerDomain === 'nvidia.com' ||
     lowerDomain === 'huggingface.co'
   ) {
     return { detectedType: 'ai_tool', detectedSource: 'web' };

@@ -8,14 +8,18 @@ export interface AppConfig {
   appUrl: string;
   supabase: {
     url: string | null;
-    anonKey: string | null;
-    serviceRoleKey: string | null;
+    publishableKey: string | null;
+    secretKey: string | null;
     isConfigured: boolean;
   };
-  ai: {
+  nvidia: {
     apiKey: string | null;
     baseURL: string;
     model: string;
+    isConfigured: boolean;
+  };
+  sentry: {
+    dsn: string | null;
     isConfigured: boolean;
   };
   storage: {
@@ -33,25 +37,58 @@ function getEnv(): 'development' | 'staging' | 'production' {
 const env = getEnv();
 const isProd = env === 'production';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || null;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || null;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || null;
+// Supabase configuration (support both publishable key and legacy anon key)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || null;
+const supabasePublishableKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  null;
 
-const aiApiKey = process.env.OPENAI_API_KEY || process.env.AI_API_KEY || null;
-const aiBaseURL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
-const aiModel = process.env.AI_MODEL_NAME || 'gpt-4o-mini';
+// Server-only secret key (never exposed to client)
+const supabaseSecretKey =
+  typeof window === 'undefined'
+    ? process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || null
+    : null;
 
-// Validate environment variables on startup
-export function validateEnvironment(): { valid: boolean; warnings: string[]; errors: string[] } {
+// NVIDIA AI configuration (server-only)
+const nvidiaApiKey =
+  typeof window === 'undefined'
+    ? process.env.NVIDIA_API_KEY || null
+    : null;
+
+const nvidiaBaseURL = process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
+const nvidiaModel = process.env.NVIDIA_TEXT_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b';
+
+// Sentry configuration
+const sentryDsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN || null;
+
+/**
+ * Validate environment variables safely without leaking secret values
+ */
+export function validateEnvironment(): {
+  valid: boolean;
+  warnings: string[];
+  errors: string[];
+  publicStatus: {
+    supabase: boolean;
+    nvidia: boolean;
+    sentry: boolean;
+  };
+} {
   const warnings: string[] = [];
   const errors: string[] = [];
 
-  if (isProd) {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      warnings.push('Supabase credentials not fully configured in production. Local storage fallback will be utilized.');
+  if (!supabaseUrl || !supabasePublishableKey) {
+    warnings.push('Supabase public credentials missing. Local fallback active.');
+  }
+
+  // Server-side checks only
+  if (typeof window === 'undefined') {
+    if (!nvidiaApiKey) {
+      warnings.push('NVIDIA_API_KEY is not configured. AI requests will fallback to deterministic heuristics.');
     }
-    if (!aiApiKey) {
-      warnings.push('OpenAI/AI Provider API key missing. Resora will run with deterministic grounded synthesis.');
+    if (!sentryDsn) {
+      warnings.push('SENTRY_DSN is not configured. Error monitoring is currently inactive.');
     }
   }
 
@@ -59,6 +96,11 @@ export function validateEnvironment(): { valid: boolean; warnings: string[]; err
     valid: errors.length === 0,
     warnings,
     errors,
+    publicStatus: {
+      supabase: Boolean(supabaseUrl && supabasePublishableKey),
+      nvidia: Boolean(nvidiaApiKey),
+      sentry: Boolean(sentryDsn),
+    },
   };
 }
 
@@ -68,15 +110,19 @@ export const config: AppConfig = {
   appUrl: process.env.NEXT_PUBLIC_APP_URL || (isProd ? 'https://resora.app' : 'http://localhost:3000'),
   supabase: {
     url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-    serviceRoleKey: supabaseServiceKey,
-    isConfigured: Boolean(supabaseUrl && supabaseAnonKey),
+    publishableKey: supabasePublishableKey,
+    secretKey: supabaseSecretKey,
+    isConfigured: Boolean(supabaseUrl && supabasePublishableKey),
   },
-  ai: {
-    apiKey: aiApiKey,
-    baseURL: aiBaseURL,
-    model: aiModel,
-    isConfigured: Boolean(aiApiKey),
+  nvidia: {
+    apiKey: nvidiaApiKey,
+    baseURL: nvidiaBaseURL,
+    model: nvidiaModel,
+    isConfigured: Boolean(nvidiaApiKey),
+  },
+  sentry: {
+    dsn: sentryDsn,
+    isConfigured: Boolean(sentryDsn),
   },
   storage: {
     maxUploadSizeBytes: 25 * 1024 * 1024, // 25 MB

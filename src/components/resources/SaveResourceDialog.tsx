@@ -10,16 +10,12 @@ import { DocumentDropzone } from '@/components/documents/DocumentDropzone';
 import {
   X,
   Globe,
-  Sparkles,
   AlertCircle,
-  ExternalLink,
   Plus,
   Loader2,
-  CheckCircle2,
   Upload,
   Link2,
-  Cloud,
-  FileText
+  Cloud
 } from 'lucide-react';
 
 export function SaveResourceDialog() {
@@ -105,90 +101,92 @@ export function SaveResourceDialog() {
 
   const toggleUseCase = (uc: string) => {
     setSelectedUseCases((prev) =>
-      prev.includes(uc) ? prev.filter((u) => u !== uc) : [...prev, uc]
+      prev.includes(uc) ? prev.filter((item) => item !== uc) : [...prev, uc]
     );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!rawUrl.trim() && !title.trim()) return;
+    if (!rawUrl.trim()) return;
 
     setIsSaving(true);
-    const { url, domain } = normalizeUrl(rawUrl.trim());
-    const tags = tagsInput
+    const parsedTags = tagsInput
       .split(',')
-      .map((t) => t.trim())
+      .map((t) => t.trim().replace(/^#/, ''))
       .filter(Boolean);
 
-    await saveResource({
-      url: url || 'https://resora.app/resource',
-      domain: domain || 'resora.app',
-      title: title.trim() || domain || 'Saved Resource',
-      description: description.trim() || (isGoogleDriveUrl ? 'Google Drive / Docs reference.' : 'Captured research resource.'),
-      resource_type: resourceType,
-      source_type: 'web',
-      tags,
-      use_cases: selectedUseCases,
-      personal_note: personalNote.trim(),
-      is_inbox: false,
-    });
+    try {
+      const saved = await saveResource({
+        url: rawUrl.trim(),
+        title: title.trim() || undefined,
+        description: description.trim() || undefined,
+        resource_type: resourceType,
+        tags: parsedTags,
+        use_cases: selectedUseCases,
+        personal_note: personalNote.trim() || undefined,
+      });
 
-    setIsSaving(false);
-    closeSaveModal();
+      if (saved) {
+        showToast(`Captured "${saved.title || saved.url}"`);
+        closeSaveModal();
+      }
+    } catch {
+      showToast('Failed to save resource. Please check the URL.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-none animate-in fade-in duration-100">
       <div className="fixed inset-0" onClick={closeSaveModal} />
-      <div className="relative w-full max-w-lg rounded-2xl bg-[#11131c] border border-[#23293c] shadow-2xl shadow-black/90 overflow-hidden z-10 flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-lg rounded-none bg-white border-4 border-black shadow-[12px_12px_0px_0px_#000] overflow-hidden z-10 flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1c2132]">
+        <div className="flex items-center justify-between px-6 py-4 border-b-4 border-black bg-[#FFFDF5]">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <Sparkles className="w-3.5 h-3.5" />
-            </div>
-            <h2 className="text-sm font-semibold text-slate-100">Save Resource to Library</h2>
+            <span className="w-3.5 h-3.5 bg-[#FF6B6B] border border-black" />
+            <h2 className="text-sm font-black uppercase tracking-wider text-black">CAPTURE RESEARCH TO ARCHIVE</h2>
           </div>
           <button
             onClick={closeSaveModal}
-            className="p-1 rounded-md text-slate-500 hover:text-slate-300 transition-colors"
+            className="p-1.5 border-2 border-black bg-white text-black hover:bg-[#FFD93D] shadow-[2px_2px_0px_0px_#000] transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 stroke-[3px]" />
           </button>
         </div>
 
         {/* Tab Toggle: URL vs File Upload */}
-        <div className="flex border-b border-[#1c2132] px-5 bg-[#0d0f17]">
+        <div className="flex border-b-4 border-black px-6 bg-white">
           <button
             type="button"
             onClick={() => setActiveTab('url')}
-            className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 py-3.5 px-4 text-xs font-black uppercase tracking-wider border-b-4 transition-colors ${
               activeTab === 'url'
-                ? 'border-indigo-500 text-indigo-300'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-black text-black bg-[#FFD93D]'
+                : 'border-transparent text-black/60 hover:text-black'
             }`}
           >
-            <Link2 className="w-3.5 h-3.5" />
-            <span>Web / Drive URL</span>
+            <Link2 className="w-4 h-4 stroke-[2.5px]" />
+            <span>WEB / DRIVE URL</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('upload')}
-            className={`flex items-center gap-1.5 py-2.5 px-3 text-xs font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 py-3.5 px-4 text-xs font-black uppercase tracking-wider border-b-4 transition-colors ${
               activeTab === 'upload'
-                ? 'border-indigo-500 text-indigo-300'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-black text-black bg-[#C4B5FD]'
+                : 'border-transparent text-black/60 hover:text-black'
             }`}
           >
-            <Upload className="w-3.5 h-3.5" />
-            <span>Upload Document</span>
+            <Upload className="w-4 h-4 stroke-[2.5px]" />
+            <span>UPLOAD DOCUMENT</span>
           </button>
         </div>
 
         {activeTab === 'upload' ? (
-          <div className="p-5 space-y-4">
-            <div className="text-xs text-slate-400">
-              Upload a PDF, Markdown, or text file. Resora automatically extracts text, creates page indexes, and generates structured AI summaries.
+          <div className="p-6 space-y-4 bg-white">
+            <div className="text-xs md:text-sm font-bold text-black leading-relaxed">
+              Upload a PDF, Markdown, or text file. Resora automatically extracts text, creates page indexes, and generates structured AI dossiers.
             </div>
             <DocumentDropzone
               onUploadComplete={(res) => {
@@ -202,11 +200,11 @@ export function SaveResourceDialog() {
           <>
             {/* Duplicate Banner Notice */}
             {duplicateMatch && (
-              <div className="mx-5 mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs text-amber-300">
+              <div className="mx-6 mt-4 p-3.5 rounded-none bg-[#FFD93D] border-4 border-black flex items-center justify-between text-xs text-black font-bold shadow-[4px_4px_0px_0px_#000]">
                 <div className="flex items-center gap-2 min-w-0 pr-2">
-                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span className="truncate">
-                    You already saved this resource: <strong>{duplicateMatch.title}</strong>
+                  <AlertCircle className="w-4 h-4 text-black stroke-[3px] shrink-0" />
+                  <span className="truncate uppercase font-black">
+                    ALREADY IN LIBRARY: <strong>{duplicateMatch.title}</strong>
                   </span>
                 </div>
                 <button
@@ -215,39 +213,39 @@ export function SaveResourceDialog() {
                     closeSaveModal();
                     router.push(`/app/library/${duplicateMatch.id}`);
                   }}
-                  className="px-2.5 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 font-medium text-amber-200 shrink-0 transition-colors"
+                  className="btn-neo px-3 py-1 bg-white border-2 border-black font-black uppercase text-[11px] shadow-[2px_2px_0px_0px_#000] shrink-0"
                 >
-                  Open existing
+                  OPEN
                 </button>
               </div>
             )}
 
-            {/* Google Drive / Docs Detection Notice */}
+            {/* Google Drive Notice */}
             {isGoogleDriveUrl && (
-              <div className="mx-5 mt-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-xs text-blue-300 flex items-start gap-2.5">
-                <Cloud className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+              <div className="mx-6 mt-3 p-3.5 bg-[#C4B5FD] text-black border-4 border-black text-xs flex items-start gap-2.5 shadow-[4px_4px_0px_0px_#000]">
+                <Cloud className="w-4 h-4 text-black stroke-[3px] shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
-                  <span className="font-semibold text-blue-200">Google Drive / Docs link detected</span>
-                  <p className="text-[11px] text-blue-300/80 leading-relaxed">
-                    Connect Google Drive to analyze this document. Content extraction is currently unavailable for private drive files; you can still save and organize this resource.
+                  <span className="font-black uppercase">GOOGLE DRIVE / DOCS LINK DETECTED</span>
+                  <p className="text-xs text-black leading-relaxed font-bold">
+                    Private drive files will be indexed as reference links. You can still annotate, organize, and query this resource.
                   </p>
                 </div>
               </div>
             )}
 
             {/* Scrollable Form */}
-            <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs overflow-y-auto">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs overflow-y-auto bg-white">
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-slate-400 font-medium">URL / Resource Link *</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-black font-black uppercase text-xs">URL / RESOURCE LINK *</label>
                   {isExtracting && (
-                    <span className="flex items-center gap-1 font-mono text-[10px] text-indigo-400">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Fetching metadata...
+                    <span className="flex items-center gap-1 font-mono text-[10px] font-black text-black bg-[#FFD93D] px-2 py-0.5 border border-black uppercase">
+                      <Loader2 className="w-3 h-3 animate-spin" /> FETCHING METADATA...
                     </span>
                   )}
                 </div>
-                <div className="flex items-center rounded-lg bg-[#161925] border border-[#242a3e] px-3 py-2 focus-within:border-indigo-500 transition-colors">
-                  <Globe className="w-3.5 h-3.5 text-slate-500 mr-2 shrink-0" />
+                <div className="flex items-center rounded-none bg-[#FFFDF5] border-4 border-black px-3.5 py-3 shadow-[3px_3px_0px_0px_#000] focus-within:bg-[#FFD93D]">
+                  <Globe className="w-4 h-4 text-black stroke-[2.5px] mr-2 shrink-0" />
                   <input
                     type="text"
                     required
@@ -264,55 +262,55 @@ export function SaveResourceDialog() {
                       }
                     }}
                     onBlur={handleUrlBlur}
-                    className="w-full bg-transparent text-slate-200 placeholder-slate-600 focus:outline-none text-xs font-mono"
+                    className="w-full bg-transparent text-black placeholder-black/50 focus:outline-none text-xs font-mono font-bold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Title</label>
+                <label className="block text-black font-black uppercase text-xs mb-1.5">TITLE</label>
                 <input
                   type="text"
                   placeholder="e.g. Kilo AI or System Architecture Guide"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full rounded-lg bg-[#161925] border border-[#242a3e] px-3 py-2 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 text-xs"
+                  className="w-full rounded-none bg-[#FFFDF5] border-4 border-black px-3.5 py-2.5 text-black placeholder-black/50 font-black uppercase focus:bg-[#FFD93D] focus:outline-none text-xs shadow-[3px_3px_0px_0px_#000]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">Resource Type</label>
+                  <label className="block text-black font-black uppercase text-xs mb-1.5">RESOURCE TYPE</label>
                   <select
                     value={resourceType}
                     onChange={(e) => setResourceType(e.target.value as ResourceType)}
-                    className="w-full rounded-lg bg-[#161925] border border-[#242a3e] px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 text-xs"
+                    className="w-full rounded-none bg-[#FFFDF5] border-4 border-black px-3 py-2.5 text-black font-black uppercase focus:bg-[#FFD93D] focus:outline-none text-xs shadow-[3px_3px_0px_0px_#000]"
                   >
                     {Object.values(RESOURCE_TYPE_CONFIGS).map((cfg) => (
-                      <option key={cfg.id} value={cfg.id} className="bg-[#11131c]">
-                        {cfg.label}
+                      <option key={cfg.id} value={cfg.id}>
+                        {cfg.label.toUpperCase()}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">Tags (Comma separated)</label>
+                  <label className="block text-black font-black uppercase text-xs mb-1.5">TAGS (COMMA SEPARATED)</label>
                   <input
                     type="text"
                     value={tagsInput}
                     onChange={(e) => setTagsInput(e.target.value)}
-                    placeholder="AI, Coding, Hackathon"
-                    className="w-full rounded-lg bg-[#161925] border border-[#242a3e] px-3 py-2 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 text-xs font-mono"
+                    placeholder="AI, CODING, HACKATHON"
+                    className="w-full rounded-none bg-[#FFFDF5] border-4 border-black px-3 py-2.5 text-black placeholder-black/50 font-mono font-bold uppercase focus:bg-[#FFD93D] focus:outline-none text-xs shadow-[3px_3px_0px_0px_#000]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">
-                  Use Cases <span className="text-slate-500">(Why would you use this?)</span>
+                <label className="block text-black font-black uppercase text-xs mb-1.5">
+                  USE CASES <span className="text-black/60 font-bold">(WHY WOULD YOU USE THIS?)</span>
                 </label>
-                <div className="flex flex-wrap gap-1.5 pt-1">
+                <div className="flex flex-wrap gap-2 pt-1">
                   {INITIAL_SUGGESTED_USE_CASES.map((uc) => {
                     const selected = selectedUseCases.includes(uc);
                     return (
@@ -320,10 +318,10 @@ export function SaveResourceDialog() {
                         key={uc}
                         type="button"
                         onClick={() => toggleUseCase(uc)}
-                        className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-colors border ${
+                        className={`btn-neo px-3 py-1 rounded-none font-black text-xs uppercase transition-all border-2 border-black ${
                           selected
-                            ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/40'
-                            : 'bg-[#151926] text-slate-400 border-[#23293c] hover:text-slate-200'
+                            ? 'bg-[#FFD93D] text-black shadow-[2px_2px_0px_0px_#000]'
+                            : 'bg-white text-black hover:bg-[#FFFDF5]'
                         }`}
                       >
                         {uc}
@@ -334,43 +332,43 @@ export function SaveResourceDialog() {
               </div>
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Short Description</label>
+                <label className="block text-black font-black uppercase text-xs mb-1.5">SHORT DESCRIPTION</label>
                 <textarea
                   rows={2}
                   placeholder="What makes this resource notable or useful?"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full rounded-lg bg-[#161925] border border-[#242a3e] px-3 py-2 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 text-xs resize-none"
+                  className="w-full rounded-none bg-[#FFFDF5] border-4 border-black px-3.5 py-2 text-black placeholder-black/50 font-medium uppercase focus:bg-[#FFD93D] focus:outline-none text-xs resize-none shadow-[3px_3px_0px_0px_#000]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Personal Note</label>
+                <label className="block text-black font-black uppercase text-xs mb-1.5">PERSONAL NOTE</label>
                 <textarea
                   rows={2}
                   placeholder="Why did I save this? How will I use it in my build?"
                   value={personalNote}
                   onChange={(e) => setPersonalNote(e.target.value)}
-                  className="w-full rounded-lg bg-[#161925] border border-[#242a3e] px-3 py-2 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 text-xs resize-none"
+                  className="w-full rounded-none bg-[#FFFDF5] border-4 border-black px-3.5 py-2 text-black placeholder-black/50 font-medium uppercase focus:bg-[#FFD93D] focus:outline-none text-xs resize-none shadow-[3px_3px_0px_0px_#000]"
                 />
               </div>
 
               {/* Footer Actions */}
-              <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#1a1f2e]">
+              <div className="pt-4 flex items-center justify-end gap-3 border-t-4 border-black">
                 <button
                   type="button"
                   onClick={closeSaveModal}
-                  className="px-3.5 py-1.5 rounded-lg border border-[#23283a] text-slate-400 hover:text-slate-200"
+                  className="btn-neo px-5 py-2.5 border-2 border-black bg-white text-black font-black uppercase text-xs shadow-[2px_2px_0px_0px_#000]"
                 >
-                  Cancel
+                  CANCEL
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm transition-colors disabled:opacity-50"
+                  className="btn-neo flex items-center gap-2 px-6 py-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000] disabled:opacity-50"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{isSaving ? 'Saving...' : duplicateMatch ? 'Save anyway' : 'Save resource'}</span>
+                  <Plus className="w-4 h-4 stroke-[3px]" />
+                  <span>{isSaving ? 'SAVING...' : duplicateMatch ? 'SAVE ANYWAY' : 'SAVE TO LIBRARY'}</span>
                 </button>
               </div>
             </form>

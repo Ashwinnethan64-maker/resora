@@ -295,7 +295,7 @@ const SEED_PROJECTS: ProjectModel[] = [
     project_type: 'hackathon',
     template_id: 'hackathon',
     color: '#6366f1',
-    technologies: ['Next.js', 'TypeScript', 'Supabase', 'TailwindCSS', 'OpenAI API'],
+    technologies: ['Next.js', 'TypeScript', 'Supabase', 'TailwindCSS', 'NVIDIA Nemotron API'],
     constraints: 'Must complete and present 2-minute demo within the 48-hour sprint window.',
     target_users: 'Hackathon builders, indie developers, and autonomous agent researchers.',
     keywords: ['Agent', 'Research', 'Hackathon', 'Vector', 'Supabase'],

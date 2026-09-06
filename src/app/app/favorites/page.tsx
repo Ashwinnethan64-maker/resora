@@ -13,20 +13,27 @@ export default function FavoritesPage() {
   const favoriteResources = resources.filter((r) => r.is_favorite && !r.is_archived);
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
-      {/* Header */}
-      <div className="pb-6 border-b border-[#1c2132]">
-        <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-100">
-            Favorites
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-200">
+      {/* Header: Neo-Brutalist Bookmarked Assets */}
+      <div className="border-b-4 border-black pb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B6B] text-black border-2 border-black text-xs font-black uppercase tracking-wider mb-3 shadow-[3px_3px_0px_0px_#000] -rotate-1">
+            <Heart className="w-3.5 h-3.5 fill-black" />
+            BOOKMARKED ASSETS
+          </div>
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-black leading-none">
+            MISSION-CRITICAL<br />
+            FAVORITES.
           </h1>
-          <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/20">
-            {favoriteResources.length} items
-          </span>
+          <p className="text-sm md:text-base font-bold text-black mt-3 max-w-xl">
+            Your prioritized, high-conviction research resources accessible across all projects and intelligence queries.
+          </p>
         </div>
-        <p className="text-xs md:text-sm text-slate-400">
-          Your bookmarked, mission-critical resources across all projects and research tracks.
-        </p>
+
+        <div className="p-5 bg-[#FFD93D] border-4 border-black shadow-[6px_6px_0px_0px_#000] rotate-1">
+          <span className="text-[10px] font-mono font-black uppercase text-black block">PINNED ASSETS</span>
+          <span className="text-3xl font-black text-black">{favoriteResources.length} ITEMS</span>
+        </div>
       </div>
 
       {/* Grid or Empty State */}
@@ -35,13 +42,13 @@ export default function FavoritesPage() {
       ) : favoriteResources.length === 0 ? (
         <EmptyState
           icon={Heart}
-          title="Your most valuable resources will appear here."
+          title="NO FAVORITE ASSETS PINNED YET"
           description="Click the heart icon on any card in your library or inbox to pin it to your favorites."
-          actionLabel="Explore your library"
+          actionLabel="EXPLORE YOUR LIBRARY"
           onAction={() => {}}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {favoriteResources.map((res) => (
             <ResourceCard key={res.id} resource={res} />
           ))}

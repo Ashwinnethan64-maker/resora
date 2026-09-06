@@ -1,6 +1,6 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
-import { BauhausGeometric } from '@/components/brand/BauhausGeometric';
+import { NeoSticker } from '@/components/brand/NeoSticker';
 
 interface EmptyStateProps {
   icon?: LucideIcon;
@@ -18,31 +18,31 @@ export function EmptyState({
   onAction,
 }: EmptyStateProps) {
   return (
-    <div className="relative flex flex-col items-center justify-center p-10 md:p-14 text-center rounded-none border-4 border-[#121212] bg-[#FFFFFF] shadow-bauhaus-md my-8 overflow-hidden">
-      {/* Bauhaus Geometric Composition */}
+    <div className="relative flex flex-col items-center justify-center p-10 md:p-14 text-center rounded-none border-4 border-black bg-white shadow-[8px_8px_0px_0px_#000] my-8 overflow-hidden">
+      {/* Decorative Stickers */}
       <div className="flex items-center justify-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-full bg-[#F0C020] border-2 border-[#121212] shadow-[2px_2px_0px_#121212]" />
-        <div className="w-9 h-9 rounded-none bg-[#D02020] border-2 border-[#121212] shadow-[2px_2px_0px_#121212] flex items-center justify-center text-white">
-          {Icon ? <Icon className="w-5 h-5 text-white" /> : <div className="w-3 h-3 bg-white" />}
+        <NeoSticker color="yellow" rotate="-2">EMPTY</NeoSticker>
+        <div className="w-12 h-12 rounded-none bg-[#FF6B6B] border-4 border-black shadow-[4px_4px_0px_0px_#000] flex items-center justify-center text-black">
+          {Icon ? <Icon className="w-6 h-6 stroke-[3]" /> : <div className="w-4 h-4 bg-black" />}
         </div>
-        <div className="w-0 h-0 border-l-[16px] border-l-transparent border-r-[16px] border-r-transparent border-b-[28px] border-b-[#1040C0] drop-shadow-[2px_2px_0px_#121212]" />
+        <NeoSticker color="violet" rotate="2">ARCHIVE</NeoSticker>
       </div>
 
       {/* Editorial Title */}
-      <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight text-[#121212]">
+      <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-black">
         {title}
       </h3>
 
       {/* Description */}
-      <p className="text-sm font-medium text-[#121212]/80 max-w-md mt-2 mb-6 leading-relaxed">
+      <p className="text-xs sm:text-sm font-bold text-black/80 max-w-md mt-2 mb-6 leading-relaxed">
         {description}
       </p>
 
-      {/* Primary Bauhaus CTA Button */}
+      {/* Primary Neo-Brutalist CTA Button */}
       {actionLabel && (
         <button
           onClick={onAction}
-          className="btn-bauhaus px-6 py-3 rounded-none bg-[#D02020] hover:bg-[#b01818] text-white border-2 border-[#121212] font-black uppercase text-xs tracking-wider shadow-bauhaus-sm"
+          className="btn-neo px-6 py-3.5 rounded-none bg-[#FFD93D] hover:bg-[#ffe366] text-black border-4 border-black font-black uppercase text-xs tracking-wider shadow-[6px_6px_0px_0px_#000]"
         >
           {actionLabel}
         </button>

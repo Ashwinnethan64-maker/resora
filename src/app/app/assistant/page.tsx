@@ -5,25 +5,19 @@ import { useSearchParams } from 'next/navigation';
 import { useResora } from '@/context/ResoraContext';
 import { SourceCard } from '@/components/assistant/SourceCard';
 import { DocumentViewerModal } from '@/components/documents/DocumentViewerModal';
+import { NeoSticker } from '@/components/brand/NeoSticker';
 import {
   AssistantScopeType,
   AssistantMessageModel,
-  AssistantCitation,
   ResourceModel
 } from '@/types/database';
 import {
-  Sparkles,
   Send,
   Loader2,
-  Bookmark,
-  Layers,
-  FileText,
-  Wrench,
-  Heart,
   RotateCcw,
   ArrowRight,
   Info,
-  ChevronDown
+  Compass
 } from 'lucide-react';
 
 const SUGGESTED_QUESTIONS = [
@@ -48,7 +42,6 @@ function AssistantContent() {
   const [messages, setMessages] = useState<AssistantMessageModel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Document Reader preview modal
   const [selectedViewerDoc, setSelectedViewerDoc] = useState<ResourceModel | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -122,46 +115,45 @@ function AssistantContent() {
     }
   };
 
-  // Scope label generator
   const getScopeName = () => {
     if (scopeType === 'project' && scopeId) {
       const p = projects.find((proj) => proj.id === scopeId);
-      return p ? `Project: ${p.name}` : 'Current Project';
+      return p ? `PROJECT: ${p.name.toUpperCase()}` : 'CURRENT PROJECT';
     }
     if (scopeType === 'collection' && scopeId) {
       const c = collections.find((col) => col.id === scopeId);
-      return c ? `Collection: ${c.name}` : 'Current Collection';
+      return c ? `COLLECTION: ${c.name.toUpperCase()}` : 'CURRENT COLLECTION';
     }
-    if (scopeType === 'documents') return 'Documents Only';
-    if (scopeType === 'tools') return 'Developer Tools';
-    if (scopeType === 'favorites') return 'Favorites Only';
-    return 'Entire Library';
+    if (scopeType === 'documents') return 'DOCUMENTS ONLY';
+    if (scopeType === 'tools') return 'DEV TOOLS';
+    if (scopeType === 'favorites') return 'FAVORITES ONLY';
+    return 'ENTIRE LIBRARY';
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-[#090a10] text-slate-100 animate-in fade-in duration-150">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-[#FFFDF5] text-black animate-in fade-in duration-100">
       {/* Top Scope & Controls Header */}
-      <div className="h-14 border-b border-[#1b2031] px-4 sm:px-8 flex items-center justify-between bg-[#0d0f18]/90 backdrop-blur-md shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-            <Sparkles className="w-4 h-4" />
+      <div className="h-16 border-b-4 border-black px-4 sm:px-8 flex items-center justify-between bg-white shrink-0 shadow-[0px_4px_0px_0px_#000] z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-none bg-[#FFD93D] border-4 border-black flex items-center justify-center text-black shadow-[3px_3px_0px_#000]">
+            <Compass className="w-5 h-5 stroke-[3]" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-semibold text-slate-100">Ask Resora</h1>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                AI Research Assistant
-              </span>
+              <h1 className="text-sm font-black uppercase tracking-wider text-black">ASK RESORA</h1>
+              <NeoSticker color="yellow" size="sm" rotate="-1">
+                RESEARCH CONSOLE
+              </NeoSticker>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Grounded answers strictly from your saved research and documents.
+            <p className="text-[11px] font-black text-black/60 hidden sm:block">
+              Synthesize factual answers grounded strictly in your personal indexed research.
             </p>
           </div>
         </div>
 
         {/* Scope Dropdown */}
         <div className="flex items-center gap-2">
-          <label className="text-[11px] font-mono text-slate-400 hidden sm:inline">Scope:</label>
+          <label className="text-[11px] font-mono font-black text-black uppercase hidden sm:inline">SCOPE:</label>
           <select
             value={scopeType}
             onChange={(e) => {
@@ -170,25 +162,25 @@ function AssistantContent() {
                 setScopeId(undefined);
               }
             }}
-            className="rounded-lg bg-[#141825] border border-[#23293c] px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer font-medium"
+            className="rounded-none bg-white border-4 border-black px-3 py-1.5 text-xs font-black uppercase text-black focus:outline-none cursor-pointer shadow-[3px_3px_0px_0px_#000]"
           >
-            <option value="library">Entire Library</option>
-            <option value="documents">Documents & PDFs</option>
-            <option value="tools">Developer Tools</option>
-            <option value="favorites">Favorites Only</option>
+            <option value="library">ENTIRE LIBRARY</option>
+            <option value="documents">DOCUMENTS & PDFS</option>
+            <option value="tools">DEV TOOLS</option>
+            <option value="favorites">FAVORITES ONLY</option>
             {projects.map((p) => (
               <option key={p.id} value="project">
-                Project: {p.name}
+                PROJECT: {p.name.toUpperCase()}
               </option>
             ))}
           </select>
           {messages.length > 0 && (
             <button
               onClick={() => setMessages([])}
-              className="p-1.5 rounded-lg border border-[#22283a] text-slate-400 hover:text-slate-200 hover:bg-[#151928] transition-colors"
+              className="btn-neo p-2 bg-white border-4 border-black text-black shadow-[3px_3px_0px_0px_#000]"
               title="Reset conversation"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RotateCcw className="w-4 h-4 stroke-[3]" />
             </button>
           )}
         </div>
@@ -197,33 +189,38 @@ function AssistantContent() {
       {/* Main Conversation Stream */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 max-w-4xl mx-auto w-full">
         {messages.length === 0 ? (
-          <div className="py-12 text-center space-y-6">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mx-auto">
-              <Sparkles className="w-6 h-6" />
+          <div className="py-8 text-center space-y-6">
+            <div className="flex items-center justify-center gap-3">
+              <NeoSticker color="yellow" rotate="-2">FACTUAL</NeoSticker>
+              <div className="w-12 h-12 rounded-none bg-[#FF6B6B] border-4 border-black shadow-[4px_4px_0px_#000] flex items-center justify-center text-black font-black text-xs">
+                RES
+              </div>
+              <NeoSticker color="violet" rotate="2">CITATIONS</NeoSticker>
             </div>
-            <div className="space-y-1.5 max-w-md mx-auto">
-              <h2 className="text-base font-semibold text-slate-100">
-                Search, synthesize, and leverage your research
+
+            <div className="space-y-2 max-w-lg mx-auto">
+              <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter text-black">
+                QUERY YOUR COLLECTIVE RESEARCH
               </h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Ask questions across your saved resources. Resora retrieves relevant context, references document pages, and provides fact-grounded synthesis without hallucinating.
+              <p className="text-xs sm:text-sm font-bold text-black/80 leading-relaxed">
+                Query across your captured websites, documents, and tools. Resora retrieves relevant context, references page citations, and constructs verified answers.
               </p>
             </div>
 
             {/* Clickable Suggested Queries */}
-            <div className="pt-2 max-w-2xl mx-auto">
-              <div className="text-[11px] font-mono uppercase tracking-wider text-slate-500 font-semibold mb-3">
-                Suggested Questions
+            <div className="pt-4 max-w-2xl mx-auto">
+              <div className="text-[11px] font-mono font-black uppercase tracking-wider text-black mb-3 text-left">
+                SUGGESTED RESEARCH QUERIES:
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
-                {SUGGESTED_QUESTIONS.map((q) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                {SUGGESTED_QUESTIONS.map((q, idx) => (
                   <button
                     key={q}
                     onClick={() => handleSend(q)}
-                    className="p-3 rounded-xl bg-[#121420] hover:bg-[#161a29] border border-[#1e2335] hover:border-indigo-500/40 text-xs text-slate-300 hover:text-slate-100 transition-all flex items-center justify-between group shadow-sm"
+                    className="card-neo p-4 bg-white hover:bg-[#FFD93D] border-4 border-black shadow-[4px_4px_0px_0px_#000] text-xs font-black text-black transition-all flex items-center justify-between group"
                   >
                     <span className="truncate pr-2">{q}</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-indigo-400 shrink-0 group-hover:translate-x-0.5 transition-all" />
+                    <ArrowRight className="w-4 h-4 text-black stroke-[3] group-hover:translate-x-1 transition-transform shrink-0" />
                   </button>
                 ))}
               </div>
@@ -233,32 +230,32 @@ function AssistantContent() {
           messages.map((msg, idx) => (
             <div
               key={msg.id || idx}
-              className={`space-y-3 ${msg.role === 'user' ? 'pl-8 sm:pl-16' : 'pr-8 sm:pr-16'}`}
+              className={`space-y-3 ${msg.role === 'user' ? 'pl-6 sm:pl-16' : 'pr-6 sm:pr-16'}`}
             >
               <div
-                className={`p-4 sm:p-5 rounded-2xl border leading-relaxed text-xs sm:text-sm whitespace-pre-wrap ${
+                className={`p-5 rounded-none border-4 border-black shadow-[6px_6px_0px_0px_#000] leading-relaxed text-xs sm:text-sm whitespace-pre-wrap ${
                   msg.role === 'user'
-                    ? 'bg-indigo-600/10 border-indigo-500/30 text-slate-100 ml-auto'
-                    : 'bg-[#12141f] border-[#202538] text-slate-200'
+                    ? 'bg-[#FFD93D] text-black ml-auto'
+                    : 'bg-white text-black'
                 }`}
               >
                 {msg.role === 'assistant' && (
-                  <div className="flex items-center gap-1.5 text-[11px] font-mono text-indigo-400 font-medium mb-2.5 pb-2 border-b border-[#1c2234]">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Resora Assistant · {getScopeName()}</span>
+                  <div className="flex items-center gap-2 text-[11px] font-mono font-black text-black uppercase mb-3 pb-2 border-b-2 border-black">
+                    <span className="w-2.5 h-2.5 bg-[#FF6B6B] border border-black" />
+                    <span>RESORA RESEARCH DOSSIER · {getScopeName()}</span>
                   </div>
                 )}
-                <div className="font-sans leading-relaxed">{msg.content}</div>
+                <div className="font-bold leading-relaxed">{msg.content}</div>
               </div>
 
-              {/* Citations & Source Cards Shelf */}
+              {/* Citations Shelf */}
               {msg.citations && msg.citations.length > 0 && (
-                <div className="pt-1 space-y-2">
-                  <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
-                    <Info className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Sources Cited ({msg.citations.length})</span>
+                <div className="pt-2 space-y-2">
+                  <div className="text-[11px] font-mono font-black uppercase tracking-wider text-black flex items-center gap-1.5">
+                    <Info className="w-4 h-4 text-black stroke-[3]" />
+                    <span>VERIFIED CITATIONS ({msg.citations.length})</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {msg.citations.map((cite, i) => (
                       <SourceCard
                         key={i}
@@ -275,17 +272,17 @@ function AssistantContent() {
         )}
 
         {isLoading && (
-          <div className="p-4 rounded-2xl bg-[#12141f] border border-[#202538] flex items-center gap-3 text-xs text-slate-400 animate-pulse">
-            <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
-            <span>Searching your library and synthesizing grounded answer...</span>
+          <div className="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_#000] flex items-center gap-3 text-xs font-black uppercase text-black">
+            <Loader2 className="w-4 h-4 text-black animate-spin stroke-[3]" />
+            <span>SEARCHING RESEARCH INDEX AND SYNTHESIZING GROUNDED ANSWER...</span>
           </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Composer Input Bar */}
-      <div className="p-4 sm:p-6 border-t border-[#1b2031] bg-[#0c0e17] shrink-0">
+      {/* Composer Input Bar: White Rectangle with 4px Black Border & Hard Shadow */}
+      <div className="p-4 sm:p-6 border-t-4 border-black bg-white shrink-0 shadow-[0px_-4px_0px_0px_#000]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -293,23 +290,23 @@ function AssistantContent() {
           }}
           className="max-w-4xl mx-auto relative"
         >
-          <div className="flex items-center rounded-2xl bg-[#141725] border border-[#242b3e] focus-within:border-indigo-500 shadow-xl transition-colors pl-4 pr-2 py-2">
+          <div className="flex items-center rounded-none bg-white border-4 border-black shadow-[6px_6px_0px_0px_#000] p-2 focus-within:bg-[#FFD93D] transition-colors">
             <input
               type="text"
               autoFocus
-              placeholder={`Ask anything about your saved research in ${getScopeName()}...`}
+              placeholder={`ASK YOUR RESEARCH IN ${getScopeName()}...`}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               disabled={isLoading}
-              className="w-full bg-transparent text-slate-100 placeholder-slate-500 focus:outline-none text-xs sm:text-sm"
+              className="w-full px-3 py-2 bg-transparent text-black placeholder-black/50 font-black uppercase focus:outline-none text-xs sm:text-sm"
             />
             <button
               type="submit"
               disabled={!query.trim() || isLoading}
-              className="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all disabled:opacity-40 shrink-0 ml-2"
-              title="Send message"
+              className="btn-neo px-6 py-3 rounded-none bg-[#FF6B6B] hover:bg-[#ff5252] text-black border-4 border-black font-black uppercase text-xs tracking-wider shadow-[3px_3px_0px_0px_#000] disabled:opacity-50 shrink-0 ml-2"
+              title="Send query"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4 stroke-[3]" />
             </button>
           </div>
         </form>
@@ -331,9 +328,8 @@ export default function AssistantPage() {
   return (
     <Suspense fallback={
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="flex items-center gap-3 text-slate-400">
-          <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
-          <span className="text-sm font-medium">Loading Resora Assistant...</span>
+        <div className="text-sm font-black uppercase text-black">
+          LOADING RESORA RESEARCH ASSISTANT...
         </div>
       </div>
     }>

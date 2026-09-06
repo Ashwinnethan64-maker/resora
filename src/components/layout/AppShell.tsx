@@ -70,11 +70,11 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#090a0f] text-slate-100 flex flex-col antialiased">
+    <div className="min-h-screen bg-[#FFFDF5] text-[#000000] flex flex-col antialiased selection:bg-[#FFD93D] selection:text-[#000000]">
       {/* Toast Notification */}
       {activeToast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#181d2e] border border-indigo-500/40 text-slate-100 shadow-xl shadow-black/80 animate-in slide-in-from-bottom-3 duration-200 text-xs">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 bg-[#FFD93D] border-4 border-black text-black shadow-[6px_6px_0px_0px_#000] animate-in slide-in-from-bottom-3 duration-100 text-xs font-black uppercase">
+          <CheckCircle2 className="w-4 h-4 text-black shrink-0 stroke-[3]" />
           <span>{activeToast}</span>
         </div>
       )}
@@ -103,14 +103,14 @@ export function AppShell({ children }: AppShellProps) {
       />
 
       {/* Top Header */}
-      <header className="h-16 border-b-4 border-[#121212] bg-[#FFFFFF] sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between shadow-[0px_4px_0px_0px_#121212]">
+      <header className="h-16 border-b-4 border-black bg-[#FFFFFF] sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between shadow-[0px_4px_0px_0px_#000]">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 bg-[#F0F0F0] border-2 border-[#121212] shadow-[2px_2px_0px_0px_#121212] text-[#121212] active:translate-x-0.5 active:translate-y-0.5"
+            className="md:hidden p-2 bg-[#FFD93D] border-4 border-black shadow-[3px_3px_0px_0px_#000] text-black active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             aria-label="Toggle navigation"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileMenuOpen ? <X className="w-5 h-5 stroke-[3]" /> : <Menu className="w-5 h-5 stroke-[3]" />}
           </button>
           <Link href="/app" className="flex items-center">
             <ResoraLogo size="sm" variant="compact" />
@@ -122,28 +122,28 @@ export function AppShell({ children }: AppShellProps) {
           {/* Global Search Trigger */}
           <button
             onClick={openCommandPalette}
-            className="flex items-center gap-2.5 px-3.5 py-2 rounded-none bg-[#F0F0F0] hover:bg-[#FFFFFF] border-2 border-[#121212] shadow-[3px_3px_0px_0px_#121212] text-xs font-bold uppercase tracking-wider text-[#121212] w-44 sm:w-72 justify-between group transition-all"
+            className="flex items-center gap-2.5 px-3.5 py-2 bg-[#FFFDF5] hover:bg-[#FFD93D] border-4 border-black shadow-[4px_4px_0px_0px_#000] text-xs font-black uppercase tracking-wider text-black w-44 sm:w-72 justify-between group transition-all active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
           >
             <div className="flex items-center gap-2 truncate">
-              <Search className="w-3.5 h-3.5 text-[#1040C0] shrink-0" />
-              <span className="truncate">Search research...</span>
+              <Search className="w-3.5 h-3.5 text-black shrink-0 stroke-[3]" />
+              <span className="truncate">Search library...</span>
             </div>
-            <kbd className="hidden sm:inline-flex items-center font-mono text-[10px] bg-[#121212] text-[#FFFFFF] px-1.5 py-0.5 font-bold">
+            <kbd className="hidden sm:inline-flex items-center font-mono text-[10px] bg-black text-white px-1.5 py-0.5 font-black">
               ⌘K
             </kbd>
           </button>
 
-          {/* Quick Add Resource */}
+          {/* Quick Add Resource: Hot Red Primary */}
           <button
             onClick={openSaveModal}
-            className="btn-bauhaus flex items-center gap-1.5 px-3.5 py-2 rounded-none bg-[#D02020] text-[#FFFFFF] font-black uppercase text-xs tracking-wider border-2 border-[#121212] shadow-[3px_3px_0px_0px_#121212]"
+            className="btn-neo flex items-center gap-1.5 px-4 py-2 bg-[#FF6B6B] text-black font-black uppercase text-xs tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span className="hidden sm:inline">Capture</span>
           </button>
 
-          {/* User Profile Badge */}
-          <div className="w-8 h-8 rounded-full bg-[#F0C020] border-2 border-[#121212] shadow-[2px_2px_0px_0px_#121212] flex items-center justify-center text-[#121212] text-xs font-black select-none">
+          {/* User Profile Badge: Vivid Yellow Sticker */}
+          <div className="w-9 h-9 rounded-full bg-[#FFD93D] border-4 border-black shadow-[3px_3px_0px_0px_#000] flex items-center justify-center text-black text-xs font-black select-none">
             A
           </div>
         </div>
@@ -151,11 +151,11 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Main Container */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:flex w-64 flex-col justify-between border-r-4 border-[#121212] bg-[#FFFFFF] shrink-0 p-4">
+        {/* Desktop Sidebar: Thick Black Border */}
+        <aside className="hidden md:flex w-64 flex-col justify-between border-r-4 border-black bg-[#FFFFFF] shrink-0 p-4">
           <div className="space-y-4">
             {/* Sidebar Brand Header */}
-            <div className="pb-3 border-b-2 border-[#121212]">
+            <div className="pb-3 border-b-4 border-black">
               <Link
                 href="/app"
                 className="flex items-center gap-2 hover:opacity-90 transition-opacity"
@@ -165,9 +165,9 @@ export function AppShell({ children }: AppShellProps) {
               </Link>
             </div>
 
-            <div className="px-2 text-[11px] font-black uppercase tracking-widest text-[#121212] flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#D02020] border border-[#121212]"></span>
-              Navigation
+            <div className="px-2 text-[11px] font-black uppercase tracking-widest text-black flex items-center gap-2">
+              <span className="w-2.5 h-2.5 bg-[#FF6B6B] border-2 border-black rotate-45"></span>
+              Research Index
             </div>
 
             <div className="space-y-1.5">
@@ -178,22 +178,22 @@ export function AppShell({ children }: AppShellProps) {
                   <Link
                     key={item.label}
                     href={item.href}
-                    className={`flex items-center justify-between px-3 py-2 text-xs font-black uppercase tracking-wider transition-all border-2 ${
+                    className={`flex items-center justify-between px-3 py-2 text-xs font-black uppercase tracking-wider transition-all border-4 ${
                       active
-                        ? 'bg-[#121212] text-[#FFFFFF] border-[#121212] shadow-[3px_3px_0px_0px_#D02020]'
-                        : 'bg-[#FFFFFF] text-[#121212] border-transparent hover:border-[#121212] hover:bg-[#F0F0F0]'
+                        ? 'bg-[#FF6B6B] text-black border-black shadow-[4px_4px_0px_0px_#000] -rotate-1'
+                        : 'bg-white text-black border-transparent hover:border-black hover:bg-[#FFD93D] hover:shadow-[3px_3px_0px_0px_#000]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon className={`w-4 h-4 ${active ? 'text-[#F0C020]' : 'text-[#121212]'}`} />
+                      <Icon className="w-4 h-4 stroke-[3]" />
                       <span>{item.label}</span>
                     </div>
                     {item.badge !== undefined && item.badge > 0 && (
                       <span
-                        className={`px-1.5 py-0.5 text-[10px] font-mono font-bold border ${
+                        className={`px-1.5 py-0.5 text-[10px] font-mono font-black border-2 border-black ${
                           active
-                            ? 'bg-[#D02020] text-[#FFFFFF] border-[#FFFFFF]'
-                            : 'bg-[#F0C020] text-[#121212] border-[#121212]'
+                            ? 'bg-[#FFD93D] text-black'
+                            : 'bg-[#C4B5FD] text-black'
                         }`}
                       >
                         {item.badge}
@@ -206,10 +206,10 @@ export function AppShell({ children }: AppShellProps) {
           </div>
 
           {/* Sidebar Footer */}
-          <div className="pt-3 border-t-2 border-[#121212] space-y-3">
-            <div className="px-2 text-[11px] font-black uppercase tracking-widest text-[#121212] flex items-center gap-2">
-              <span className="w-2 h-2 rounded-none bg-[#1040C0] border border-[#121212]"></span>
-              Workspace
+          <div className="pt-3 border-t-4 border-black space-y-3">
+            <div className="px-2 text-[11px] font-black uppercase tracking-widest text-black flex items-center gap-2">
+              <span className="w-2.5 h-2.5 bg-[#C4B5FD] border-2 border-black"></span>
+              System
             </div>
             {bottomNavItems.map((item) => {
               const active = isActive(item.href);
@@ -218,24 +218,24 @@ export function AppShell({ children }: AppShellProps) {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs font-black uppercase tracking-wider transition-all border-2 ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs font-black uppercase tracking-wider transition-all border-4 ${
                     active
-                      ? 'bg-[#121212] text-[#FFFFFF] border-[#121212]'
-                      : 'bg-[#FFFFFF] text-[#121212] border-transparent hover:border-[#121212] hover:bg-[#F0F0F0]'
+                      ? 'bg-[#FFD93D] text-black border-black shadow-[4px_4px_0px_0px_#000]'
+                      : 'bg-white text-black border-transparent hover:border-black hover:bg-[#FFFDF5]'
                   }`}
                 >
-                  <Icon className="w-4 h-4 text-[#121212]" />
+                  <Icon className="w-4 h-4 stroke-[3]" />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
 
-            <div className="p-3 bg-[#F0F0F0] border-2 border-[#121212] shadow-[3px_3px_0px_0px_#121212] flex items-center justify-between text-xs">
+            <div className="p-3 bg-[#FFFDF5] border-4 border-black shadow-[4px_4px_0px_0px_#000] flex items-center justify-between text-xs">
               <div className="truncate">
-                <div className="font-black text-[#121212] uppercase tracking-wider truncate">Ashwin</div>
-                <div className="text-[10px] text-[#121212]/70 font-mono">Local Workspace</div>
+                <div className="font-black text-black uppercase tracking-wider truncate">Ashwin</div>
+                <div className="text-[10px] text-black/70 font-mono font-bold">Local Workspace</div>
               </div>
-              <span className="w-2.5 h-2.5 rounded-full bg-[#1040C0] border border-[#121212]" title="Connected"></span>
+              <span className="w-3 h-3 rounded-full bg-[#FFD93D] border-2 border-black" title="Connected"></span>
             </div>
           </div>
         </aside>
@@ -243,16 +243,16 @@ export function AppShell({ children }: AppShellProps) {
         {/* Mobile Slide-out Drawer */}
         {mobileMenuOpen && (
           <div className="md:hidden fixed inset-0 z-40 flex">
-            <div className="fixed inset-0 bg-[#121212]/80 backdrop-blur-none" onClick={() => setMobileMenuOpen(false)} />
-            <div className="relative w-64 max-w-[80vw] bg-[#FFFFFF] border-r-4 border-[#121212] p-4 flex flex-col justify-between z-10">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between pb-3 border-b-2 border-[#121212]">
+            <div className="fixed inset-0 bg-black/60" onClick={() => setMobileMenuOpen(false)} />
+            <div className="relative w-72 max-w-[85vw] bg-[#FFFDF5] border-r-4 border-black p-4 flex flex-col justify-between z-10 shadow-[8px_0px_0px_0px_#000]">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b-4 border-black">
                   <ResoraLogo size="sm" variant="compact" />
                   <button
                     onClick={() => setMobileMenuOpen(false)}
-                    className="p-1 border-2 border-[#121212] bg-[#F0F0F0]"
+                    className="p-1 border-4 border-black bg-[#FFD93D]"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5 stroke-[3]" />
                   </button>
                 </div>
                 {navItems.map((item) => {
@@ -263,18 +263,18 @@ export function AppShell({ children }: AppShellProps) {
                       key={item.label}
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center justify-between px-3 py-2 text-xs font-black uppercase tracking-wider border-2 ${
+                      className={`flex items-center justify-between px-3 py-2 text-xs font-black uppercase tracking-wider border-4 border-black ${
                         active
-                          ? 'bg-[#121212] text-[#FFFFFF] border-[#121212]'
-                          : 'bg-[#FFFFFF] text-[#121212] border-transparent hover:border-[#121212]'
+                          ? 'bg-[#FF6B6B] text-black shadow-[4px_4px_0px_0px_#000]'
+                          : 'bg-white text-black hover:bg-[#FFD93D]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Icon className="w-4 h-4" />
+                        <Icon className="w-4 h-4 stroke-[3]" />
                         <span>{item.label}</span>
                       </div>
                       {item.badge !== undefined && item.badge > 0 && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-[#F0C020] text-[#121212] border border-[#121212]">
+                        <span className="px-1.5 py-0.5 text-[10px] font-mono font-black bg-[#FFD93D] text-black border-2 border-black">
                           {item.badge}
                         </span>
                       )}
@@ -283,7 +283,7 @@ export function AppShell({ children }: AppShellProps) {
                 })}
               </div>
 
-              <div className="pt-3 border-t-2 border-[#121212]">
+              <div className="pt-3 border-t-4 border-black">
                 {bottomNavItems.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -291,9 +291,9 @@ export function AppShell({ children }: AppShellProps) {
                       key={item.label}
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-xs font-black uppercase tracking-wider text-[#121212] border-2 border-transparent hover:border-[#121212]"
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs font-black uppercase tracking-wider text-black border-4 border-black bg-white hover:bg-[#FFD93D]"
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-4 h-4 stroke-[3]" />
                       <span>{item.label}</span>
                     </Link>
                   );
@@ -304,7 +304,7 @@ export function AppShell({ children }: AppShellProps) {
         )}
 
         {/* Content Viewport */}
-        <main className="flex-1 overflow-y-auto min-w-0 bg-[#F0F0F0]">
+        <main className="flex-1 overflow-y-auto min-w-0 bg-[#FFFDF5]">
           {children}
         </main>
       </div>

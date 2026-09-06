@@ -20,7 +20,7 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
     description: 'Rapid prototyping sprint with pitch preparation, judging rubric alignment, and core build stack.',
     icon: 'Trophy',
     defaultObjective: 'Build a working AI prototype and pitch deck within the sprint timeframe.',
-    suggestedTechnologies: ['Next.js', 'TypeScript', 'Supabase', 'TailwindCSS', 'OpenAI / Claude API'],
+    suggestedTechnologies: ['Next.js', 'TypeScript', 'Supabase', 'TailwindCSS', 'NVIDIA Nemotron API'],
     defaultGroups: [
       'Problem Research',
       'Existing Solutions',

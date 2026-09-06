@@ -4,34 +4,39 @@ import { Search, ArrowLeft, Home } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-[#08090e] text-slate-100 flex flex-col items-center justify-center p-6 text-center">
-      <div className="space-y-4 max-w-md">
+    <div className="min-h-screen bg-[#FFFDF5] text-black flex flex-col items-center justify-center p-6 text-center antialiased selection:bg-[#FFD93D] selection:text-black">
+      <div className="space-y-6 max-w-lg p-8 md:p-12 bg-white border-4 border-black shadow-[12px_12px_0px_0px_#000]">
         <div className="flex justify-center">
           <ResoraLogo size="md" />
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto">
-          <Search className="w-6 h-6" />
+        
+        <div className="inline-block bg-[#FF6B6B] text-black px-4 py-1 border-2 border-black font-mono font-black text-xs uppercase shadow-[3px_3px_0px_0px_#000] -rotate-2">
+          ERROR 404
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-100">
-          That research doesn't exist
+
+        <h1 className="text-5xl sm:text-6xl font-black uppercase tracking-tighter text-black leading-none">
+          WRONG<br />
+          PAGE.
         </h1>
-        <p className="text-xs text-slate-400 leading-relaxed">
-          The resource, document, or project workspace you're looking for may have been moved, deleted, or never indexed.
+
+        <p className="text-xs sm:text-sm font-bold text-black leading-relaxed">
+          The resource, document dossier, or project workspace you're looking for was moved, deleted, or never indexed into the research archive.
         </p>
-        <div className="pt-2 flex items-center justify-center gap-3">
+
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             href="/app"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-md shadow-indigo-900/40 transition-all"
+            className="btn-neo w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
           >
-            <Home className="w-3.5 h-3.5" />
-            <span>Return to Workspace</span>
+            <Home className="w-4 h-4 stroke-[3px]" />
+            <span>RETURN TO WORKSPACE →</span>
           </Link>
           <Link
             href="/app/library"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#141724] hover:bg-[#1a1f30] text-slate-300 hover:text-white border border-[#23293c] transition-all text-xs"
+            className="btn-neo w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 bg-[#FFD93D] hover:bg-[#ffe169] text-black font-black uppercase text-xs md:text-sm tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Browse Library</span>
+            <ArrowLeft className="w-4 h-4 stroke-[3px]" />
+            <span>BROWSE LIBRARY</span>
           </Link>
         </div>
       </div>

@@ -143,10 +143,10 @@ export function DocumentDropzone({ onUploadSuccess, onUploadComplete, className 
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`p-6 sm:p-8 rounded-2xl border-2 border-dashed transition-all cursor-pointer text-center flex flex-col items-center justify-center gap-2 group ${
+        className={`p-6 sm:p-8 rounded-none border-4 border-black transition-all cursor-pointer text-center flex flex-col items-center justify-center gap-2 group ${
           isDragOver
-            ? 'border-indigo-500 bg-indigo-500/10 scale-[0.99]'
-            : 'border-[#23293c] hover:border-indigo-500/50 bg-[#10121c]/60 hover:bg-[#121522]'
+            ? 'bg-[#FFD93D] shadow-none translate-x-[2px] translate-y-[2px]'
+            : 'bg-white hover:bg-[#FFFDF5] shadow-[6px_6px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000]'
         }`}
       >
         <input
@@ -158,92 +158,96 @@ export function DocumentDropzone({ onUploadSuccess, onUploadComplete, className 
           className="hidden"
         />
 
-        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform shadow-inner">
-          <UploadCloud className="w-6 h-6" />
+        <div className="w-14 h-14 rounded-none bg-[#FFD93D] border-4 border-black flex items-center justify-center text-black shadow-[4px_4px_0px_0px_#000] group-hover:-translate-y-1 transition-transform">
+          <UploadCloud className="w-7 h-7 stroke-[3px]" />
         </div>
 
         <div>
-          <div className="text-sm font-semibold text-slate-200 group-hover:text-indigo-300 transition-colors">
-            Drop research documents here
+          <div className="text-base font-black uppercase tracking-tight text-black">
+            DROP RESEARCH DOCUMENTS HERE
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            or <span className="text-indigo-400 underline underline-offset-2">browse files</span> from your computer
+          <p className="text-xs text-black font-mono font-bold mt-1">
+            or <span className="bg-[#FF6B6B] text-black px-1.5 py-0.5 border-2 border-black underline">BROWSE LOCAL DISK</span>
           </p>
         </div>
 
-        <div className="flex items-center gap-2 font-mono text-[10px] text-slate-500 pt-1">
-          <span>Supported: PDF, TXT, Markdown</span>
+        <div className="flex items-center gap-2 font-mono text-[11px] font-black text-black pt-2 uppercase">
+          <span className="bg-[#C4B5FD] px-2 py-0.5 border border-black">PDF, TXT, MARKDOWN</span>
           <span>•</span>
-          <span>Up to 25 MB</span>
+          <span className="bg-white px-2 py-0.5 border border-black">MAX 25 MB</span>
         </div>
       </div>
 
       {/* Processing Queue */}
       {queue.length > 0 && (
-        <div className="space-y-2 p-3 rounded-xl bg-[#0e1017] border border-[#1f2434] text-xs">
-          <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pb-1 border-b border-[#1a1f2e]">
-            <span>Document Processing Queue ({queue.length})</span>
+        <div className="space-y-3 p-4 rounded-none bg-white border-4 border-black shadow-[6px_6px_0px_0px_#000] text-xs">
+          <div className="flex items-center justify-between font-black uppercase text-black pb-2 border-b-2 border-black">
+            <span className="bg-[#FFD93D] px-2 py-0.5 border border-black text-xs">
+              DOCUMENT QUEUE [{queue.length}]
+            </span>
             <button
               onClick={() => setQueue([])}
-              className="text-slate-500 hover:text-slate-300"
+              className="text-black hover:text-[#FF6B6B] font-black uppercase tracking-wider underline text-xs"
             >
-              Clear
+              Clear All
             </button>
           </div>
 
-          <div className="space-y-1.5 max-h-48 overflow-y-auto">
+          <div className="space-y-2 max-h-56 overflow-y-auto">
             {queue.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between gap-3 p-2 rounded-lg bg-[#141824] border border-[#202638]"
+                className="flex items-center justify-between gap-3 p-2.5 rounded-none bg-[#FFFDF5] border-2 border-black shadow-[2px_2px_0px_0px_#000]"
               >
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span className="truncate text-slate-200 font-medium">
+                  <div className="w-6 h-6 bg-white border border-black flex items-center justify-center shrink-0">
+                    <FileText className="w-3.5 h-3.5 stroke-[2.5px] text-black" />
+                  </div>
+                  <span className="truncate text-black font-black text-xs uppercase">
                     {item.file.name}
                   </span>
-                  <span className="text-[10px] font-mono text-slate-500 shrink-0">
-                    ({(item.file.size / 1024 / 1024).toFixed(1)}MB)
+                  <span className="text-[10px] font-mono font-bold text-black shrink-0 bg-white px-1 border border-black">
+                    {(item.file.size / 1024 / 1024).toFixed(1)}MB
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
                   {item.status === 'uploading' && (
-                    <span className="flex items-center gap-1 font-mono text-[10px] text-indigo-400">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Uploading
+                    <span className="flex items-center gap-1 font-mono font-black text-[10px] bg-[#FFD93D] px-2 py-0.5 border border-black text-black uppercase">
+                      <Loader2 className="w-3 h-3 animate-spin stroke-[3px]" /> Uploading
                     </span>
                   )}
                   {item.status === 'extracting' && (
-                    <span className="flex items-center gap-1 font-mono text-[10px] text-amber-400">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Extracting pages
+                    <span className="flex items-center gap-1 font-mono font-black text-[10px] bg-[#C4B5FD] px-2 py-0.5 border border-black text-black uppercase">
+                      <Loader2 className="w-3 h-3 animate-spin stroke-[3px]" /> Extracting
                     </span>
                   )}
                   {item.status === 'completed' && (
-                    <span className="flex items-center gap-1 font-mono text-[10px] text-emerald-400">
-                      <CheckCircle2 className="w-3 h-3" /> Indexed
+                    <span className="flex items-center gap-1 font-mono font-black text-[10px] bg-[#FFD93D] px-2 py-0.5 border border-black text-black uppercase">
+                      <CheckCircle2 className="w-3 h-3 stroke-[3px]" /> Indexed
                     </span>
                   )}
                   {item.status === 'duplicate' && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-amber-400 font-mono">Duplicate</span>
+                      <span className="text-[10px] bg-[#FF6B6B] text-black px-1.5 py-0.5 border border-black font-mono font-black uppercase">Duplicate</span>
                       <button
                         onClick={() => uploadFile(item, true)}
-                        className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-200 text-[10px] font-medium hover:bg-amber-500/30"
+                        className="btn-neo px-2 py-0.5 bg-white text-black text-[10px] font-black border border-black uppercase hover:bg-[#FFD93D]"
                       >
-                        Upload anyway
+                        Force Upload
                       </button>
                     </div>
                   )}
                   {item.status === 'failed' && (
-                    <span className="flex items-center gap-1 font-mono text-[10px] text-rose-400" title={item.error}>
-                      <AlertCircle className="w-3 h-3" /> Failed
+                    <span className="flex items-center gap-1 font-mono font-black text-[10px] bg-[#FF6B6B] text-black px-2 py-0.5 border border-black uppercase" title={item.error}>
+                      <AlertCircle className="w-3 h-3 stroke-[3px]" /> Failed
                     </span>
                   )}
                   <button
                     onClick={() => removeItem(item.id)}
-                    className="p-1 rounded text-slate-500 hover:text-slate-300"
+                    className="p-1 text-black hover:bg-[#FF6B6B] border border-black transition-colors"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5 stroke-[3px]" />
                   </button>
                 </div>
               </div>

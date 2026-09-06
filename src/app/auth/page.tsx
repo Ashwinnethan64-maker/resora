@@ -45,19 +45,19 @@ function AuthContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#08090e] text-slate-100 flex flex-col justify-center items-center px-4 py-12 selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-[#FFFDF5] text-black flex flex-col justify-center items-center px-4 py-12 selection:bg-[#FFD93D] selection:text-black">
       <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <Link href="/" className="inline-block">
             <ResoraLogo size="lg" />
           </Link>
-          <h1 className="text-xl font-bold tracking-tight text-slate-100">
+          <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter text-black">
             {mode === 'signin' && 'Welcome back to Resora'}
-            {mode === 'signup' && 'Create your research workspace'}
+            {mode === 'signup' && 'Create your workspace'}
             {mode === 'forgot' && 'Reset your password'}
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs sm:text-sm font-bold text-black">
             {mode === 'signin' && 'Access your private library, documents, and research intelligence.'}
             {mode === 'signup' && 'Start organizing your scattered research into compound knowledge.'}
             {mode === 'forgot' && 'Enter your account email to receive a recovery link.'}
@@ -65,43 +65,43 @@ function AuthContent() {
         </div>
 
         {/* Auth Card */}
-        <div className="p-6 rounded-2xl bg-[#0f121d] border border-[#1e2335] shadow-xl shadow-black/50 space-y-5">
+        <div className="p-6 sm:p-8 rounded-none bg-white border-4 border-black shadow-[12px_12px_0px_0px_#000] space-y-5">
           {/* Tabs */}
           {mode !== 'forgot' && (
-            <div className="grid grid-cols-2 p-1 rounded-xl bg-[#090b12] border border-[#191d2c] text-xs font-medium">
+            <div className="grid grid-cols-2 p-1 rounded-none bg-[#FFFDF5] border-2 border-black text-xs font-black uppercase">
               <button
                 type="button"
                 onClick={() => { setMode('signin'); setErrorMessage(''); }}
-                className={`py-1.5 rounded-lg transition-all ${
+                className={`py-2 transition-all ${
                   mode === 'signin'
-                    ? 'bg-[#181d2c] text-indigo-300 shadow-sm border border-[#262e44]'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#FFD93D] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]'
+                    : 'text-black/60 hover:text-black'
                 }`}
               >
-                Sign In
+                SIGN IN
               </button>
               <button
                 type="button"
                 onClick={() => { setMode('signup'); setErrorMessage(''); }}
-                className={`py-1.5 rounded-lg transition-all ${
+                className={`py-2 transition-all ${
                   mode === 'signup'
-                    ? 'bg-[#181d2c] text-indigo-300 shadow-sm border border-[#262e44]'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#FF6B6B] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]'
+                    : 'text-black/60 hover:text-black'
                 }`}
               >
-                Sign Up
+                SIGN UP
               </button>
             </div>
           )}
 
           {errorMessage && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs">
+            <div className="p-3 bg-[#FF6B6B] border-2 border-black text-black font-black text-xs shadow-[2px_2px_0px_0px_#000]">
               {errorMessage}
             </div>
           )}
 
           {successMessage && (
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs">
+            <div className="p-3 bg-[#FFD93D] border-2 border-black text-black font-black text-xs shadow-[2px_2px_0px_0px_#000]">
               {successMessage}
             </div>
           )}
@@ -109,32 +109,32 @@ function AuthContent() {
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             {mode === 'signup' && (
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Display Name</label>
+                <label className="block text-black font-black uppercase text-xs mb-1">DISPLAY NAME</label>
                 <div className="relative">
-                  <User className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+                  <User className="w-4 h-4 absolute left-3 top-3 text-black stroke-[2.5px]" />
                   <input
                     type="text"
                     required
                     placeholder="e.g. Ashwin"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-xl bg-[#090a12] border border-[#212638] pl-9 pr-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500"
+                    className="w-full rounded-none bg-[#FFFDF5] border-4 border-black pl-9 pr-3 py-2.5 text-black font-black uppercase focus:bg-[#FFD93D] focus:outline-none shadow-[3px_3px_0px_0px_#000]"
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-slate-400 font-medium mb-1">Email Address</label>
+              <label className="block text-black font-black uppercase text-xs mb-1">EMAIL ADDRESS</label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+                <Mail className="w-4 h-4 absolute left-3 top-3 text-black stroke-[2.5px]" />
                 <input
                   type="email"
                   required
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl bg-[#090a12] border border-[#212638] pl-9 pr-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-full rounded-none bg-[#FFFDF5] border-4 border-black pl-9 pr-3 py-2.5 text-black font-mono font-bold focus:bg-[#FFD93D] focus:outline-none shadow-[3px_3px_0px_0px_#000]"
                 />
               </div>
             </div>
@@ -142,26 +142,26 @@ function AuthContent() {
             {mode !== 'forgot' && (
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-slate-400 font-medium">Password</label>
+                  <label className="text-black font-black uppercase text-xs">PASSWORD</label>
                   {mode === 'signin' && (
                     <button
                       type="button"
                       onClick={() => { setMode('forgot'); setErrorMessage(''); }}
-                      className="text-[11px] text-indigo-400 hover:underline"
+                      className="text-[11px] font-black uppercase text-black hover:underline"
                     >
-                      Forgot?
+                      FORGOT?
                     </button>
                   )}
                 </div>
                 <div className="relative">
-                  <Lock className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+                  <Lock className="w-4 h-4 absolute left-3 top-3 text-black stroke-[2.5px]" />
                   <input
                     type="password"
                     required
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-xl bg-[#090a12] border border-[#212638] pl-9 pr-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500"
+                    className="w-full rounded-none bg-[#FFFDF5] border-4 border-black pl-9 pr-3 py-2.5 text-black font-mono font-bold focus:bg-[#FFD93D] focus:outline-none shadow-[3px_3px_0px_0px_#000]"
                   />
                 </div>
               </div>
@@ -170,7 +170,7 @@ function AuthContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-md shadow-indigo-900/40 transition-all flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
+              className="btn-neo w-full py-3.5 rounded-none bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase tracking-wider text-xs md:text-sm border-4 border-black shadow-[4px_4px_0px_0px_#000] flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -181,7 +181,7 @@ function AuthContent() {
                     {mode === 'signup' && 'Create Free Account'}
                     {mode === 'forgot' && 'Send Reset Link'}
                   </span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-4 h-4 stroke-[3px]" />
                 </>
               )}
             </button>
@@ -192,7 +192,7 @@ function AuthContent() {
               <button
                 type="button"
                 onClick={() => { setMode('signin'); setErrorMessage(''); }}
-                className="text-xs text-slate-400 hover:text-slate-200 underline"
+                className="text-xs font-black uppercase text-black hover:underline"
               >
                 Back to Sign In
               </button>
@@ -201,8 +201,8 @@ function AuthContent() {
         </div>
 
         {/* Security / Privacy Trust Pill */}
-        <div className="flex items-center justify-center gap-2 text-[11px] text-slate-500">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="flex items-center justify-center gap-2 text-xs font-bold text-black">
+          <ShieldCheck className="w-4 h-4 text-black stroke-[2.5px]" />
           <span>Private research intelligence. Your data is never sold.</span>
         </div>
       </div>
@@ -212,7 +212,7 @@ function AuthContent() {
 
 export default function AuthPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#08090e] flex items-center justify-center text-slate-500 text-xs">Loading authentication...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#FFFDF5] flex items-center justify-center text-black font-mono text-xs">Loading authentication...</div>}>
       <AuthContent />
     </Suspense>
   );

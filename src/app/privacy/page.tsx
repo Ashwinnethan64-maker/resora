@@ -39,7 +39,7 @@ export default function PrivacyPage() {
           <section className="space-y-2">
             <h2 className="text-sm font-semibold text-slate-100">2. AI Intelligence & External Providers</h2>
             <p>
-              When you trigger AI synthesis, metadata extraction, or document indexing, text excerpts are passed to configured AI providers (e.g. OpenAI) strictly for inference and grounding. Content is never used to train generalized foundation models without your explicit consent.
+              When you trigger AI synthesis, metadata extraction, or document indexing, text excerpts are passed to configured AI providers (e.g. NVIDIA) strictly for inference and grounding. Content is never used to train generalized foundation models without your explicit consent.
             </p>
           </section>
 

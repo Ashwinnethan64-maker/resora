@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Outfit, JetBrains_Mono } from "next/font/google";
+import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ResoraProvider } from "@/context/ResoraContext";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space",
   subsets: ["latin"],
-  weight: ["400", "500", "700", "900"],
+  weight: ["400", "500", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -64,8 +64,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${outfit.variable} ${jetbrainsMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans bg-[#F0F0F0] text-[#121212] selection:bg-[#F0C020] selection:text-[#121212]">
+    <html lang="en" className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col font-sans bg-[#FFFDF5] text-[#000000] selection:bg-[#FFD93D] selection:text-[#000000]">
         <OfflineBanner />
         <ResoraProvider>
           {children}

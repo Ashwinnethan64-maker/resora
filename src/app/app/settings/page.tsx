@@ -5,13 +5,11 @@ import { useResora } from '@/context/ResoraContext';
 import { AuthService } from '@/lib/auth/auth-service';
 import {
   User,
-  Shield,
-  Database,
   Sliders,
+  Database,
   Download,
   Upload,
   Trash2,
-  CheckCircle2,
   AlertTriangle,
   FileSpreadsheet,
   Save,
@@ -19,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { showToast, resources, projects, collections, refreshData } = useResora();
+  const { showToast, resources, projects, collections } = useResora();
   const currentUser = AuthService.getCurrentUser();
 
   const [activeTab, setActiveTab] = useState<'profile' | 'workspace' | 'data'>('profile');
@@ -98,7 +96,6 @@ export default function SettingsPage() {
     const reader = new FileReader();
     reader.onload = async (event) => {
       const html = event.target?.result as string;
-      // Extract <A HREF="...">text</A> links
       const linkRegex = /<A\s+(?:[^>]*?\s+)?HREF="([^"]*)"[^>]*>(.*?)<\/A>/gi;
       let match;
       let importedCount = 0;
@@ -108,13 +105,10 @@ export default function SettingsPage() {
 
       while ((match = linkRegex.exec(html)) !== null) {
         const url = match[1].trim();
-        const title = match[2].replace(/<[^>]*>?/gm, '').trim() || url;
-
         if (url.startsWith('http://') || url.startsWith('https://')) {
           if (existingUrls.has(url.toLowerCase())) {
             skippedDuplicates++;
           } else {
-            // Import resource
             importedCount++;
           }
         }
@@ -134,15 +128,20 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6 animate-in fade-in duration-150">
-      {/* Header */}
-      <div className="pb-6 border-b border-[#1c2132] flex items-center justify-between">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in duration-200">
+      {/* Header: Neo-Brutalist Control Panel */}
+      <div className="border-b-4 border-black pb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-100">
-            Settings
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFD93D] text-black border-2 border-black text-xs font-black uppercase tracking-wider mb-3 shadow-[3px_3px_0px_0px_#000] -rotate-1">
+            <span className="w-2.5 h-2.5 rounded-none bg-black" />
+            CONTROL PANEL
+          </div>
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-black leading-none">
+            SETTINGS &<br />
+            PREFERENCES.
           </h1>
-          <p className="text-xs md:text-sm text-slate-400 mt-1">
-            Manage your research profile, workspace preferences, and data portability.
+          <p className="text-sm md:text-base font-bold text-black mt-3 max-w-xl">
+            Manage your research profile, workspace configurations, and data export portability.
           </p>
         </div>
 
@@ -151,168 +150,170 @@ export default function SettingsPage() {
             await AuthService.signOut();
             window.location.href = '/auth';
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#151926] hover:bg-[#1f2538] text-slate-400 hover:text-slate-200 border border-[#242b3e] transition-colors text-xs"
+          className="btn-neo flex items-center gap-2 px-5 py-3 bg-white border-4 border-black text-black font-black uppercase text-xs md:text-sm tracking-wider shadow-[4px_4px_0px_0px_#000]"
         >
-          <LogOut className="w-3.5 h-3.5" />
-          <span>Sign Out</span>
+          <LogOut className="w-4 h-4 stroke-[3px]" />
+          <span>SIGN OUT</span>
         </button>
       </div>
 
       {/* Settings Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#1c2132] pb-3 text-xs font-medium">
+      <div className="flex items-center gap-3 border-b-4 border-black pb-4 text-xs overflow-x-auto">
         <button
           onClick={() => setActiveTab('profile')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${
+          className={`btn-neo flex items-center gap-2 px-4 py-2.5 rounded-none border-2 border-black font-black uppercase tracking-wider transition-all ${
             activeTab === 'profile'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#FFD93D] text-black shadow-[4px_4px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          <User className="w-3.5 h-3.5" />
-          <span>Profile & Account</span>
+          <User className="w-4 h-4 stroke-[3px]" />
+          <span>PROFILE & ACCOUNT</span>
         </button>
         <button
           onClick={() => setActiveTab('workspace')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${
+          className={`btn-neo flex items-center gap-2 px-4 py-2.5 rounded-none border-2 border-black font-black uppercase tracking-wider transition-all ${
             activeTab === 'workspace'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#C4B5FD] text-black shadow-[4px_4px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          <Sliders className="w-3.5 h-3.5" />
-          <span>Workspace Preferences</span>
+          <Sliders className="w-4 h-4 stroke-[3px]" />
+          <span>WORKSPACE</span>
         </button>
         <button
           onClick={() => setActiveTab('data')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${
+          className={`btn-neo flex items-center gap-2 px-4 py-2.5 rounded-none border-2 border-black font-black uppercase tracking-wider transition-all ${
             activeTab === 'data'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#FF6B6B] text-black shadow-[4px_4px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          <Database className="w-3.5 h-3.5" />
-          <span>Data Portability & Deletion</span>
+          <Database className="w-4 h-4 stroke-[3px]" />
+          <span>DATA PORTABILITY</span>
         </button>
       </div>
 
       {/* Tab Panels */}
       {activeTab === 'profile' && (
-        <form onSubmit={handleSaveProfile} className="space-y-4 max-w-xl text-xs">
-          <div>
-            <label className="block text-slate-400 font-medium mb-1">Display Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl bg-[#121420] border border-[#212638] px-3.5 py-2 text-slate-200 focus:outline-none focus:border-indigo-500"
-            />
-          </div>
+        <form onSubmit={handleSaveProfile} className="space-y-5 max-w-xl text-xs">
+          <div className="p-6 md:p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] space-y-4">
+            <div>
+              <label className="block text-black font-black uppercase text-xs mb-1.5">DISPLAY NAME</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full rounded-none bg-[#FFFDF5] border-4 border-black px-3.5 py-3 text-black font-black uppercase focus:bg-[#FFD93D] focus:outline-none shadow-[3px_3px_0px_0px_#000]"
+              />
+            </div>
 
-          <div>
-            <label className="block text-slate-400 font-medium mb-1">Email Address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl bg-[#121420] border border-[#212638] px-3.5 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
-            />
-          </div>
+            <div>
+              <label className="block text-black font-black uppercase text-xs mb-1.5">EMAIL ADDRESS</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-none bg-[#FFFDF5] border-4 border-black px-3.5 py-3 text-black font-mono font-bold focus:bg-[#FFD93D] focus:outline-none shadow-[3px_3px_0px_0px_#000]"
+              />
+            </div>
 
-          <div className="pt-2">
-            <button
-              type="submit"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-md shadow-indigo-900/30 transition-all"
-            >
-              <Save className="w-3.5 h-3.5" />
-              <span>Save Profile</span>
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                className="btn-neo flex items-center gap-2 px-6 py-3.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
+              >
+                <Save className="w-4 h-4 stroke-[3px]" />
+                <span>SAVE PROFILE</span>
+              </button>
+            </div>
           </div>
         </form>
       )}
 
       {activeTab === 'workspace' && (
-        <div className="space-y-4 max-w-xl text-xs">
-          <div className="p-4 rounded-xl bg-[#11131c] border border-[#1f2434] space-y-2">
-            <div className="font-semibold text-slate-200">Default Library View</div>
-            <p className="text-slate-400 text-[11px]">Choose whether the resource library opens in grid or list mode.</p>
+        <div className="space-y-5 max-w-xl text-xs">
+          <div className="p-6 md:p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] space-y-2.5">
+            <div className="font-black uppercase text-sm md:text-base text-black bg-[#FFD93D] px-2 py-0.5 border border-black w-max">
+              DEFAULT LIBRARY VIEW
+            </div>
+            <p className="text-black text-xs font-bold">Choose whether the research library opens in grid cards or list mode.</p>
             <select
               value={defaultView}
               onChange={(e) => {
                 setDefaultView(e.target.value);
                 showToast(`Default view updated to ${e.target.value}`);
               }}
-              className="px-3 py-1.5 rounded-lg bg-[#161925] border border-[#242a3e] text-slate-300 focus:outline-none"
+              className="px-3.5 py-2.5 rounded-none bg-[#FFFDF5] border-4 border-black font-black uppercase text-black focus:bg-[#FFD93D] focus:outline-none shadow-[3px_3px_0px_0px_#000] mt-2 block w-full sm:w-auto"
             >
-              <option value="grid">Grid (Compact dense cards)</option>
-              <option value="list">List (Linear high-throughput table)</option>
+              <option value="grid">GRID (PHYSICAL RESEARCH INDEX CARDS)</option>
+              <option value="list">LIST (LINEAR DOSSIER ROWS)</option>
             </select>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#11131c] border border-[#1f2434] space-y-2">
-            <div className="font-semibold text-slate-200">Default Assistant Scope</div>
-            <p className="text-slate-400 text-[11px]">Primary grounding target when launching Ask Resora from global triggers.</p>
+          <div className="p-6 md:p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] space-y-2.5">
+            <div className="font-black uppercase text-sm md:text-base text-black bg-[#C4B5FD] px-2 py-0.5 border border-black w-max">
+              DEFAULT ASSISTANT SCOPE
+            </div>
+            <p className="text-black text-xs font-bold">Primary grounding scope when launching Ask Resora.</p>
             <select
               value={defaultScope}
               onChange={(e) => {
                 setDefaultScope(e.target.value);
                 showToast(`Default assistant scope set to ${e.target.value}`);
               }}
-              className="px-3 py-1.5 rounded-lg bg-[#161925] border border-[#242a3e] text-slate-300 focus:outline-none"
+              className="px-3.5 py-2.5 rounded-none bg-[#FFFDF5] border-4 border-black font-black uppercase text-black focus:bg-[#FFD93D] focus:outline-none shadow-[3px_3px_0px_0px_#000] mt-2 block w-full sm:w-auto"
             >
-              <option value="library">Entire Library</option>
-              <option value="documents">Documents Only</option>
-              <option value="tools">Developer Tools</option>
-              <option value="favorites">Favorites</option>
+              <option value="library">ENTIRE LIBRARY</option>
+              <option value="documents">DOCUMENTS ONLY</option>
+              <option value="tools">DEVELOPER TOOLS</option>
+              <option value="favorites">FAVORITES ONLY</option>
             </select>
-          </div>
-
-          <div className="p-4 rounded-xl bg-[#11131c] border border-[#1f2434] space-y-2">
-            <div className="font-semibold text-slate-200">Global Command Palette Shortcut</div>
-            <p className="text-slate-400 text-[11px]">Primary keyboard shortcut to trigger research synthesis from any screen.</p>
-            <div className="font-mono text-xs text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20 inline-block">
-              ⌘ + K / Ctrl + K
-            </div>
           </div>
         </div>
       )}
 
       {activeTab === 'data' && (
-        <div className="space-y-4 max-w-xl text-xs">
+        <div className="space-y-6 max-w-xl text-xs">
           {/* Data Export */}
-          <div className="p-4 rounded-xl bg-[#11131c] border border-[#1f2434] space-y-3">
+          <div className="p-6 md:p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] space-y-3">
             <div>
-              <div className="font-semibold text-slate-200">Export Library Data</div>
-              <p className="text-slate-400 text-[11px] mt-0.5">
-                Download your entire structured research database, including tags, use cases, and project links.
+              <div className="font-black uppercase text-sm md:text-base text-black bg-[#FFD93D] px-2 py-0.5 border border-black w-max">
+                EXPORT RESEARCH DATA
+              </div>
+              <p className="text-black text-xs font-bold mt-2">
+                Download your entire structured research library, including tags, use cases, and project links.
               </p>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-3 pt-2 flex-wrap">
               <button
                 onClick={handleExportJson}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#181d2a] hover:bg-[#202738] text-slate-200 border border-[#262d40] transition-colors"
+                className="btn-neo flex items-center gap-2 px-5 py-3 bg-white border-4 border-black text-black font-black uppercase text-xs tracking-wider shadow-[4px_4px_0px_0px_#000]"
               >
-                <Download className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Export as JSON ({resources.length})</span>
+                <Download className="w-4 h-4 text-black stroke-[3px]" />
+                <span>EXPORT JSON ({resources.length})</span>
               </button>
               <button
                 onClick={handleExportCsv}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#181d2a] hover:bg-[#202738] text-slate-200 border border-[#262d40] transition-colors"
+                className="btn-neo flex items-center gap-2 px-5 py-3 bg-white border-4 border-black text-black font-black uppercase text-xs tracking-wider shadow-[4px_4px_0px_0px_#000]"
               >
-                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Export as CSV</span>
+                <FileSpreadsheet className="w-4 h-4 text-black stroke-[3px]" />
+                <span>EXPORT CSV</span>
               </button>
             </div>
           </div>
 
           {/* Bookmark Import */}
-          <div className="p-4 rounded-xl bg-[#11131c] border border-[#1f2434] space-y-3">
+          <div className="p-6 md:p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] space-y-3">
             <div>
-              <div className="font-semibold text-slate-200">Import Browser Bookmarks</div>
-              <p className="text-slate-400 text-[11px] mt-0.5">
+              <div className="font-black uppercase text-sm md:text-base text-black bg-[#C4B5FD] px-2 py-0.5 border border-black w-max">
+                IMPORT BROWSER BOOKMARKS
+              </div>
+              <p className="text-black text-xs font-bold mt-2">
                 Upload a standard bookmarks HTML file from Chrome, Edge, Safari, or Firefox.
               </p>
             </div>
-            <div>
+            <div className="pt-2">
               <input
                 ref={importInputRef}
                 type="file"
@@ -323,28 +324,30 @@ export default function SettingsPage() {
               />
               <label
                 htmlFor="bookmark-file-input"
-                className="cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#181d2a] hover:bg-[#202738] text-slate-200 border border-[#262d40] transition-colors"
+                className="btn-neo cursor-pointer inline-flex items-center gap-2 px-5 py-3 bg-[#FFD93D] hover:bg-[#ffe169] text-black border-4 border-black font-black uppercase text-xs tracking-wider shadow-[4px_4px_0px_0px_#000]"
               >
-                <Upload className="w-3.5 h-3.5 text-sky-400" />
-                <span>Select Bookmarks HTML</span>
+                <Upload className="w-4 h-4 stroke-[3px]" />
+                <span>SELECT BOOKMARKS HTML</span>
               </label>
             </div>
           </div>
 
           {/* Danger Zone: Account Deletion */}
-          <div className="p-4 rounded-xl bg-rose-950/10 border border-rose-900/30 space-y-3">
+          <div className="p-6 md:p-8 bg-[#FFFDF5] border-4 border-[#FF6B6B] shadow-[8px_8px_0px_0px_#000] space-y-3">
             <div>
-              <div className="font-semibold text-rose-300">Permanent Account Deletion</div>
-              <p className="text-slate-400 text-[11px] mt-0.5">
-                Permanently delete your Resora account, saved resources, extracted documents, conversations, and embeddings.
+              <div className="font-black uppercase text-sm md:text-base text-black bg-[#FF6B6B] px-2 py-0.5 border-2 border-black w-max">
+                PERMANENT ACCOUNT DELETION
+              </div>
+              <p className="text-black text-xs font-bold mt-2">
+                Permanently purge your account, saved research links, document dossiers, and embeddings.
               </p>
             </div>
             <button
               onClick={() => setIsDeleteModalOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 transition-colors"
+              className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-black border-4 border-black font-black uppercase text-xs tracking-wider shadow-[4px_4px_0px_0px_#000] mt-2"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete Account & Data</span>
+              <Trash2 className="w-4 h-4 stroke-[3px]" />
+              <span>DELETE ACCOUNT & DATA</span>
             </button>
           </div>
         </div>
@@ -352,40 +355,42 @@ export default function SettingsPage() {
 
       {/* Account Deletion Confirmation Modal */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-          <div className="max-w-md w-full bg-[#0f111a] border border-rose-900/40 rounded-2xl p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center gap-3 text-rose-400">
-              <AlertTriangle className="w-6 h-6 shrink-0" />
-              <h2 className="text-base font-bold text-slate-100">Delete Account & All Research?</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="max-w-md w-full bg-white border-4 border-black rounded-none p-6 md:p-8 space-y-4 shadow-[12px_12px_0px_0px_#000]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#FF6B6B] border-2 border-black flex items-center justify-center shrink-0 shadow-[2px_2px_0px_0px_#000]">
+                <AlertTriangle className="w-6 h-6 text-black stroke-[2.5px]" />
+              </div>
+              <h2 className="text-lg font-black uppercase text-black leading-tight">DELETE ACCOUNT & ALL RESEARCH?</h2>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              This action is <strong className="text-rose-400">irreversible</strong>. All your saved websites, PDF documents, project workspaces, decisions, and assistant threads will be permanently wiped.
+            <p className="text-xs sm:text-sm font-medium text-black leading-relaxed">
+              This action is <strong className="text-black bg-[#FF6B6B] px-1 border border-black uppercase font-black">irreversible</strong>. All your saved websites, PDF documents, project workspaces, decisions, and assistant threads will be permanently wiped.
             </p>
             <div>
-              <label className="block text-[11px] text-slate-400 mb-1">
-                Type <span className="font-mono text-rose-400 font-bold">DELETE</span> to confirm:
+              <label className="block text-xs font-black text-black mb-1.5 uppercase">
+                TYPE <span className="font-mono bg-[#FFD93D] px-1.5 border border-black">DELETE</span> TO CONFIRM:
               </label>
               <input
                 type="text"
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
                 placeholder="DELETE"
-                className="w-full rounded-xl bg-[#090a12] border border-[#282e44] px-3 py-2 text-slate-100 font-mono text-xs focus:outline-none focus:border-rose-500"
+                className="w-full rounded-none bg-[#FFFDF5] border-4 border-black px-3.5 py-2.5 text-black font-mono font-black text-xs focus:bg-[#FFD93D] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
               />
             </div>
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-3 pt-3">
               <button
                 onClick={() => { setIsDeleteModalOpen(false); setDeleteConfirmText(''); }}
-                className="px-3.5 py-2 rounded-xl text-slate-400 hover:text-slate-200 text-xs"
+                className="btn-neo px-5 py-2.5 border-2 border-black bg-white text-black text-xs font-black uppercase shadow-[2px_2px_0px_0px_#000]"
               >
-                Cancel
+                CANCEL
               </button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={deleteConfirmText !== 'DELETE'}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs disabled:opacity-40 shadow-md shadow-rose-900/30 transition-all"
+                className="btn-neo px-5 py-2.5 bg-[#FF6B6B] text-black border-4 border-black font-black text-xs uppercase disabled:opacity-50 shadow-[3px_3px_0px_0px_#000]"
               >
-                Permanently Delete
+                PERMANENTLY DELETE
               </button>
             </div>
           </div>

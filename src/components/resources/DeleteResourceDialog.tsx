@@ -19,40 +19,43 @@ export function DeleteResourceDialog({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-100">
       <div className="fixed inset-0" onClick={onCancel} />
-      <div className="relative w-full max-w-md rounded-2xl bg-[#11131c] border border-rose-900/40 shadow-2xl shadow-black/90 p-5 z-10 space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-[#1c2132]">
-          <div className="flex items-center gap-2.5 text-rose-400 font-semibold text-sm">
-            <div className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4" />
+      <div className="relative w-full max-w-md rounded-none bg-[#FFFDF5] border-4 border-black shadow-[12px_12px_0px_0px_#000] p-5 z-10 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b-4 border-black">
+          <div className="flex items-center gap-2.5 text-black font-black text-sm uppercase tracking-tight">
+            <div className="w-8 h-8 rounded-none bg-[#FF6B6B] border-2 border-black flex items-center justify-center text-black shadow-[2px_2px_0px_0px_#000]">
+              <AlertTriangle className="w-4 h-4 stroke-[3px]" />
             </div>
-            <span>Delete this resource?</span>
+            <span>DELETE THIS RESOURCE?</span>
           </div>
           <button
             onClick={onCancel}
-            className="p-1 rounded-md text-slate-500 hover:text-slate-300"
+            className="p-1 rounded-none text-black hover:bg-[#FF6B6B] border-2 border-black transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 stroke-[3px]" />
           </button>
         </div>
 
-        <div className="space-y-2 text-xs text-slate-300">
-          <p>
+        <div className="space-y-2 text-xs text-black font-mono">
+          <p className="font-bold">
             Are you sure you want to permanently delete{' '}
-            <strong className="text-slate-100 font-medium">"{resourceTitle}"</strong>?
+            <span className="bg-[#FFD93D] px-1.5 py-0.5 border border-black font-black text-black">
+              "{resourceTitle}"
+            </span>
+            ?
           </p>
-          <p className="text-slate-500 leading-relaxed">
+          <p className="text-black/80 font-medium leading-relaxed">
             This resource will be permanently removed from your library, projects, and collections. This action cannot be undone.
           </p>
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#1c2132]">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t-2 border-black">
           <button
             type="button"
             onClick={onCancel}
             disabled={isDeleting}
-            className="px-3.5 py-1.5 rounded-lg border border-[#23283a] text-slate-400 hover:text-slate-200 hover:bg-[#181c2b] text-xs transition-colors"
+            className="btn-neo px-4 py-2 rounded-none border-2 border-black text-black font-black uppercase text-xs bg-white hover:bg-black/5"
           >
             Cancel
           </button>
@@ -60,10 +63,10 @@ export function DeleteResourceDialog({
             type="button"
             onClick={onConfirm}
             disabled={isDeleting}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs shadow-md shadow-rose-950/40 transition-colors disabled:opacity-50"
+            className="btn-neo flex items-center gap-1.5 px-5 py-2 rounded-none bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs border-4 border-black shadow-[4px_4px_0px_0px_#000] transition-all disabled:opacity-50"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>{isDeleting ? 'Deleting...' : 'Delete resource'}</span>
+            <Trash2 className="w-3.5 h-3.5 stroke-[3px]" />
+            <span>{isDeleting ? 'DELETING...' : 'DELETE RESOURCE'}</span>
           </button>
         </div>
       </div>

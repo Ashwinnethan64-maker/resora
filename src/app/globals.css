@@ -1,91 +1,131 @@
 @import "tailwindcss";
 
 :root {
-  /* Bauhaus Core Palette */
-  --bauhaus-bg: #F0F0F0;
-  --bauhaus-black: #121212;
-  --bauhaus-red: #D02020;
-  --bauhaus-blue: #1040C0;
-  --bauhaus-yellow: #F0C020;
-  --bauhaus-muted: #E0E0E0;
-  --bauhaus-white: #FFFFFF;
+  /* Neo-Brutalist Core Palette */
+  --neo-background: #FFFDF5;
+  --neo-foreground: #000000;
+  --neo-accent: #FF6B6B;
+  --neo-secondary: #FFD93D;
+  --neo-muted: #C4B5FD;
+  --neo-white: #FFFFFF;
 
-  --background: #F0F0F0;
-  --foreground: #121212;
-  --border: #121212;
+  --background: #FFFDF5;
+  --foreground: #000000;
+  --border: #000000;
 
-  --shadow-sm: 4px 4px 0px 0px #121212;
-  --shadow-md: 6px 6px 0px 0px #121212;
-  --shadow-lg: 8px 8px 0px 0px #121212;
+  /* Solid Hard Zero-Blur Shadows */
+  --shadow-neo-sm: 4px 4px 0px 0px #000000;
+  --shadow-neo-md: 8px 8px 0px 0px #000000;
+  --shadow-neo-lg: 12px 12px 0px 0px #000000;
+  --shadow-neo-xl: 16px 16px 0px 0px #000000;
 }
 
 body {
-  background-color: var(--bauhaus-bg);
-  color: var(--bauhaus-black);
-  font-family: var(--font-outfit), sans-serif;
+  background-color: var(--neo-background);
+  color: var(--neo-foreground);
+  font-family: var(--font-space), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Bauhaus Architectural Hard Shadows */
-.shadow-bauhaus-sm {
-  box-shadow: 4px 4px 0px 0px #121212;
+/* Subtle Halftone Background Texture Utility */
+.bg-halftone {
+  background-image: radial-gradient(#000000 1.5px, transparent 1.5px);
+  background-size: 18px 18px;
 }
 
-.shadow-bauhaus-md {
-  box-shadow: 6px 6px 0px 0px #121212;
+.bg-grid-paper {
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-.shadow-bauhaus-lg {
-  box-shadow: 8px 8px 0px 0px #121212;
+/* Neo-Brutalist Hard Shadows */
+.shadow-neo-sm {
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
-.shadow-bauhaus-red {
-  box-shadow: 6px 6px 0px 0px #D02020;
+.shadow-neo-md {
+  box-shadow: 8px 8px 0px 0px #000000;
 }
 
-.shadow-bauhaus-blue {
-  box-shadow: 6px 6px 0px 0px #1040C0;
+.shadow-neo-lg {
+  box-shadow: 12px 12px 0px 0px #000000;
 }
 
-.shadow-bauhaus-yellow {
-  box-shadow: 6px 6px 0px 0px #F0C020;
+.shadow-neo-xl {
+  box-shadow: 16px 16px 0px 0px #000000;
 }
 
-/* Mechanical Button Press Interaction */
-.btn-bauhaus {
-  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
-}
-.btn-bauhaus:hover {
-  transform: translate(-1px, -1px);
-}
-.btn-bauhaus:active {
-  transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0px 0px #121212 !important;
+/* Tactile Physical Button Interactions */
+.btn-neo {
+  transition: transform 100ms ease-linear, box-shadow 100ms ease-linear;
 }
 
-/* Custom Bauhaus Scrollbar */
+.btn-neo:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px #000000;
+}
+
+.btn-neo:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px 0px #000000 !important;
+}
+
+/* Card Physical Lift Interaction */
+.card-neo {
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.card-neo:hover {
+  transform: translateY(-8px);
+  box-shadow: 12px 12px 0px 0px #000000;
+}
+
+/* Sticker Elements with Controlled Angles */
+.sticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border: 2px solid #000000;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+/* Outlined Display Text Effect */
+.text-stroke-black {
+  -webkit-text-stroke: 2px #000000;
+  color: transparent;
+}
+
+/* Custom Neo-Brutalist Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #E0E0E0;
-  border-left: 2px solid #121212;
+  background: #FFFDF5;
+  border-left: 3px solid #000000;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #121212;
+  background: #000000;
+  border: 1px solid #FFFDF5;
   border-radius: 0px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #D02020;
+  background: #FF6B6B;
 }
 
-/* Selection */
+/* High Contrast Selection */
 ::selection {
-  background: #F0C020;
-  color: #121212;
+  background: #FFD93D;
+  color: #000000;
 }

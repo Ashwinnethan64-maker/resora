@@ -6,7 +6,6 @@ import { useResora } from '@/context/ResoraContext';
 import { RESOURCE_TYPE_CONFIGS } from '@/lib/resource-types';
 import {
   Search,
-  BookOpen,
   Inbox,
   FolderKanban,
   Library,
@@ -15,8 +14,7 @@ import {
   Heart,
   Settings,
   PlusCircle,
-  ExternalLink,
-  Sparkles,
+  Compass,
   ArrowRight
 } from 'lucide-react';
 
@@ -35,7 +33,6 @@ export function CommandPalette() {
 
   if (!isCommandPaletteOpen) return null;
 
-  // Real-time fuzzy query across title, description, domain, tags, and use cases
   const q = query.trim().toLowerCase();
   const filteredResources = q
     ? resources
@@ -52,18 +49,17 @@ export function CommandPalette() {
         .slice(0, 5)
     : [];
 
-  // Static navigation commands
   const navCommands = [
-    { title: 'Ask Resora', icon: Sparkles, action: () => router.push('/app/assistant'), shortcut: 'A' },
-    { title: 'Search library', icon: Search, action: () => router.push('/app/library'), shortcut: 'L' },
-    { title: 'Save resource', icon: PlusCircle, action: () => { closeCommandPalette(); openSaveModal(); }, shortcut: '⌘⇧S' },
-    { title: 'Open inbox', icon: Inbox, action: () => router.push('/app/inbox'), shortcut: 'I' },
-    { title: 'Open projects', icon: FolderKanban, action: () => router.push('/app/projects'), shortcut: 'P' },
-    { title: 'Open collections', icon: Library, action: () => router.push('/app/collections'), shortcut: 'C' },
-    { title: 'Open documents', icon: FileText, action: () => router.push('/app/documents'), shortcut: 'D' },
-    { title: 'Open tools', icon: Wrench, action: () => router.push('/app/tools'), shortcut: 'T' },
-    { title: 'Open favorites', icon: Heart, action: () => router.push('/app/favorites'), shortcut: 'F' },
-    { title: 'Settings', icon: Settings, action: () => router.push('/app/settings'), shortcut: 'S' },
+    { title: 'ASK RESORA', icon: Compass, action: () => router.push('/app/assistant'), shortcut: 'A', color: 'bg-[#FFD93D] text-black' },
+    { title: 'SEARCH LIBRARY', icon: Search, action: () => router.push('/app/library'), shortcut: 'L', color: 'bg-[#FF6B6B] text-black' },
+    { title: 'CAPTURE RESOURCE', icon: PlusCircle, action: () => { closeCommandPalette(); openSaveModal(); }, shortcut: '⌘⇧S', color: 'bg-[#C4B5FD] text-black' },
+    { title: 'OPEN INBOX', icon: Inbox, action: () => router.push('/app/inbox'), shortcut: 'I', color: 'bg-white text-black' },
+    { title: 'OPEN PROJECTS', icon: FolderKanban, action: () => router.push('/app/projects'), shortcut: 'P', color: 'bg-white text-black' },
+    { title: 'OPEN COLLECTIONS', icon: Library, action: () => router.push('/app/collections'), shortcut: 'C', color: 'bg-white text-black' },
+    { title: 'OPEN DOCUMENTS', icon: FileText, action: () => router.push('/app/documents'), shortcut: 'D', color: 'bg-white text-black' },
+    { title: 'OPEN TOOLS', icon: Wrench, action: () => router.push('/app/tools'), shortcut: 'T', color: 'bg-white text-black' },
+    { title: 'OPEN FAVORITES', icon: Heart, action: () => router.push('/app/favorites'), shortcut: 'F', color: 'bg-white text-black' },
+    { title: 'SETTINGS', icon: Settings, action: () => router.push('/app/settings'), shortcut: 'S', color: 'bg-white text-black' },
   ].filter((cmd) => cmd.title.toLowerCase().includes(q));
 
   const suggestions = [
@@ -80,32 +76,36 @@ export function CommandPalette() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 sm:pt-28 px-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/70 backdrop-blur-none animate-in fade-in duration-100">
       <div className="fixed inset-0" onClick={closeCommandPalette} />
-      <div className="relative w-full max-w-xl rounded-2xl bg-[#11131c] border border-[#23293c] shadow-2xl shadow-black/90 overflow-hidden z-10 flex flex-col">
-        {/* Search input field */}
-        <div className="flex items-center px-4 py-3.5 border-b border-[#1c2132] gap-3">
-          <Search className="w-5 h-5 text-indigo-400 shrink-0" />
+      
+      {/* Neo-Brutalist Command Modal Box */}
+      <div className="relative w-full max-w-2xl rounded-none bg-white border-4 border-black shadow-[12px_12px_0px_0px_#000] overflow-hidden z-10 flex flex-col">
+        
+        {/* Search Header */}
+        <div className="flex items-center px-4 py-4 border-b-4 border-black gap-3 bg-[#FFFDF5]">
+          <Search className="w-5 h-5 text-black stroke-[3px] shrink-0" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search your research library..."
-            className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none"
+            placeholder="SEARCH RESEARCH INDEX (CMD+K)..."
+            className="w-full bg-transparent text-sm md:text-base font-black uppercase text-black placeholder-black/50 focus:outline-none"
           />
-          <kbd className="hidden sm:inline-block font-mono text-[10px] text-slate-400 bg-[#1a1e2d] px-2 py-0.5 rounded border border-[#2b3248]">
+          <kbd className="hidden sm:inline-block font-mono text-[10px] font-black text-black bg-[#FFD93D] px-2 py-0.5 border-2 border-black shadow-[2px_2px_0px_0px_#000]">
             ESC
           </kbd>
         </div>
 
         {/* Content list */}
-        <div className="max-h-[380px] overflow-y-auto p-2 space-y-1">
+        <div className="max-h-[380px] overflow-y-auto p-4 space-y-3 bg-white">
           {/* Matching live resources */}
           {filteredResources.length > 0 && (
-            <div className="mb-2">
-              <div className="px-2 py-1 text-[11px] font-mono uppercase tracking-wider text-slate-500">
-                Matching Saved Resources
+            <div className="mb-4">
+              <div className="px-2 py-1 text-xs font-mono font-black uppercase tracking-wider text-black flex items-center gap-1.5 bg-[#FFD93D] border-2 border-black w-max mb-2">
+                <span className="w-2.5 h-2.5 rounded-none bg-[#FF6B6B] border border-black" />
+                MATCHING SAVED RESEARCH
               </div>
               {filteredResources.map((res) => {
                 const cfg = RESOURCE_TYPE_CONFIGS[res.resource_type] || RESOURCE_TYPE_CONFIGS.website;
@@ -113,41 +113,41 @@ export function CommandPalette() {
                   <button
                     key={res.id}
                     onClick={() => handleSelect(() => router.push(`/app/library/${res.id}`))}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left hover:bg-[#191d2c] transition-colors group"
+                    className="w-full flex items-center justify-between p-3 rounded-none text-left bg-white hover:bg-[#FFFDF5] border-2 border-black transition-colors group mb-2 shadow-[3px_3px_0px_0px_#000]"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-6 h-6 rounded bg-[#202538] border border-[#2d344d] flex items-center justify-center text-[10px] font-mono text-slate-300 shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-none bg-[#FFD93D] text-black border-2 border-black flex items-center justify-center text-xs font-mono font-black shrink-0">
                         {res.title ? res.title.slice(0, 2).toUpperCase() : 'RE'}
                       </div>
                       <div className="truncate">
-                        <div className="text-xs font-medium text-slate-200 group-hover:text-indigo-300 truncate">
+                        <div className="text-xs md:text-sm font-black uppercase text-black group-hover:text-[#FF6B6B] truncate">
                           {res.title}
                         </div>
-                        <div className="text-[10px] text-slate-500 font-mono truncate">
-                          {res.domain} • {cfg.label}
+                        <div className="text-[11px] text-black font-mono font-bold truncate">
+                          {res.domain} • {cfg.label.toUpperCase()}
                         </div>
                       </div>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ArrowRight className="w-4 h-4 text-black stroke-[3px] group-hover:translate-x-1 transition-transform" />
                   </button>
                 );
               })}
             </div>
           )}
 
-          {/* Quick suggestions if query is empty */}
+          {/* Suggestions if empty */}
           {!query && (
-            <div className="mb-3">
-              <div className="px-2 py-1 text-[11px] font-mono uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3 text-amber-400" />
-                Research Suggestions
+            <div className="mb-4">
+              <div className="px-2 py-1 text-xs font-mono font-black uppercase tracking-wider text-black flex items-center gap-1.5 bg-[#C4B5FD] border-2 border-black w-max mb-2">
+                <span className="w-2.5 h-2.5 bg-black" />
+                RESEARCH PROMPTS
               </div>
-              <div className="flex flex-wrap gap-1.5 px-2 pt-1 pb-2">
+              <div className="flex flex-wrap gap-2 px-1 pt-1 pb-2">
                 {suggestions.map((sug) => (
                   <button
                     key={sug}
                     onClick={() => setQuery(sug)}
-                    className="text-xs px-2.5 py-1 rounded-md bg-[#161a27] hover:bg-[#1e2335] text-slate-400 hover:text-slate-200 border border-[#23283a] transition-colors"
+                    className="btn-neo text-xs px-3 py-1.5 rounded-none bg-[#FFFDF5] text-black font-bold border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:bg-[#FFD93D]"
                   >
                     {sug}
                   </button>
@@ -158,39 +158,41 @@ export function CommandPalette() {
 
           {/* Navigation Commands */}
           <div>
-            <div className="px-2 py-1 text-[11px] font-mono uppercase tracking-wider text-slate-500">
-              Quick Navigation
+            <div className="px-2 py-1 text-xs font-mono font-black uppercase tracking-wider text-black bg-[#FF6B6B] border-2 border-black w-max mb-2">
+              QUICK COMMANDS
             </div>
-            {navCommands.map((cmd) => {
-              const Icon = cmd.icon;
-              return (
-                <button
-                  key={cmd.title}
-                  onClick={() => handleSelect(cmd.action)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left hover:bg-[#191d2c] transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 text-slate-400 group-hover:text-indigo-400 transition-colors" />
-                    <span className="text-xs text-slate-300 group-hover:text-slate-100">
-                      {cmd.title}
-                    </span>
-                  </div>
-                  <kbd className="font-mono text-[10px] text-slate-500 bg-[#161925] px-1.5 py-0.5 rounded border border-[#222739]">
-                    {cmd.shortcut}
-                  </kbd>
-                </button>
-              );
-            })}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              {navCommands.map((cmd) => {
+                const Icon = cmd.icon;
+                return (
+                  <button
+                    key={cmd.title}
+                    onClick={() => handleSelect(cmd.action)}
+                    className="btn-neo flex items-center justify-between p-2.5 rounded-none text-left bg-white hover:bg-[#FFFDF5] border-2 border-black transition-all group shadow-[2px_2px_0px_0px_#000]"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-4 h-4 text-black stroke-[2.5px]" />
+                      <span className="text-xs font-black uppercase text-black group-hover:text-[#FF6B6B]">
+                        {cmd.title}
+                      </span>
+                    </div>
+                    <kbd className="font-mono text-[10px] font-black text-black bg-[#FFD93D] px-2 py-0.5 border border-black shadow-[1px_1px_0px_0px_#000]">
+                      {cmd.shortcut}
+                    </kbd>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {/* Footer info bar */}
-        <div className="px-4 py-2 border-t border-[#1a1f2e] bg-[#0e1017] flex items-center justify-between text-[11px] text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Persistent index active ({resources.length} items)
+        <div className="px-4 py-3 border-t-4 border-black bg-[#FFFDF5] flex items-center justify-between text-xs font-bold text-black">
+          <span className="flex items-center gap-2 font-black">
+            <span className="w-2.5 h-2.5 rounded-none bg-[#FF6B6B] border border-black" />
+            PERSISTENT RESEARCH INDEX ({resources.length} ITEMS)
           </span>
-          <span className="font-mono text-[10px]">ESC to close</span>
+          <span className="font-mono text-[10px] uppercase bg-black text-white px-2 py-0.5">ESC TO CLOSE</span>
         </div>
       </div>
     </div>

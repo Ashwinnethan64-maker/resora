@@ -10,7 +10,6 @@ import { ResourceModel } from '@/types/database';
 import {
   FileText,
   Upload,
-  Sparkles,
   Plus,
   Eye,
   Cloud,
@@ -48,56 +47,54 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#1c2132]">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-200">
+      {/* Header: Neo-Brutalist Document Archive */}
+      <div className="border-b-4 border-black pb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-100">
-              Documents & Research
-            </h1>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
-              Intelligence Ready
-            </span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFD93D] text-black border-2 border-black text-xs font-black uppercase tracking-wider mb-3 shadow-[3px_3px_0px_0px_#000] -rotate-1">
+            <span className="w-2.5 h-2.5 rounded-none bg-[#FF6B6B] border border-black" />
+            DOCUMENT INTELLIGENCE ARCHIVE
           </div>
-          <p className="text-xs md:text-sm text-slate-400 mt-1">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-black leading-none">
+            DOCUMENTS &<br />
+            RESEARCH.
+          </h1>
+          <p className="text-sm md:text-base font-bold text-black mt-3 max-w-xl">
             Research papers, PDFs, system briefs, and uploaded files parsed with page-level intelligence.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+        <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
           <button
             onClick={() => setShowDropzone((prev) => !prev)}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium border transition-all ${
-              showDropzone
-                ? 'bg-[#1e2335] text-indigo-300 border-indigo-500/40 shadow-sm'
-                : 'bg-[#151926] text-slate-300 border-[#262e43] hover:text-white hover:border-slate-600'
-            }`}
+            className="btn-neo flex items-center gap-2 px-5 py-3.5 bg-white hover:bg-[#FFFDF5] text-black text-xs md:text-sm font-black uppercase tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
           >
-            <Upload className="w-3.5 h-3.5 text-indigo-400" />
-            <span>{showDropzone ? 'Hide Upload Zone' : 'Upload Files'}</span>
-            {showDropzone ? <ChevronUp className="w-3 h-3 ml-0.5 opacity-60" /> : <ChevronDown className="w-3 h-3 ml-0.5 opacity-60" />}
+            <Upload className="w-4 h-4 stroke-[3px]" />
+            <span>{showDropzone ? 'HIDE UPLOAD' : 'UPLOAD FILES'}</span>
+            {showDropzone ? <ChevronUp className="w-4 h-4 stroke-[3px] ml-0.5" /> : <ChevronDown className="w-4 h-4 stroke-[3px] ml-0.5" />}
           </button>
 
           <button
             onClick={openSaveModal}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-md shadow-indigo-900/30 transition-all"
+            className="btn-neo flex items-center gap-2 px-6 py-3.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Save Link / Drive</span>
+            <Plus className="w-4 h-4 stroke-[3px]" />
+            <span>+ SAVE LINK / DRIVE</span>
           </button>
         </div>
       </div>
 
       {/* Upload Dropzone Collapse Area */}
       {showDropzone && (
-        <div className="p-5 rounded-2xl bg-[#11131c] border border-indigo-500/30 shadow-xl shadow-black/40 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex items-center justify-between mb-3">
+        <div className="p-6 md:p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] animate-in fade-in duration-200">
+          <div className="flex items-center justify-between pb-3 mb-4 border-b-2 border-black">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
-              <h2 className="text-xs font-semibold text-slate-200">File Ingestion & Page Indexer</h2>
+              <span className="w-3.5 h-3.5 bg-[#FFD93D] border border-black" />
+              <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-black">FILE INGESTION & PAGE INDEXER</h2>
             </div>
-            <span className="text-[11px] text-slate-500 font-mono">Max 25MB · PDF, TXT, MD, DOC</span>
+            <span className="text-xs text-black font-mono font-black uppercase bg-[#C4B5FD] px-2 py-0.5 border border-black">
+              MAX 25MB · PDF, TXT, MD, DOC
+            </span>
           </div>
           <DocumentDropzone
             onUploadComplete={(res) => {
@@ -107,48 +104,48 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#1c2132] pb-3 text-xs overflow-x-auto">
+      {/* Tabs: Neo-Brutalist Filter Tabs */}
+      <div className="flex items-center gap-3 border-b-4 border-black pb-4 text-xs overflow-x-auto">
         <button
           onClick={() => setActiveTab('all')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none border-2 border-black font-black uppercase text-xs tracking-wider transition-all ${
             activeTab === 'all'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#FFD93D] text-black shadow-[4px_4px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          All Documents ({documentResources.length})
+          ALL DOCUMENTS ({documentResources.length})
         </button>
         <button
           onClick={() => setActiveTab('pdf')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none border-2 border-black font-black uppercase text-xs tracking-wider transition-all ${
             activeTab === 'pdf'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#FF6B6B] text-black shadow-[4px_4px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          PDFs & Papers
+          PDFS & PAPERS
         </button>
         <button
           onClick={() => setActiveTab('doc')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none border-2 border-black font-black uppercase text-xs tracking-wider transition-all ${
             activeTab === 'doc'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#C4B5FD] text-black shadow-[4px_4px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          Notes & Briefs
+          NOTES & BRIEFS
         </button>
         <button
           onClick={() => setActiveTab('drive')}
-          className={`px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1.5 whitespace-nowrap ${
+          className={`btn-neo px-4 py-2.5 rounded-none border-2 border-black font-black uppercase text-xs tracking-wider transition-all flex items-center gap-1.5 ${
             activeTab === 'drive'
-              ? 'bg-[#181d2c] text-indigo-300 border border-[#272f44]'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#FFD93D] text-black shadow-[4px_4px_0px_0px_#000] -translate-y-0.5'
+              : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
           }`}
         >
-          <Cloud className="w-3 h-3 text-amber-400" />
-          <span>Google Drive / Docs</span>
+          <Cloud className="w-4 h-4 stroke-[3px]" />
+          <span>GOOGLE DRIVE / DOCS</span>
         </button>
       </div>
 
@@ -156,17 +153,17 @@ export default function DocumentsPage() {
       {filteredDocs.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title={activeTab === 'drive' ? 'No Google Drive links saved.' : 'No documents found.'}
+          title={activeTab === 'drive' ? 'NO GOOGLE DRIVE LINKS' : 'NO DOCUMENTS FOUND'}
           description={
             activeTab === 'drive'
               ? 'Paste a Google Drive or Google Docs link using "+ Save Link / Drive".'
-              : 'Upload research PDFs or save document links into your Resora library.'
+              : 'Upload research PDFs or save document links into your Resora archive.'
           }
-          actionLabel="+ Upload or save document"
+          actionLabel="+ UPLOAD OR SAVE DOCUMENT"
           onAction={() => setShowDropzone(true)}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredDocs.map((doc) => (
             <div key={doc.id} className="relative group">
               <ResourceCard resource={doc} />
@@ -178,10 +175,10 @@ export default function DocumentsPage() {
                     e.stopPropagation();
                     handleOpenViewer(doc);
                   }}
-                  className="absolute top-3 right-12 z-20 p-1.5 rounded-lg bg-[#1a1e2d]/90 hover:bg-indigo-600 text-slate-300 hover:text-white border border-[#2b334a] shadow-md backdrop-blur-sm transition-all"
+                  className="btn-neo absolute top-3 right-12 z-20 p-2 bg-white hover:bg-[#FFD93D] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000]"
                   title="Open in Document Reader"
                 >
-                  <Eye className="w-3.5 h-3.5" />
+                  <Eye className="w-4 h-4 stroke-[3px]" />
                 </button>
               )}
             </div>
