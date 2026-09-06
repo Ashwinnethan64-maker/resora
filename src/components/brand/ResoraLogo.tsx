@@ -15,10 +15,10 @@ export function ResoraLogo({
   showTagline = false,
 }: ResoraLogoProps) {
   const pixelSizes = {
-    sm: 24,
-    md: 32,
-    lg: 40,
-    xl: 48,
+    sm: 26,
+    md: 34,
+    lg: 42,
+    xl: 52,
   };
 
   const textSizes = {
@@ -40,7 +40,7 @@ export function ResoraLogo({
           width={dimension}
           height={dimension}
           priority
-          className="object-contain rounded-lg shadow-sm"
+          className="object-contain rounded-none border border-black shadow-[2px_2px_0px_#000]"
         />
       </div>
     );
@@ -56,23 +56,23 @@ export function ResoraLogo({
           width={dimension}
           height={dimension}
           priority
-          className="object-contain rounded-lg shadow-sm"
+          className="object-contain rounded-none border border-black shadow-[2px_2px_0px_#000]"
         />
       </div>
 
       <div className="flex flex-col justify-center min-w-0">
-        <div className="flex items-center gap-1.5 leading-none">
-          <span className="font-bold tracking-wider text-slate-100 font-sans">
+        <div className="flex items-center gap-2 leading-none">
+          <span className="font-black tracking-tight text-black text-base md:text-lg uppercase">
             RESORA
           </span>
           {variant !== 'compact' && (
-            <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
+            <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-[#FFD93D] text-black border border-black font-black">
               v1.0
             </span>
           )}
         </div>
         {showTagline && (
-          <span className="text-[10px] text-slate-400 tracking-tight mt-1 font-normal">
+          <span className="text-[11px] font-mono text-black font-bold tracking-tight mt-1">
             Save it. Understand it. Use it.
           </span>
         )}

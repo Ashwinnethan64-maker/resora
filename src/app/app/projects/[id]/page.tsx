@@ -126,11 +126,12 @@ export default function ProjectWorkspacePage() {
 
   if (!project) {
     return (
-      <div className="p-8 max-w-4xl mx-auto space-y-4 text-center">
-        <h2 className="text-xl font-bold text-slate-200">Project Workspace not found</h2>
-        <p className="text-xs text-slate-400">The requested workspace does not exist or was deleted.</p>
-        <Link href="/app/projects" className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300">
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Projects
+      <div className="p-10 max-w-2xl mx-auto space-y-4 text-center bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] my-12">
+        <h2 className="text-2xl font-black uppercase text-black">WORKSPACE NOT FOUND</h2>
+        <p className="text-xs font-bold text-black">The requested research workspace does not exist or has been removed.</p>
+        <Link href="/app/projects" className="btn-neo inline-flex items-center gap-2 px-5 py-2.5 bg-[#FFD93D] text-black border-2 border-black font-black uppercase text-xs shadow-[3px_3px_0px_0px_#000]">
+          <ArrowLeft className="w-4 h-4 stroke-[3px]" />
+          <span>BACK TO WORKSPACES</span>
         </Link>
       </div>
     );
@@ -391,56 +392,56 @@ export default function ProjectWorkspacePage() {
           {/* Quick Sections Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Connected Resources */}
-            <div className="p-5 rounded-2xl bg-[#11131c] border border-[#1f2434] space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="p-6 rounded-none bg-white border-4 border-black shadow-[6px_6px_0px_0px_#000] space-y-4">
+              <div className="flex items-center justify-between border-b-2 border-black pb-3">
                 <div className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-indigo-400" />
-                  <h2 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
-                    Recent Resources
+                  <span className="w-3 h-3 bg-[#FFD93D] border border-black" />
+                  <h2 className="text-xs font-black text-black uppercase tracking-wider">
+                    RECENT WORKSPACE RESOURCES
                   </h2>
                 </div>
                 <button
                   onClick={() => setActiveTab('resources')}
-                  className="text-[11px] text-indigo-400 hover:text-indigo-300"
+                  className="text-xs font-black uppercase text-black hover:text-[#FF6B6B] transition-colors"
                 >
-                  View all ({linkedResources.length})
+                  VIEW ALL ({linkedResources.length}) →
                 </button>
               </div>
 
               {linkedResources.length === 0 ? (
-                <div className="py-8 text-center text-xs text-slate-500 border border-dashed border-[#202536] rounded-xl p-4 space-y-2">
-                  <p>No resources connected to this workspace yet.</p>
+                <div className="py-8 text-center text-xs text-black border-2 border-dashed border-black p-4 space-y-3 bg-[#FFFDF5]">
+                  <p className="font-bold">No resources connected to this workspace yet.</p>
                   <button
                     onClick={() => setIsAddResourceOpen(true)}
-                    className="px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[11px]"
+                    className="btn-neo px-4 py-2 bg-[#FF6B6B] hover:bg-[#ff5252] text-black text-xs font-black uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_0px_#000]"
                   >
-                    + Add from Library
+                    + ADD FROM LIBRARY
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {linkedResources.slice(0, 4).map((res) => (
                     <div
                       key={res.id}
-                      className="p-3 rounded-xl bg-[#141724] border border-[#1f2537] flex items-center justify-between gap-3 group"
+                      className="p-3.5 rounded-none bg-[#FFFDF5] border-2 border-black flex items-center justify-between gap-3 group hover:bg-[#FFD93D] transition-colors shadow-[2px_2px_0px_0px_#000]"
                     >
                       <div className="min-w-0 flex-1">
                         <Link
                           href={`/app/library/${res.id}`}
-                          className="text-xs font-semibold text-slate-200 group-hover:text-indigo-300 truncate block"
+                          className="text-xs font-black text-black truncate block uppercase tracking-tight"
                         >
                           {res.title}
                         </Link>
-                        <span className="text-[10px] font-mono text-slate-500">
+                        <span className="text-[10px] font-mono font-bold text-black uppercase">
                           {res.domain} · {res.resource_type}
                         </span>
                       </div>
                       <button
                         onClick={() => removeResourceFromProject(project.id, res.id)}
-                        className="p-1 text-slate-500 hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
+                        className="btn-neo p-1 text-black hover:bg-[#FF6B6B] border border-black transition-colors"
                         title="Remove from project"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3.5 h-3.5 stroke-[2.5px]" />
                       </button>
                     </div>
                   ))}
@@ -449,40 +450,40 @@ export default function ProjectWorkspacePage() {
             </div>
 
             {/* Architecture Decisions Log Preview */}
-            <div className="p-5 rounded-2xl bg-[#11131c] border border-[#1f2434] space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="p-6 rounded-none bg-white border-4 border-black shadow-[6px_6px_0px_0px_#000] space-y-4">
+              <div className="flex items-center justify-between border-b-2 border-black pb-3">
                 <div className="flex items-center gap-2">
-                  <CheckSquare className="w-4 h-4 text-amber-400" />
-                  <h2 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
-                    Architecture Decisions Log
+                  <span className="w-3 h-3 bg-[#FF6B6B] border border-black" />
+                  <h2 className="text-xs font-black text-black uppercase tracking-wider">
+                    ARCHITECTURE DECISIONS LOG
                   </h2>
                 </div>
                 <button
                   onClick={() => setActiveTab('decisions')}
-                  className="text-[11px] text-indigo-400 hover:text-indigo-300"
+                  className="text-xs font-black uppercase text-black hover:text-[#FF6B6B] transition-colors"
                 >
-                  Manage ({decisions.length})
+                  MANAGE ({decisions.length}) →
                 </button>
               </div>
 
               {decisions.length === 0 ? (
-                <div className="py-8 text-center text-xs text-slate-500 border border-dashed border-[#202536] rounded-xl p-4">
-                  No decisions logged yet. Record key technical choices (e.g. Supabase vs Firebase).
+                <div className="py-8 text-center text-xs text-black font-bold border-2 border-dashed border-black p-4 bg-[#FFFDF5]">
+                  No decisions logged yet. Record key technical choices and framework decisions.
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {decisions.slice(0, 3).map((dec) => (
                     <div
                       key={dec.id}
-                      className="p-3 rounded-xl bg-[#141724] border border-[#1f2537] space-y-1"
+                      className="p-3.5 rounded-none bg-[#FFFDF5] border-2 border-black space-y-1 shadow-[2px_2px_0px_0px_#000]"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-slate-200">
+                        <span className="text-xs font-black text-black uppercase">
                           {dec.decision}
                         </span>
-                        <span className="text-[10px] font-mono text-slate-500">{dec.date}</span>
+                        <span className="text-[10px] font-mono font-bold text-black bg-[#C4B5FD] px-1.5 py-0.5 border border-black">{dec.date}</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 leading-tight">
+                      <p className="text-xs text-black font-medium leading-relaxed">
                         {dec.reason}
                       </p>
                     </div>
@@ -496,40 +497,40 @@ export default function ProjectWorkspacePage() {
 
       {/* TAB 2: RESOURCES */}
       {activeTab === 'resources' && (
-        <div className="space-y-4 animate-in fade-in duration-150">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center rounded-xl bg-[#161925] border border-[#242a3e] px-3 py-1.5 focus-within:border-indigo-500 transition-colors w-full sm:w-80">
-              <Search className="w-3.5 h-3.5 text-slate-500 mr-2 shrink-0" />
+        <div className="space-y-6 animate-in fade-in duration-150">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-4 border-black pb-4">
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 text-black absolute left-3 top-1/2 -translate-y-1/2 stroke-[3px]" />
               <input
                 type="text"
-                placeholder="Search project resources..."
+                placeholder="SEARCH PROJECT RESOURCES..."
                 value={resourceSearch}
                 onChange={(e) => setResourceSearch(e.target.value)}
-                className="w-full bg-transparent text-slate-200 placeholder-slate-500 focus:outline-none text-xs"
+                className="w-full pl-9 pr-3 py-2.5 rounded-none bg-white border-2 border-black text-xs text-black placeholder-black/50 font-black uppercase focus:bg-[#FFD93D] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
               />
             </div>
 
             <div className="flex items-center gap-2 self-start sm:self-auto">
               <button
                 onClick={() => setIsAddResourceOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-all"
+                className="btn-neo flex items-center gap-1.5 px-4 py-2.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black text-xs font-black uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_0px_#000]"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add from library</span>
+                <Plus className="w-4 h-4 stroke-[3px]" />
+                <span>+ ADD FROM LIBRARY</span>
               </button>
             </div>
           </div>
 
           {filteredResources.length === 0 ? (
-            <div className="py-16 text-center border border-dashed border-[#23293c] rounded-2xl p-8 space-y-2">
-              <Layers className="w-8 h-8 text-slate-600 mx-auto stroke-1" />
-              <h3 className="text-xs font-semibold text-slate-300">No matching resources in this workspace</h3>
-              <p className="text-[11px] text-slate-500">
+            <div className="py-16 text-center border-4 border-dashed border-black rounded-none p-8 space-y-3 bg-white shadow-[6px_6px_0px_0px_#000]">
+              <Layers className="w-10 h-10 text-black mx-auto stroke-2" />
+              <h3 className="text-sm font-black uppercase text-black">NO MATCHING RESOURCES IN WORKSPACE</h3>
+              <p className="text-xs font-bold text-black">
                 Click "+ Add from library" to link research without duplicating files.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredResources.map((res) => (
                 <div key={res.id} className="relative group">
                   <ResourceCard resource={res} />
@@ -539,10 +540,10 @@ export default function ProjectWorkspacePage() {
                       e.stopPropagation();
                       removeResourceFromProject(project.id, res.id);
                     }}
-                    className="absolute top-3 right-12 z-20 p-1.5 rounded-lg bg-[#141825]/90 hover:bg-rose-600 text-slate-400 hover:text-white border border-[#282f44] opacity-0 group-hover:opacity-100 transition-all shadow-md"
+                    className="btn-neo absolute top-3 right-12 z-20 p-1.5 rounded-none bg-white hover:bg-[#FF6B6B] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000] opacity-0 group-hover:opacity-100 transition-all"
                     title="Remove from project workspace"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-3.5 h-3.5 stroke-[2.5px]" />
                   </button>
                 </div>
               ))}
@@ -553,34 +554,35 @@ export default function ProjectWorkspacePage() {
 
       {/* TAB 3: DOCUMENTS */}
       {activeTab === 'documents' && (
-        <div className="space-y-4 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between">
+        <div className="space-y-6 animate-in fade-in duration-150">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-4 border-black pb-4">
             <div>
-              <h2 className="text-sm font-semibold text-slate-200">
-                Workspace Research Papers & PDFs
+              <h2 className="text-base font-black uppercase text-black">
+                WORKSPACE RESEARCH PAPERS & PDFS
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs font-bold text-black mt-0.5">
                 Documents linked to {project.name}. View with in-browser page search.
               </p>
             </div>
             <button
               onClick={() => setIsAddResourceOpen(true)}
-              className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium"
+              className="btn-neo flex items-center gap-1.5 px-4 py-2.5 bg-[#FFD93D] hover:bg-[#ffe169] text-black text-xs font-black uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_0px_#000] self-start sm:self-auto"
             >
-              + Link Document
+              <Plus className="w-4 h-4 stroke-[3px]" />
+              <span>+ LINK DOCUMENT</span>
             </button>
           </div>
 
           {documentResources.length === 0 ? (
-            <div className="py-16 text-center border border-dashed border-[#23293c] rounded-2xl p-8 space-y-2">
-              <FileText className="w-8 h-8 text-slate-600 mx-auto stroke-1" />
-              <h3 className="text-xs font-semibold text-slate-300">No documents connected yet</h3>
-              <p className="text-[11px] text-slate-500">
+            <div className="py-16 text-center border-4 border-dashed border-black rounded-none p-8 space-y-3 bg-white shadow-[6px_6px_0px_0px_#000]">
+              <FileText className="w-10 h-10 text-black mx-auto stroke-2" />
+              <h3 className="text-sm font-black uppercase text-black">NO DOCUMENTS CONNECTED YET</h3>
+              <p className="text-xs font-bold text-black">
                 Connect research whitepapers, architecture briefs, or project guides.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {documentResources.map((doc) => (
                 <div key={doc.id} className="relative group">
                   <ResourceCard resource={doc} />
@@ -590,10 +592,10 @@ export default function ProjectWorkspacePage() {
                       e.stopPropagation();
                       setSelectedViewerResource(doc);
                     }}
-                    className="absolute top-3 right-12 z-20 p-1.5 rounded-lg bg-[#141825]/90 hover:bg-indigo-600 text-slate-300 hover:text-white border border-[#282f44] transition-all shadow-md"
+                    className="btn-neo absolute top-3 right-12 z-20 p-1.5 rounded-none bg-white hover:bg-[#C4B5FD] text-black border-2 border-black shadow-[2px_2px_0px_0px_#000] transition-all"
                     title="Open in Document Reader"
                   >
-                    <Eye className="w-3.5 h-3.5" />
+                    <Eye className="w-4 h-4 stroke-[3px]" />
                   </button>
                 </div>
               ))}
@@ -604,20 +606,20 @@ export default function ProjectWorkspacePage() {
 
       {/* TAB 4: NOTES */}
       {activeTab === 'notes' && (
-        <div className="space-y-4 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between">
+        <div className="space-y-6 animate-in fade-in duration-150">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-4 border-black pb-4">
             <div>
-              <h2 className="text-sm font-semibold text-slate-200">Workspace Notes</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-base font-black uppercase text-black">WORKSPACE NOTES</h2>
+              <p className="text-xs font-bold text-black mt-0.5">
                 Capture thoughts, architectural questions, and reference notes specifically for this build.
               </p>
             </div>
             <button
               onClick={() => setIsCreatingNote(!isCreatingNote)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium"
+              className="btn-neo flex items-center gap-1.5 px-4 py-2.5 bg-[#C4B5FD] hover:bg-[#b5a3fa] text-black text-xs font-black uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_0px_#000] self-start sm:self-auto"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{isCreatingNote ? 'Cancel Note' : 'New Note'}</span>
+              <Plus className="w-4 h-4 stroke-[3px]" />
+              <span>{isCreatingNote ? 'CANCEL NOTE' : '+ NEW NOTE'}</span>
             </button>
           </div>
 
@@ -625,17 +627,19 @@ export default function ProjectWorkspacePage() {
           {isCreatingNote && (
             <form
               onSubmit={handleCreateNote}
-              className="p-5 rounded-2xl bg-[#11131e] border border-indigo-500/30 space-y-3 text-xs shadow-xl animate-in fade-in"
+              className="p-6 rounded-none bg-white border-4 border-black space-y-4 text-xs shadow-[8px_8px_0px_0px_#000] animate-in fade-in"
             >
-              <h3 className="font-semibold text-slate-200">Add Project Note</h3>
+              <div className="font-black uppercase text-xs bg-[#FFD93D] px-2 py-0.5 border border-black w-max">
+                ADD PROJECT NOTE
+              </div>
               <input
                 type="text"
                 required
                 autoFocus
-                placeholder="Note title (e.g. Model Reflection Loop Findings)"
+                placeholder="NOTE TITLE (E.G. MODEL REFLECTION LOOP FINDINGS)"
                 value={newNoteTitle}
                 onChange={(e) => setNewNoteTitle(e.target.value)}
-                className="w-full rounded-lg bg-[#161925] border border-[#242a3e] px-3 py-2 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-none bg-[#FFFDF5] border-2 border-black px-3.5 py-2.5 text-black font-black uppercase placeholder-black/50 focus:bg-[#FFD93D] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
               />
               <textarea
                 rows={4}
@@ -643,21 +647,21 @@ export default function ProjectWorkspacePage() {
                 placeholder="Write your notes, findings, or questions..."
                 value={newNoteContent}
                 onChange={(e) => setNewNoteContent(e.target.value)}
-                className="w-full rounded-lg bg-[#161925] border border-[#242a3e] px-3 py-2 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none font-sans"
+                className="w-full rounded-none bg-[#FFFDF5] border-2 border-black px-3.5 py-2.5 text-black font-medium placeholder-black/50 focus:bg-[#FFD93D] focus:outline-none resize-none shadow-[2px_2px_0px_0px_#000]"
               />
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsCreatingNote(false)}
-                  className="px-3 py-1.5 rounded-lg border border-[#23283a] text-slate-400"
+                  className="btn-neo px-4 py-2 rounded-none border-2 border-black bg-white text-black font-black uppercase text-xs shadow-[2px_2px_0px_0px_#000]"
                 >
-                  Cancel
+                  CANCEL
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium"
+                  className="btn-neo px-5 py-2 rounded-none bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs border-2 border-black shadow-[3px_3px_0px_0px_#000]"
                 >
-                  Save Note
+                  SAVE NOTE
                 </button>
               </div>
             </form>
@@ -665,38 +669,38 @@ export default function ProjectWorkspacePage() {
 
           {/* Notes List */}
           {notes.length === 0 && !isCreatingNote ? (
-            <div className="py-16 text-center border border-dashed border-[#23293c] rounded-2xl p-8 space-y-2">
-              <Bookmark className="w-8 h-8 text-slate-600 mx-auto stroke-1" />
-              <h3 className="text-xs font-semibold text-slate-300">No project notes yet</h3>
-              <p className="text-[11px] text-slate-500">
+            <div className="py-16 text-center border-4 border-dashed border-black rounded-none p-8 space-y-3 bg-white shadow-[6px_6px_0px_0px_#000]">
+              <Bookmark className="w-10 h-10 text-black mx-auto stroke-2" />
+              <h3 className="text-sm font-black uppercase text-black">NO PROJECT NOTES YET</h3>
+              <p className="text-xs font-bold text-black">
                 Record thoughts, stack evaluations, or questions as you build.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {notes.map((note) => (
                 <div
                   key={note.id}
-                  className="p-5 rounded-2xl bg-[#11131c] border border-[#1f2434] space-y-2.5 flex flex-col justify-between"
+                  className="p-6 rounded-none bg-white border-4 border-black space-y-3 flex flex-col justify-between shadow-[6px_6px_0px_0px_#000]"
                 >
-                  <div className="space-y-1.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-slate-200">
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-2 border-b-2 border-black pb-2">
+                      <h3 className="text-sm font-black uppercase text-black">
                         {note.title}
                       </h3>
                       <button
                         onClick={() => handleDeleteNote(note.id)}
-                        className="text-slate-500 hover:text-rose-400 p-1"
+                        className="btn-neo p-1 text-black hover:bg-[#FF6B6B] border border-black transition-colors"
                         title="Delete note"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3.5 h-3.5 stroke-[2.5px]" />
                       </button>
                     </div>
-                    <p className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-xs font-medium text-black whitespace-pre-wrap leading-relaxed">
                       {note.content}
                     </p>
                   </div>
-                  <div className="pt-2 border-t border-[#1a1f2e] text-[10px] font-mono text-slate-500">
+                  <div className="pt-2 border-t border-black text-[10px] font-mono font-bold text-black uppercase">
                     {new Date(note.created_at).toLocaleDateString()}
                   </div>
                 </div>
@@ -708,20 +712,20 @@ export default function ProjectWorkspacePage() {
 
       {/* TAB 5: DECISIONS */}
       {activeTab === 'decisions' && (
-        <div className="space-y-4 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between">
+        <div className="space-y-6 animate-in fade-in duration-150">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-4 border-black pb-4">
             <div>
-              <h2 className="text-sm font-semibold text-slate-200">Technical Decision Log</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-base font-black uppercase text-black">TECHNICAL DECISION LOG</h2>
+              <p className="text-xs font-bold text-black mt-0.5">
                 Document critical architectural and library choices to preserve context across sprint iterations.
               </p>
             </div>
             <button
               onClick={() => setIsCreatingDecision(!isCreatingDecision)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium"
+              className="btn-neo flex items-center gap-1.5 px-4 py-2.5 bg-[#FFD93D] hover:bg-[#ffe169] text-black text-xs font-black uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_0px_#000] self-start sm:self-auto"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{isCreatingDecision ? 'Cancel' : 'Log Decision'}</span>
+              <Plus className="w-4 h-4 stroke-[3px]" />
+              <span>{isCreatingDecision ? 'CANCEL' : '+ LOG DECISION'}</span>
             </button>
           </div>
 
@@ -729,17 +733,19 @@ export default function ProjectWorkspacePage() {
           {isCreatingDecision && (
             <form
               onSubmit={handleCreateDecision}
-              className="p-5 rounded-2xl bg-[#11131e] border border-amber-500/30 space-y-3 text-xs shadow-xl animate-in fade-in"
+              className="p-6 rounded-none bg-white border-4 border-black space-y-4 text-xs shadow-[8px_8px_0px_0px_#000] animate-in fade-in"
             >
-              <h3 className="font-semibold text-slate-200">Record Architecture Decision</h3>
+              <div className="font-black uppercase text-xs bg-[#FFD93D] px-2 py-0.5 border border-black w-max">
+                RECORD ARCHITECTURE DECISION
+              </div>
               <input
                 type="text"
                 required
                 autoFocus
-                placeholder="Decision (e.g. Use Supabase instead of Firebase)"
+                placeholder="DECISION (E.G. USE SUPABASE INSTEAD OF FIREBASE)"
                 value={newDecision}
                 onChange={(e) => setNewDecision(e.target.value)}
-                className="w-full rounded-lg bg-[#161925] border border-[#242a3e] px-3 py-2 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-none bg-[#FFFDF5] border-2 border-black px-3.5 py-2.5 text-black font-black uppercase placeholder-black/50 focus:bg-[#FFD93D] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
               />
               <textarea
                 rows={3}
@@ -747,21 +753,21 @@ export default function ProjectWorkspacePage() {
                 placeholder="Reason (e.g. Better PostgreSQL compatibility, native RLS, and built-in vector support)"
                 value={newDecisionReason}
                 onChange={(e) => setNewDecisionReason(e.target.value)}
-                className="w-full rounded-lg bg-[#161925] border border-[#242a3e] px-3 py-2 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none font-sans"
+                className="w-full rounded-none bg-[#FFFDF5] border-2 border-black px-3.5 py-2.5 text-black font-medium placeholder-black/50 focus:bg-[#FFD93D] focus:outline-none resize-none shadow-[2px_2px_0px_0px_#000]"
               />
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsCreatingDecision(false)}
-                  className="px-3 py-1.5 rounded-lg border border-[#23283a] text-slate-400"
+                  className="btn-neo px-4 py-2 rounded-none border-2 border-black bg-white text-black font-black uppercase text-xs shadow-[2px_2px_0px_0px_#000]"
                 >
-                  Cancel
+                  CANCEL
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium"
+                  className="btn-neo px-5 py-2 rounded-none bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs border-2 border-black shadow-[3px_3px_0px_0px_#000]"
                 >
-                  Record Decision
+                  RECORD DECISION
                 </button>
               </div>
             </form>
@@ -769,39 +775,39 @@ export default function ProjectWorkspacePage() {
 
           {/* Decisions List */}
           {decisions.length === 0 && !isCreatingDecision ? (
-            <div className="py-16 text-center border border-dashed border-[#23293c] rounded-2xl p-8 space-y-2">
-              <CheckSquare className="w-8 h-8 text-slate-600 mx-auto stroke-1" />
-              <h3 className="text-xs font-semibold text-slate-300">No decisions logged yet</h3>
-              <p className="text-[11px] text-slate-500">
+            <div className="py-16 text-center border-4 border-dashed border-black rounded-none p-8 space-y-3 bg-white shadow-[6px_6px_0px_0px_#000]">
+              <CheckSquare className="w-10 h-10 text-black mx-auto stroke-2" />
+              <h3 className="text-sm font-black uppercase text-black">NO DECISIONS LOGGED YET</h3>
+              <p className="text-xs font-bold text-black">
                 Preserve the "Why" behind your technology and framework choices.
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {decisions.map((dec) => (
                 <div
                   key={dec.id}
-                  className="p-4 rounded-2xl bg-[#11131c] border border-[#1f2434] space-y-1.5"
+                  className="p-5 rounded-none bg-white border-4 border-black space-y-2 shadow-[6px_6px_0px_0px_#000]"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-3 border-b-2 border-black pb-2">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <h3 className="text-sm font-semibold text-slate-200">
+                      <CheckCircle2 className="w-4 h-4 text-black stroke-[3px] shrink-0" />
+                      <h3 className="text-sm font-black uppercase text-black">
                         {dec.decision}
                       </h3>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-slate-500">{dec.date}</span>
+                      <span className="text-[10px] font-mono font-black text-black bg-[#C4B5FD] px-2 py-0.5 border border-black uppercase">{dec.date}</span>
                       <button
                         onClick={() => handleDeleteDecision(dec.id)}
-                        className="text-slate-500 hover:text-rose-400 p-1"
+                        className="btn-neo p-1 text-black hover:bg-[#FF6B6B] border border-black transition-colors"
                         title="Delete decision"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3.5 h-3.5 stroke-[2.5px]" />
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed pl-6">
+                  <p className="text-xs font-medium text-black leading-relaxed">
                     {dec.reason}
                   </p>
                 </div>
@@ -813,23 +819,23 @@ export default function ProjectWorkspacePage() {
 
       {/* TAB 6: SETTINGS */}
       {activeTab === 'settings' && (
-        <div className="p-6 rounded-2xl bg-[#11131c] border border-[#1f2434] space-y-6 max-w-2xl animate-in fade-in duration-150 text-xs">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-200">Workspace Settings & Lifecycle</h2>
-            <p className="text-slate-400 mt-0.5">Manage project status, archive, or deletion.</p>
+        <div className="p-6 md:p-8 rounded-none bg-white border-4 border-black space-y-6 max-w-2xl animate-in fade-in duration-150 text-xs shadow-[8px_8px_0px_0px_#000]">
+          <div className="border-b-2 border-black pb-3">
+            <h2 className="text-base font-black uppercase text-black">WORKSPACE SETTINGS & LIFECYCLE</h2>
+            <p className="text-xs font-bold text-black mt-0.5">Manage project status, archive, or deletion.</p>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-slate-400 font-semibold">Workspace Status</label>
+            <label className="block text-black font-black uppercase text-xs">Workspace Status</label>
             <div className="flex flex-wrap gap-2">
               {(['active', 'planning', 'paused', 'completed', 'archived'] as const).map((st) => (
                 <button
                   key={st}
                   onClick={() => updateProject(project.id, { status: st })}
-                  className={`px-3 py-1.5 rounded-lg border capitalize font-medium ${
+                  className={`btn-neo px-3.5 py-2 rounded-none border-2 border-black capitalize font-black text-xs ${
                     project.status === st
-                      ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/50'
-                      : 'bg-[#151926] text-slate-400 border-[#22293c] hover:text-slate-200'
+                      ? 'bg-[#FFD93D] text-black shadow-[3px_3px_0px_0px_#000] -translate-y-0.5'
+                      : 'bg-white text-black hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000]'
                   }`}
                 >
                   {st}
@@ -839,22 +845,22 @@ export default function ProjectWorkspacePage() {
           </div>
 
           {/* Danger Zone */}
-          <div className="pt-6 border-t border-[#1f2434] space-y-3">
-            <h3 className="text-xs font-semibold text-rose-400 uppercase tracking-wider">
-              Danger Zone
+          <div className="pt-6 border-t-4 border-black space-y-3">
+            <h3 className="text-xs font-black text-black bg-[#FF6B6B] px-2 py-0.5 border border-black w-max uppercase tracking-wider">
+              DANGER ZONE
             </h3>
-            <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <span className="font-semibold text-slate-200">Delete Project Workspace</span>
-                <p className="text-[11px] text-slate-400">
+            <div className="p-5 rounded-none bg-[#FFFDF5] border-2 border-black flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[4px_4px_0px_0px_#000]">
+              <div className="space-y-1">
+                <span className="font-black uppercase text-xs text-black">DELETE PROJECT WORKSPACE</span>
+                <p className="text-xs text-black font-medium leading-relaxed">
                   Deletes this workspace organization, notes, and decisions. All connected library resources remain safe in your library.
                 </p>
               </div>
               <button
                 onClick={handleDeleteProject}
-                className="px-4 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition-all font-medium whitespace-nowrap self-start sm:self-auto"
+                className="btn-neo px-4 py-2.5 rounded-none bg-[#FF6B6B] hover:bg-[#ff5252] text-black border-2 border-black font-black uppercase text-xs tracking-wider shadow-[3px_3px_0px_0px_#000] whitespace-nowrap self-start sm:self-auto"
               >
-                Delete Workspace
+                DELETE WORKSPACE
               </button>
             </div>
           </div>

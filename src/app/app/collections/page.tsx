@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useResora } from '@/context/ResoraContext';
-import { ArrowRight, Plus } from 'lucide-react';
+import { ArrowRight, Plus, Sparkles } from 'lucide-react';
+import { PageHeader } from '@/components/ui/SectionLabel';
 
 export default function CollectionsPage() {
   const { collections, createCollection } = useResora();
@@ -33,31 +34,24 @@ export default function CollectionsPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-200">
-      {/* Header: Neo-Brutalist Thematic Stacks */}
-      <div className="border-b-4 border-black pb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFD93D] text-black border-2 border-black text-xs font-black uppercase tracking-wider mb-3 shadow-[3px_3px_0px_0px_#000] -rotate-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-black" />
-            THEMATIC ARCHIVES
-          </div>
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-black leading-none">
-            CURATED<br />
-            COLLECTIONS.
-          </h1>
-          <p className="text-sm md:text-base font-bold text-black mt-3 max-w-xl">
-            Thematic resource clusters curated for high-velocity retrieval and cross-project reuse.
-          </p>
-        </div>
-
-        <button
-          onClick={() => setIsCreating(true)}
-          className="btn-neo flex items-center gap-2 px-6 py-4 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-4 border-black shadow-[6px_6px_0px_0px_#000] self-start sm:self-auto"
-        >
-          <Plus className="w-5 h-5 stroke-[3px]" />
-          <span>+ NEW COLLECTION</span>
-        </button>
-      </div>
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
+      {/* Top Header */}
+      <PageHeader
+        eyebrow="THEMATIC ARCHIVES"
+        eyebrowColor="violet"
+        eyebrowIcon={<Sparkles className="w-3 h-3 stroke-[2.5]" />}
+        title="CURATED COLLECTIONS."
+        description="Thematic resource clusters curated for high-velocity retrieval and cross-project reuse."
+        actions={
+          <button
+            onClick={() => setIsCreating(true)}
+            className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-2 border-black shadow-[3px_3px_0px_#000]"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>+ NEW COLLECTION</span>
+          </button>
+        }
+      />
 
       {/* Inline Create Collection Form */}
       {isCreating && (

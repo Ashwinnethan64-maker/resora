@@ -17,9 +17,13 @@ export default function CollectionDetailPage() {
 
   if (!collection) {
     return (
-      <div className="p-8 max-w-4xl mx-auto space-y-4 text-center">
-        <h2 className="text-xl font-bold text-slate-200">Collection not found</h2>
-        <Link href="/app/collections" className="text-xs text-indigo-400">Back to Collections</Link>
+      <div className="p-10 max-w-2xl mx-auto space-y-4 text-center bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] my-12">
+        <h2 className="text-2xl font-black uppercase text-black">COLLECTION NOT FOUND</h2>
+        <p className="text-xs font-bold text-black">The requested collection does not exist or was removed.</p>
+        <Link href="/app/collections" className="btn-neo inline-flex items-center gap-2 px-5 py-2.5 bg-[#FFD93D] text-black border-2 border-black font-black uppercase text-xs shadow-[3px_3px_0px_0px_#000]">
+          <ArrowLeft className="w-4 h-4 stroke-[3px]" />
+          <span>BACK TO COLLECTIONS</span>
+        </Link>
       </div>
     );
   }

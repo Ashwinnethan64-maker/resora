@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { useResora } from '@/context/ResoraContext';
 import { AuthService } from '@/lib/auth/auth-service';
+import { PageHeader } from '@/components/ui/SectionLabel';
 import {
   User,
   Sliders,
@@ -128,34 +129,27 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in duration-200">
-      {/* Header: Neo-Brutalist Control Panel */}
-      <div className="border-b-4 border-black pb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFD93D] text-black border-2 border-black text-xs font-black uppercase tracking-wider mb-3 shadow-[3px_3px_0px_0px_#000] -rotate-1">
-            <span className="w-2.5 h-2.5 rounded-none bg-black" />
-            CONTROL PANEL
-          </div>
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-black leading-none">
-            SETTINGS &<br />
-            PREFERENCES.
-          </h1>
-          <p className="text-sm md:text-base font-bold text-black mt-3 max-w-xl">
-            Manage your research profile, workspace configurations, and data export portability.
-          </p>
-        </div>
-
-        <button
-          onClick={async () => {
-            await AuthService.signOut();
-            window.location.href = '/auth';
-          }}
-          className="btn-neo flex items-center gap-2 px-5 py-3 bg-white border-4 border-black text-black font-black uppercase text-xs md:text-sm tracking-wider shadow-[4px_4px_0px_0px_#000]"
-        >
-          <LogOut className="w-4 h-4 stroke-[3px]" />
-          <span>SIGN OUT</span>
-        </button>
-      </div>
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in duration-150">
+      {/* Top Header */}
+      <PageHeader
+        eyebrow="SYSTEM & CONTROL"
+        eyebrowColor="white"
+        eyebrowIcon={<Sliders className="w-3 h-3 stroke-[2.5]" />}
+        title="SETTINGS & PREFERENCES."
+        description="Manage your research profile, workspace configurations, and data export portability."
+        actions={
+          <button
+            onClick={async () => {
+              await AuthService.signOut();
+              window.location.href = '/auth';
+            }}
+            className="btn-neo flex items-center gap-2 px-5 py-3 bg-white border-2 border-black text-black font-black uppercase text-xs md:text-sm tracking-wider shadow-[3px_3px_0px_#000]"
+          >
+            <LogOut className="w-4 h-4 stroke-[3px]" />
+            <span>SIGN OUT</span>
+          </button>
+        }
+      />
 
       {/* Settings Navigation Tabs */}
       <div className="flex items-center gap-3 border-b-4 border-black pb-4 text-xs overflow-x-auto">

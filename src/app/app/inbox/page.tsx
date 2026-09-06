@@ -5,14 +5,17 @@ import { useResora } from '@/context/ResoraContext';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ResourceSkeleton } from '@/components/resources/ResourceSkeleton';
 import { ResourceIntelligence } from '@/types/database';
+import { PageHeader } from '@/components/ui/SectionLabel';
 import {
   Inbox,
   ExternalLink,
   CheckCircle2,
   Calendar,
   Edit2,
-  Brain,
-  Check
+  Sparkles,
+  Check,
+  ArrowRight,
+  Trash2
 } from 'lucide-react';
 
 export default function InboxPage() {
@@ -20,6 +23,7 @@ export default function InboxPage() {
     inboxResources,
     updateResource,
     openEditModal,
+    openDeleteDialog,
     getIntelligence,
     analyzeResource,
     isLoading,
@@ -72,161 +76,120 @@ export default function InboxPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-200">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in duration-150">
       
-      {/* Page Header: Hot Red Neo-Brutalist Banner */}
-      <div className="p-6 md:p-10 bg-[#FF6B6B] text-black border-4 border-black shadow-[8px_8px_0px_0px_#000] flex flex-col md:flex-row md:items-end justify-between gap-6 relative overflow-hidden">
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFD93D] text-black border-2 border-black text-xs font-black uppercase tracking-wider mb-4 shadow-[3px_3px_0px_0px_#000] -rotate-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B6B] border border-black" />
-            UNPROCESSED RESEARCH
-          </div>
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-black leading-none">
-            INBOX.<br />
-            <span className="bg-[#FFFDF5] px-2 py-0.5 inline-block border-2 border-black shadow-[4px_4px_0px_0px_#000] mt-2 rotate-1">
-              {inboxResources.length} ITEMS
-            </span> PENDING.
-          </h1>
-          <p className="text-sm md:text-base font-bold text-black mt-4 max-w-xl">
-            Captured links awaiting project assignment, taxonomy tags, and AI dossier verification.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 relative z-10">
+      {/* Header Banner */}
+      <PageHeader
+        eyebrow="UNPROCESSED RESEARCH"
+        eyebrowColor="coral"
+        eyebrowIcon={<span className="w-2 h-2 rounded-full bg-black inline-block" />}
+        title={`INBOX (${inboxResources.length}).`}
+        description="Captured research waiting to be understood, tagged, and filed into active projects."
+        actions={
           <button
             onClick={handleOrganizeWithAI}
             disabled={organizingAI || inboxResources.length === 0}
-            className="btn-neo px-6 py-4 bg-[#FFD93D] hover:bg-[#ffe169] text-black border-4 border-black font-black uppercase text-xs sm:text-sm tracking-wider shadow-[6px_6px_0px_0px_#000] disabled:opacity-50"
+            className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#FFD93D] hover:bg-[#ffe169] text-black border-2 border-black font-black uppercase text-xs tracking-wider shadow-[3px_3px_0px_#000] disabled:opacity-50"
           >
-            {organizingAI ? 'SYNTHESIZING...' : '⚡ ANALYZE INBOX WITH AI'}
+            <Sparkles className="w-4 h-4 stroke-[2.5]" />
+            <span>{organizingAI ? 'ANALYZING INBOX...' : 'AI AUTO-TRIAGE'}</span>
           </button>
-        </div>
-      </div>
+        }
+      />
 
-      {/* Notice Banner */}
-      <div className="p-4 bg-[#FFFFFF] border-4 border-black shadow-[4px_4px_0px_0px_#000] flex items-start gap-3 text-xs md:text-sm text-black font-bold">
-        <div className="w-4 h-4 rounded-none bg-[#C4B5FD] border-2 border-black mt-0.5 shrink-0" />
-        <div>
-          <span className="font-black uppercase bg-[#FFD93D] px-1 border border-black mr-1">INTELLIGENT INBOX TRIAGE:</span> Resora generates verified types, topics, and use cases for unorganized captures. Click "Accept & Organize" to apply recommendations in one step.
-        </div>
-      </div>
-
-      {/* Content List */}
+      {/* Inbox Items Feed */}
       {isLoading ? (
-        <ResourceSkeleton count={4} viewMode="list" />
+        <ResourceSkeleton count={3} />
       ) : inboxResources.length === 0 ? (
         <EmptyState
           icon={Inbox}
-          title="YOUR RESEARCH INBOX IS CLEAR"
-          description="All captured items have been triaged and organized into your library, projects, and collections."
+          title="YOUR INBOX IS CLEAN"
+          description="All captured research has been organized into your library and project workspaces."
+          actionLabel="EXPLORE YOUR LIBRARY"
+          onAction={() => {}}
         />
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {inboxResources.map((item) => {
             const intel = intelMap[item.id];
             return (
               <div
                 key={item.id}
-                className="p-6 rounded-none bg-white border-4 border-black shadow-[6px_6px_0px_0px_#000] hover:shadow-[10px_10px_0px_0px_#000] hover:-translate-y-1 transition-all duration-150 space-y-4"
+                className="p-5 bg-white border-3 border-black shadow-[4px_4px_0px_#000] space-y-4 transition-all"
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="space-y-2 flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="w-3 h-3 rounded-none bg-[#FF6B6B] border-2 border-black" />
-                      <h3 className="text-base md:text-lg font-black uppercase text-black truncate">
-                        {item.title}
-                      </h3>
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-black hover:text-[#FF6B6B] transition-colors p-1"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                      <span className="text-xs font-mono font-black text-black bg-[#FFFDF5] px-2 py-0.5 border border-black">
-                        VIA {item.domain.toUpperCase()}
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 border border-black bg-[#FFD93D] text-black">
+                        {item.resource_type.toUpperCase()}
                       </span>
+                      <span className="font-mono text-xs text-black/60 font-bold">{item.domain}</span>
                     </div>
 
-                    <p className="text-xs md:text-sm font-medium text-black line-clamp-2 leading-relaxed">
-                      {intel?.summary || item.description || 'Quick-saved research resource.'}
+                    <h3 className="text-base font-bold text-black">{item.title}</h3>
+                    <p className="text-xs text-black/75 font-normal leading-relaxed">
+                      {item.description || 'No description provided.'}
                     </p>
-
-                    <div className="flex items-center gap-3 pt-1 text-xs font-mono font-bold text-black uppercase">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-black" /> SAVED {new Date(item.created_at).toLocaleDateString()}
-                      </span>
-                      <span className="px-2 py-0.5 bg-[#C4B5FD] text-black border-2 border-black font-black">
-                        TYPE: {item.resource_type.toUpperCase()}
-                      </span>
-                    </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 shrink-0 pt-3 md:pt-0 border-t-2 md:border-t-0 border-black">
+                  <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0">
+                    <button
+                      onClick={() => handleOrganizeItem(item.id)}
+                      className="btn-neo px-3 py-1.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs border-2 border-black shadow-[2px_2px_0px_#000] flex items-center gap-1"
+                    >
+                      <Check className="w-3 h-3 stroke-[3]" />
+                      <span>Accept</span>
+                    </button>
                     <button
                       onClick={() => openEditModal(item)}
-                      className="btn-neo flex items-center gap-1.5 px-4 py-2.5 bg-white border-2 border-black text-black text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_0px_#000]"
+                      className="p-1.5 border-2 border-black bg-white hover:bg-[#FFD93D] text-black shadow-[2px_2px_0px_#000]"
+                      title="Edit details"
                     >
-                      <Edit2 className="w-3.5 h-3.5" />
-                      <span>EDIT</span>
+                      <Edit2 className="w-3.5 h-3.5 stroke-[2]" />
                     </button>
-                    {intel ? (
-                      <button
-                        onClick={() => handleAcceptAllSuggestions(item)}
-                        className="btn-neo flex items-center gap-1.5 px-5 py-2.5 bg-[#FFD93D] hover:bg-[#ffe169] text-black border-4 border-black text-xs font-black uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
-                      >
-                        <Check className="w-4 h-4" />
-                        <span>ACCEPT & ORGANIZE</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleOrganizeItem(item.id)}
-                        className="btn-neo flex items-center gap-1.5 px-5 py-2.5 bg-[#C4B5FD] hover:bg-[#b8a6fb] text-black border-4 border-black text-xs font-black uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>ORGANIZE</span>
-                      </button>
-                    )}
+                    <button
+                      onClick={() => openDeleteDialog(item)}
+                      className="p-1.5 border-2 border-black bg-white hover:bg-[#FF6B6B] text-black shadow-[2px_2px_0px_#000]"
+                      title="Discard"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 stroke-[2]" />
+                    </button>
                   </div>
                 </div>
 
-                {/* AI Suggestions Preview Bar */}
+                {/* AI Intelligence Suggestions (if ready) */}
                 {intel && (
-                  <div className="pt-4 border-t-2 border-black flex flex-wrap items-center gap-4 text-xs">
-                    <div className="flex items-center gap-1.5 font-black uppercase text-black bg-[#FFD93D] px-2 py-1 border border-black">
-                      <Brain className="w-3.5 h-3.5" />
-                      <span>AI SUGGESTIONS:</span>
+                  <div className="p-3.5 bg-[#FFFDF5] border-2 border-black space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] font-black uppercase text-black flex items-center gap-1.5">
+                        <Sparkles className="w-3 h-3 text-[#FF6B6B] stroke-[2.5]" />
+                        <span>AI Dossier Insight</span>
+                      </span>
+                      <button
+                        onClick={() => handleAcceptAllSuggestions(item)}
+                        className="text-[11px] font-bold text-black underline hover:text-[#FF6B6B]"
+                      >
+                        Accept Suggestions →
+                      </button>
                     </div>
 
-                    {intel.suggested_tags && intel.suggested_tags.length > 0 && (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] text-black font-mono font-bold uppercase">TAGS:</span>
-                        {intel.suggested_tags.map((t) => (
-                          <span
-                            key={t}
-                            className="px-2 py-0.5 bg-white text-black border-2 border-black font-mono font-black text-xs shadow-[2px_2px_0px_0px_#000]"
-                          >
-                            #{t}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    <div className="text-xs text-black/85 font-normal">
+                      <strong>What it is:</strong> {intel.what_it_is}
+                    </div>
 
-                    {intel.suggested_use_cases && intel.suggested_use_cases.length > 0 && (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] text-black font-mono font-bold uppercase">USE CASES:</span>
-                        {intel.suggested_use_cases.map((uc) => (
-                          <span
-                            key={uc}
-                            className="px-2.5 py-0.5 bg-[#C4B5FD] text-black border-2 border-black text-xs font-black uppercase shadow-[2px_2px_0px_0px_#000]"
-                          >
-                            {uc}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {intel.suggested_tags?.slice(0, 3).map((tag) => (
+                        <span key={tag} className="text-[10px] font-mono px-1.5 py-0.2 bg-white border border-black font-bold">
+                          #{tag}
+                        </span>
+                      ))}
+                      {intel.suggested_use_cases?.slice(0, 2).map((uc) => (
+                        <span key={uc} className="text-[10px] font-mono px-1.5 py-0.2 bg-[#FFD93D] border border-black font-bold">
+                          {uc}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

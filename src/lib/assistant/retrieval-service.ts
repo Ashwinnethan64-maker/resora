@@ -92,7 +92,7 @@ export class RetrievalService {
 
     for (const res of candidateResources) {
       let score = 0;
-      let matchedPages: DocumentPageModel[] = [];
+      const matchedPages: DocumentPageModel[] = [];
       let matchSnippet = res.description || '';
 
       const title = res.title.toLowerCase();

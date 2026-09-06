@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useResora } from '@/context/ResoraContext';
 import { ResourceCard } from '@/components/resources/ResourceCard';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { PageHeader } from '@/components/ui/SectionLabel';
 import {
   Wrench,
   Search,
@@ -44,45 +45,37 @@ export default function ToolsPage() {
   });
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-200">
-      {/* Header: Neo-Brutalism Toolkit Directory */}
-      <div className="border-b-4 border-black pb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFD93D] text-black border-2 border-black text-xs font-black uppercase tracking-wider mb-3 shadow-[3px_3px_0px_0px_#000] -rotate-1">
-            <span className="w-2.5 h-2.5 rounded-none bg-black" />
-            TOOLKIT DIRECTORY
-          </div>
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-black leading-none">
-            DEVELOPER<br />
-            TOOLS.
-          </h1>
-          <p className="text-sm md:text-base font-bold text-black mt-3 max-w-xl">
-            Software utilities, AI companions, and development engines curated for your active workflows.
-          </p>
-        </div>
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
+      {/* Top Header */}
+      <PageHeader
+        eyebrow="TOOLKIT DIRECTORY"
+        eyebrowColor="yellow"
+        eyebrowIcon={<span className="w-2.5 h-2.5 bg-black rotate-45 inline-block shrink-0" />}
+        title="DEVELOPER TOOLS."
+        description="Software utilities, AI companions, and development engines curated for your active workflows."
+        actions={
+          <div className="flex items-center gap-3">
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 text-black stroke-[3px] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="SEARCH SAVED TOOLS..."
+                value={toolSearch}
+                onChange={(e) => setToolSearch(e.target.value)}
+                className="w-full pl-10 pr-3.5 py-3 bg-white border-2 border-black text-black placeholder-black/50 text-xs font-black uppercase focus:bg-[#FFD93D] focus:outline-none shadow-[2px_2px_0px_#000]"
+              />
+            </div>
 
-        <div className="flex items-center gap-3">
-          {/* Search tool */}
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 text-black stroke-[3px] absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="SEARCH SAVED TOOLS..."
-              value={toolSearch}
-              onChange={(e) => setToolSearch(e.target.value)}
-              className="w-full pl-10 pr-3.5 py-3 rounded-none bg-white border-4 border-black text-black placeholder-black/50 text-xs font-black uppercase focus:bg-[#FFD93D] focus:outline-none shadow-[3px_3px_0px_0px_#000]"
-            />
+            <button
+              onClick={openSaveModal}
+              className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-2 border-black shadow-[3px_3px_0px_#000] shrink-0"
+            >
+              <Plus className="w-4 h-4 stroke-[3px]" />
+              <span>+ SAVE TOOL</span>
+            </button>
           </div>
-
-          <button
-            onClick={openSaveModal}
-            className="btn-neo flex items-center gap-2 px-6 py-3.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000] shrink-0"
-          >
-            <Plus className="w-4 h-4 stroke-[3px]" />
-            <span>+ SAVE TOOL</span>
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Category Pills */}
       <div className="flex flex-wrap items-center gap-3 border-b-4 border-black pb-4">

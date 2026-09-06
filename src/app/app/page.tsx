@@ -8,6 +8,7 @@ import { ResourceCard } from '@/components/resources/ResourceCard';
 import { ResourceSkeleton } from '@/components/resources/ResourceSkeleton';
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import { NeoSticker } from '@/components/brand/NeoSticker';
+import { PageHeader } from '@/components/ui/SectionLabel';
 import {
   Plus,
   ArrowRight,
@@ -18,21 +19,18 @@ import {
   FileSpreadsheet,
   GraduationCap,
   Clock,
-  Compass
+  Compass,
+  Sparkles,
+  Inbox,
+  FolderKanban,
+  FileText,
+  Heart,
+  ArrowUpRight
 } from 'lucide-react';
-
-const QUICK_ACCESS_ITEMS = [
-  { id: 'qa-1', title: 'AI DEV', topic: 'AI', icon: Brain, bg: 'bg-[#FFD93D]', rotate: '-1', route: '/app/library?topic=AI' },
-  { id: 'qa-2', title: 'DEV TOOLS', topic: 'Coding', icon: Code2, bg: 'bg-[#C4B5FD]', rotate: '1', route: '/app/tools' },
-  { id: 'qa-3', title: 'HACKATHONS', topic: 'Hackathon', icon: Flame, bg: 'bg-[#FF6B6B]', rotate: '-2', route: '/app/projects' },
-  { id: 'qa-4', title: 'UI / DESIGN', topic: 'Design', icon: Layers, bg: 'bg-[#FFFFFF]', rotate: '2', route: '/app/library?topic=Design' },
-  { id: 'qa-5', title: 'RESEARCH', topic: 'Research', icon: FileSpreadsheet, bg: 'bg-[#FFD93D]', rotate: '-1', route: '/app/documents' },
-  { id: 'qa-6', title: 'LEARNING', topic: 'Learning', icon: GraduationCap, bg: 'bg-[#C4B5FD]', rotate: '1', route: '/app/collections' },
-];
 
 function AppHomeContent() {
   const searchParams = useSearchParams();
-  const { resources, metrics, isLoading, openSaveModal } = useResora();
+  const { resources, projects, metrics, isLoading, openSaveModal } = useResora();
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   useEffect(() => {
@@ -42,351 +40,191 @@ function AppHomeContent() {
   }, [searchParams]);
 
   const recentResources = resources.slice(0, 6);
+  const activeProjects = projects.filter((p) => p.status !== 'archived').slice(0, 3);
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-10 animate-in fade-in duration-100">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-150">
       
-      {/* ============================================================ */}
-      {/* SECTION 1: NEO-BRUTALIST HERO COMMAND CENTER (60/40 ASYMMETRIC) */}
-      {/* ============================================================ */}
-      <section className="relative border-4 border-black bg-white shadow-[12px_12px_0px_0px_#000] overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[360px]">
-          
-          {/* LEFT 60%: LOUD OVERSIZED TYPOGRAPHY & RESEARCH STATEMENT */}
-          <div className="lg:col-span-7 p-6 sm:p-10 md:p-12 flex flex-col justify-between border-b-4 lg:border-b-0 lg:border-r-4 border-black bg-white z-10">
-            <div>
-              <div className="flex items-center gap-2 mb-5">
-                <NeoSticker color="yellow" rotate="-1">
-                  PERSONAL RESEARCH INTELLIGENCE
-                </NeoSticker>
-                <NeoSticker color="violet" rotate="1" size="sm">
-                  LIVE 2026
-                </NeoSticker>
-              </div>
-              
-              <h1 className="text-5xl sm:text-7xl md:text-8xl font-black uppercase tracking-tighter text-black leading-[0.88]">
-                YOUR<br />
-                RESEARCH<br />
-                <span className="text-[#FF6B6B] underline decoration-8 decoration-black">IS WAITING.</span>
-              </h1>
-
-              <p className="text-sm md:text-base font-black text-black/80 mt-6 max-w-lg leading-relaxed">
-                Save what matters. Understand what you saved. Use it when it counts. A tactile research bulletin board engineered for creative builders.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 mt-8">
-              <button
-                onClick={openSaveModal}
-                className="btn-neo px-6 py-4 bg-[#FF6B6B] hover:bg-[#ff5252] text-black border-4 border-black font-black uppercase text-xs md:text-sm tracking-wider shadow-[6px_6px_0px_0px_#000] flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                <span>+ CAPTURE TO ARCHIVE</span>
-              </button>
-              
-              <Link
-                href="/app/assistant"
-                className="btn-neo px-6 py-4 bg-[#FFD93D] hover:bg-[#ffe366] text-black border-4 border-black font-black uppercase text-xs md:text-sm tracking-wider shadow-[6px_6px_0px_0px_#000] flex items-center gap-2"
-              >
-                <Compass className="w-4 h-4 stroke-[3]" />
-                <span>QUERY RESEARCH</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* RIGHT 40%: STACKED STICKER LAB COMPOSITION WITH HALFTONE PATTERN */}
-          <div className="lg:col-span-5 relative bg-[#FFFDF5] p-6 md:p-8 flex flex-col justify-between overflow-hidden bg-halftone">
-            {/* Top Tape Header */}
-            <div className="relative z-10 flex items-center justify-between pb-3 border-b-4 border-black">
-              <span className="font-mono text-xs font-black uppercase tracking-wider text-black">
-                BULLETIN INDEX
-              </span>
-              <span className="text-xs font-mono font-black bg-[#C4B5FD] text-black px-2 py-0.5 border-2 border-black">
-                STATUS: SYNCED
-              </span>
-            </div>
-
-            {/* Overlapping Sticker Cards (Controlled Chaos) */}
-            <div className="relative z-10 my-6 flex flex-col items-center justify-center gap-3">
-              <div className="w-full bg-[#FFD93D] border-4 border-black p-4 shadow-[6px_6px_0px_0px_#000] -rotate-2">
-                <div className="text-[10px] font-mono font-black uppercase text-black">ACTIVE DOSSIERS</div>
-                <div className="text-3xl font-black uppercase text-black leading-none mt-1">
-                  {metrics.total} ITEMS SAVED
-                </div>
-              </div>
-
-              <div className="w-full bg-[#C4B5FD] border-4 border-black p-4 shadow-[6px_6px_0px_0px_#000] rotate-1">
-                <div className="text-[10px] font-mono font-black uppercase text-black">INBOX QUEUE</div>
-                <div className="text-2xl font-black uppercase text-black leading-none mt-1">
-                  {metrics.inbox} PENDING TRIAGE
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Statement Box */}
-            <div className="relative z-10 p-4 bg-white border-4 border-black shadow-[6px_6px_0px_0px_#000]">
-              <div className="text-[10px] font-mono font-black uppercase text-black/60">
-                SYSTEM MOTTO
-              </div>
-              <div className="text-lg font-black uppercase text-black leading-tight mt-0.5">
-                "NO FLUFF. PURE INTELLIGENCE."
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* SECTION 2: HARD STATISTIC BLOCKS (SOLID 8PX SHADOWS) */}
-      {/* ============================================================ */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-        
-        {/* BLOCK 1: CREAM / YELLOW STICKER */}
-        <div className="card-neo relative p-6 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase tracking-wider text-black/70">
-              RESOURCES
-            </span>
-            <NeoSticker color="yellow" size="sm" rotate="-2">ALL</NeoSticker>
-          </div>
-          <div className="text-5xl md:text-6xl font-black text-black my-4 leading-none tracking-tight">
-            {metrics.total}
-          </div>
-          <div className="text-[11px] font-mono font-black uppercase text-black/60">
-            {metrics.favorites} FAVORITED
-          </div>
-        </div>
-
-        {/* BLOCK 2: HOT RED BLOCK */}
-        <div className="card-neo relative p-6 bg-[#FF6B6B] text-black border-4 border-black shadow-[8px_8px_0px_0px_#000] flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase tracking-wider text-black">
-              UNDERSTOOD
-            </span>
-            <NeoSticker color="white" size="sm" rotate="1">AI</NeoSticker>
-          </div>
-          <div className="text-5xl md:text-6xl font-black text-black my-4 leading-none tracking-tight">
-            {metrics.analyzed}
-          </div>
-          <div className="text-[11px] font-mono font-black uppercase text-black/80">
-            FACTUAL DOSSIERS
-          </div>
-        </div>
-
-        {/* BLOCK 3: VIVID YELLOW BLOCK */}
-        <div className="card-neo relative p-6 bg-[#FFD93D] text-black border-4 border-black shadow-[8px_8px_0px_0px_#000] flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase tracking-wider text-black">
-              PROJECTS
-            </span>
-            <NeoSticker color="black" size="sm" rotate="-1">ACTIVE</NeoSticker>
-          </div>
-          <div className="text-5xl md:text-6xl font-black text-black my-4 leading-none tracking-tight">
-            {metrics.projects}
-          </div>
-          <div className="text-[11px] font-mono font-black uppercase text-black/80">
-            ACTIVE WORKSPACES
-          </div>
-        </div>
-
-        {/* BLOCK 4: SOFT VIOLET BLOCK */}
-        <div className="card-neo relative p-6 bg-[#C4B5FD] text-black border-4 border-black shadow-[8px_8px_0px_0px_#000] flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase tracking-wider text-black">
-              COLLECTIONS
-            </span>
-            <NeoSticker color="yellow" size="sm" rotate="2">STACKS</NeoSticker>
-          </div>
-          <div className="text-5xl md:text-6xl font-black text-black my-4 leading-none tracking-tight">
-            {metrics.collections}
-          </div>
-          <div className="text-[11px] font-mono font-black uppercase text-black/80">
-            THEMATIC CLUSTERS
-          </div>
-        </div>
-
-      </section>
-
-      {/* ============================================================ */}
-      {/* SECTION 3: QUICK ACCESS (RESEARCH BULLETIN TILES) */}
-      {/* ============================================================ */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b-4 border-black">
-          <h2 className="text-lg md:text-xl font-black uppercase tracking-tight text-black flex items-center gap-2">
-            <span className="w-3.5 h-3.5 bg-[#FF6B6B] border-2 border-black rotate-45" />
-            RESEARCH DIRECTORY
-          </h2>
-          <span className="text-xs font-mono font-black uppercase text-black/60">
-            THEMATIC ROUTING
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {QUICK_ACCESS_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const topicCount = resources.filter((r) =>
-              r.tags?.some((t) => t.toLowerCase() === item.topic.toLowerCase())
-            ).length;
-
-            return (
-              <Link
-                key={item.id}
-                href={item.route}
-                className={`card-neo p-4 ${item.bg} border-4 border-black shadow-[6px_6px_0px_0px_#000] flex flex-col justify-between min-h-[120px]`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="p-2 bg-white border-2 border-black shadow-[2px_2px_0px_#000]">
-                    <Icon className="w-4 h-4 text-black stroke-[3]" />
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-black stroke-[3]" />
-                </div>
-                <div>
-                  <div className="text-xs font-black uppercase tracking-wider text-black">
-                    {item.title}
-                  </div>
-                  <div className="text-[10px] font-mono font-black text-black/70 mt-0.5 uppercase">
-                    {topicCount > 0 ? `${topicCount} SAVED` : 'BROWSE'}
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* SECTION 4: RECENT RESEARCH CARDS */}
-      {/* ============================================================ */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b-4 border-black">
-          <div>
-            <h2 className="text-lg md:text-xl font-black uppercase tracking-tight text-black flex items-center gap-2">
-              <Clock className="w-4 h-4 stroke-[3]" />
-              RECENTLY INGESTED RESEARCH
-            </h2>
-            <p className="text-xs font-black text-black/60 mt-0.5 uppercase">
-              LIVE PERSISTED INDEX CARDS
-            </p>
-          </div>
-          <Link
-            href="/app/library"
-            className="btn-neo px-4 py-2 bg-white hover:bg-[#FFD93D] text-black border-4 border-black text-xs font-black uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
-          >
-            VIEW ARCHIVE ({metrics.total}) →
-          </Link>
-        </div>
-
-        {isLoading ? (
-          <ResourceSkeleton count={6} />
-        ) : recentResources.length === 0 ? (
-          <div className="p-10 border-4 border-black bg-white shadow-[8px_8px_0px_0px_#000] text-center">
-            <h3 className="text-2xl font-black uppercase text-black">NO RESEARCH INGESTED YET</h3>
-            <p className="text-xs font-bold text-black/70 mt-1 mb-4">Click below to capture and analyze your first live link or file.</p>
-            <button
-              onClick={openSaveModal}
-              className="btn-neo px-6 py-3 bg-[#FF6B6B] text-black border-4 border-black font-black uppercase text-xs tracking-wider shadow-[4px_4px_0px_0px_#000]"
-            >
-              + CAPTURE RESOURCE
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recentResources.map((resource) => (
-              <ResourceCard key={resource.id} resource={resource} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* ============================================================ */}
-      {/* SECTION 5: INBOX TRIAGE & AI SYNTHESIS PANELS */}
-      {/* ============================================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
-        
-        {/* INBOX ACTION PANEL: HOT RED */}
-        <section className="lg:col-span-5 p-6 md:p-8 bg-[#FF6B6B] text-black border-4 border-black shadow-[8px_8px_0px_0px_#000] flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3 border-b-4 border-black">
-              <div className="text-xs font-black uppercase tracking-widest text-black flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-black" />
-                UNPROCESSED INBOX
-              </div>
-              <span className="text-xs font-mono font-black bg-white text-black px-2 py-0.5 border-2 border-black">
-                {metrics.inbox} ITEMS
-              </span>
-            </div>
-            
-            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight mt-5 leading-none">
-              RAW CAPTURES AWAITING REVIEW.
-            </h3>
-            
-            <p className="text-xs font-bold text-black/90 mt-3 leading-relaxed">
-              Items saved directly via quick capture need project tag assignment and AI dossier verification.
-            </p>
-          </div>
-
-          <Link
-            href="/app/inbox"
-            className="btn-neo mt-6 w-full py-3.5 bg-white hover:bg-[#FFD93D] text-black border-4 border-black font-black uppercase text-xs tracking-wider shadow-[4px_4px_0px_0px_#000] flex items-center justify-center gap-2"
-          >
-            <span>TRIAGE INBOX NOW</span>
-            <ArrowRight className="w-4 h-4 stroke-[3]" />
-          </Link>
-        </section>
-
-        {/* AI SYNTHESIS PANEL: CREAM WHITE */}
-        <section className="lg:col-span-7 p-6 md:p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3 border-b-4 border-black">
-              <div className="text-xs font-black uppercase tracking-widest text-black flex items-center gap-2">
-                <Brain className="w-4 h-4 stroke-[3]" />
-                SYNTHESIZED TOPIC CLUSTERS
-              </div>
-              <span className="text-xs font-mono font-black bg-[#FFD93D] text-black px-2 py-0.5 border-2 border-black">
-                {metrics.analyzed} ANALYZED
-              </span>
-            </div>
-
-            <div className="mt-5">
-              <div className="text-[11px] font-mono font-black uppercase tracking-wider text-black/70 mb-2.5">
-                DISCOVERED RESEARCH TOPICS:
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {metrics.discoveredTopics.length > 0 ? (
-                  metrics.discoveredTopics.map((top, idx) => (
-                    <span
-                      key={top}
-                      className={`px-3 py-1 font-black text-xs uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_#000] ${
-                        idx % 3 === 0 ? 'bg-[#FFD93D]' : idx % 3 === 1 ? 'bg-[#C4B5FD]' : 'bg-[#FF6B6B]'
-                      }`}
-                    >
-                      #{top}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-xs font-bold text-black/60">Save resources to generate topic clusters.</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t-4 border-black flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-xs font-black text-black/80">
-              Query your personal research dossier using structured citations.
-            </div>
+      {/* Greeting & Header */}
+      <PageHeader
+        eyebrow="PERSONAL RESEARCH INTELLIGENCE"
+        eyebrowColor="yellow"
+        eyebrowIcon={<span className="w-2 h-2 rounded-full bg-black inline-block" />}
+        title="RESEARCH COMMAND CENTER."
+        description="Welcome back. Your personal index is grounded and ready to retrieve, organize, and synthesize."
+        actions={
+          <div className="flex items-center gap-2.5 flex-wrap">
             <Link
               href="/app/assistant"
-              className="btn-neo px-5 py-2.5 bg-[#FFD93D] hover:bg-[#ffe366] text-black border-4 border-black font-black uppercase text-xs tracking-wider shadow-[4px_4px_0px_0px_#000] shrink-0"
+              className="btn-neo flex items-center gap-1.5 px-4 py-2.5 bg-[#C4B5FD] hover:bg-[#b8a6fb] text-black border-2 border-black font-black uppercase text-xs tracking-wider shadow-[2px_2px_0px_#000]"
             >
-              LAUNCH CONSOLE →
+              <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>ASK RESORA</span>
             </Link>
-          </div>
-        </section>
 
+            <button
+              onClick={openSaveModal}
+              className="btn-neo flex items-center gap-1.5 px-4 py-2.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs tracking-wider border-2 border-black shadow-[2px_2px_0px_#000]"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[3]" />
+              <span>+ CAPTURE</span>
+            </button>
+          </div>
+        }
+      />
+
+      {/* Metric Cards Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {[
+          { label: 'TOTAL RESOURCES', count: metrics.total, color: 'bg-white', href: '/app/library' },
+          { label: 'UNPROCESSED INBOX', count: metrics.inbox, color: 'bg-[#FF6B6B]', href: '/app/inbox' },
+          { label: 'ACTIVE PROJECTS', count: metrics.projects, color: 'bg-[#FFD93D]', href: '/app/projects' },
+          { label: 'DOCUMENTS / PDFS', count: metrics.documents, color: 'bg-[#C4B5FD]', href: '/app/documents' },
+          { label: 'FAVORITES PINNED', count: metrics.favorites, color: 'bg-white', href: '/app/favorites' },
+        ].map((m) => (
+          <Link
+            key={m.label}
+            href={m.href}
+            className={`p-3.5 ${m.color} border-2 border-black shadow-[3px_3px_0px_#000] hover:-translate-y-0.5 transition-transform flex flex-col justify-between`}
+          >
+            <div className="text-[10px] font-mono font-bold text-black/70 leading-tight">{m.label}</div>
+            <div className="text-2xl font-black text-black mt-2">{m.count}</div>
+          </Link>
+        ))}
       </div>
 
-      {/* 3-Step Onboarding Modal */}
+      {/* Two-Column Workspace Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Left Column (8 cols): Recently Captured & Library */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="flex items-center justify-between pb-2 border-b-2 border-black">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 bg-[#FF6B6B] border border-black" />
+              <h2 className="text-sm font-black uppercase tracking-wider text-black">
+                RECENTLY CAPTURED RESEARCH
+              </h2>
+            </div>
+            <Link
+              href="/app/library"
+              className="text-xs font-bold text-black underline hover:text-[#FF6B6B]"
+            >
+              View all archive →
+            </Link>
+          </div>
+
+          {isLoading ? (
+            <ResourceSkeleton count={4} />
+          ) : recentResources.length === 0 ? (
+            <div className="p-8 text-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] space-y-3">
+              <p className="text-sm font-bold text-black">Your archive is empty.</p>
+              <button
+                onClick={openSaveModal}
+                className="btn-neo px-4 py-2 bg-[#FF6B6B] text-black font-black uppercase text-xs border-2 border-black shadow-[2px_2px_0px_#000]"
+              >
+                + Capture First Resource
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {recentResources.map((res) => (
+                <ResourceCard key={res.id} resource={res} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right Column (4 cols): Projects, Insights & Actions */}
+        <div className="lg:col-span-4 space-y-6">
+          
+          {/* Active Projects Block */}
+          <div className="p-4 bg-white border-2 border-black shadow-[4px_4px_0px_#000] space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-black/10">
+              <span className="text-xs font-mono font-black uppercase text-black">ACTIVE PROJECTS</span>
+              <Link href="/app/projects" className="text-[11px] font-bold text-black underline">
+                View All
+              </Link>
+            </div>
+
+            <div className="space-y-2">
+              {activeProjects.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/app/projects/${p.id}`}
+                  className="block p-2.5 bg-[#FFFDF5] border border-black hover:bg-[#FFD93D] transition-colors"
+                >
+                  <div className="flex items-center justify-between text-[11px] font-mono font-bold">
+                    <span className="truncate max-w-[160px] text-black font-black">{p.name}</span>
+                    <span className="text-[10px] uppercase px-1.5 py-0.2 border border-black bg-white">
+                      {p.status}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-black/70 mt-1 line-clamp-1 font-normal">
+                    {p.objective || 'No objective specified.'}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* AI Intelligence Insight */}
+          <div className="p-4 bg-[#FFD93D] border-2 border-black shadow-[4px_4px_0px_#000] space-y-2">
+            <div className="flex items-center gap-2 text-xs font-mono font-black text-black uppercase">
+              <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>AI Research Insight</span>
+            </div>
+            <p className="text-xs text-black font-normal leading-relaxed">
+              Your library contains a strong cluster of <strong>AI coding tools</strong> and <strong>hackathon architecture</strong>. Connect them to an active workspace for real-time recommendations.
+            </p>
+            <Link
+              href="/app/assistant?q=Summarize%20my%20AI%20developer%20tools"
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-black underline pt-1"
+            >
+              <span>Explore tools synthesis</span>
+              <ArrowUpRight className="w-3 h-3 stroke-[2.5]" />
+            </Link>
+          </div>
+
+          {/* Quick Actions Panel */}
+          <div className="p-4 bg-white border-2 border-black shadow-[4px_4px_0px_#000] space-y-2.5">
+            <span className="text-xs font-mono font-black uppercase text-black block pb-1 border-b border-black/10">
+              QUICK COMMANDS
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={openSaveModal}
+                className="btn-neo p-2.5 bg-[#FFFDF5] hover:bg-[#FF6B6B] border border-black text-xs font-bold text-black text-left flex flex-col justify-between shadow-[2px_2px_0px_#000]"
+              >
+                <span>+ Capture</span>
+                <span className="text-[9px] font-mono text-black/60">Any URL</span>
+              </button>
+              <Link
+                href="/app/documents"
+                className="btn-neo p-2.5 bg-[#FFFDF5] hover:bg-[#C4B5FD] border border-black text-xs font-bold text-black text-left flex flex-col justify-between shadow-[2px_2px_0px_#000]"
+              >
+                <span>Upload PDF</span>
+                <span className="text-[9px] font-mono text-black/60">Page index</span>
+              </Link>
+              <Link
+                href="/app/inbox"
+                className="btn-neo p-2.5 bg-[#FFFDF5] hover:bg-[#FFD93D] border border-black text-xs font-bold text-black text-left flex flex-col justify-between shadow-[2px_2px_0px_#000]"
+              >
+                <span>Triage Inbox</span>
+                <span className="text-[9px] font-mono text-black/60">{metrics.inbox} items</span>
+              </Link>
+              <Link
+                href="/app/assistant"
+                className="btn-neo p-2.5 bg-[#FFFDF5] hover:bg-[#FFD93D] border border-black text-xs font-bold text-black text-left flex flex-col justify-between shadow-[2px_2px_0px_#000]"
+              >
+                <span>Query RAG</span>
+                <span className="text-[9px] font-mono text-black/60">Ask Resora</span>
+              </Link>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       <OnboardingModal
         isOpen={isOnboardingOpen}
         onClose={() => setIsOnboardingOpen(false)}
@@ -395,9 +233,9 @@ function AppHomeContent() {
   );
 }
 
-export default function AppHomePage() {
+export default function AppHome() {
   return (
-    <Suspense fallback={<div className="p-12 text-center text-black font-black uppercase text-sm">LOADING RESORA WORKSPACE...</div>}>
+    <Suspense fallback={<div className="p-8"><ResourceSkeleton count={6} /></div>}>
       <AppHomeContent />
     </Suspense>
   );

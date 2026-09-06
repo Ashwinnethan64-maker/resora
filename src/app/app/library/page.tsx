@@ -5,8 +5,8 @@ import { useResora } from '@/context/ResoraContext';
 import { ResourceCard } from '@/components/resources/ResourceCard';
 import { ResourceSkeleton } from '@/components/resources/ResourceSkeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { NeoSticker } from '@/components/brand/NeoSticker';
 import { INITIAL_SUGGESTED_USE_CASES, INITIAL_SUGGESTED_TAGS } from '@/lib/resource-types';
+import { PageHeader } from '@/components/ui/SectionLabel';
 import {
   Search,
   LayoutGrid,
@@ -15,17 +15,18 @@ import {
   BookOpen,
   X,
   Archive,
-  Heart
+  Heart,
+  Plus
 } from 'lucide-react';
 
 const TYPE_FILTER_BUTTONS = [
-  { id: 'all', label: 'ALL', color: 'bg-black text-white' },
-  { id: 'ai_tool', label: 'AI TOOLS', color: 'bg-[#FFD93D] text-black' },
-  { id: 'github', label: 'GITHUB', color: 'bg-[#FF6B6B] text-black' },
-  { id: 'pdf', label: 'PDFS', color: 'bg-[#C4B5FD] text-black' },
-  { id: 'document', label: 'DOCS', color: 'bg-[#C4B5FD] text-black' },
-  { id: 'website', label: 'WEBSITES', color: 'bg-white text-black' },
-  { id: 'video', label: 'VIDEOS', color: 'bg-[#FF6B6B] text-black' },
+  { id: 'all', label: 'ALL' },
+  { id: 'ai_tool', label: 'AI TOOLS' },
+  { id: 'github', label: 'GITHUB' },
+  { id: 'pdf', label: 'PDFS' },
+  { id: 'document', label: 'DOCS' },
+  { id: 'website', label: 'WEBSITES' },
+  { id: 'video', label: 'VIDEOS' },
 ];
 
 export default function LibraryPage() {
@@ -66,7 +67,7 @@ export default function LibraryPage() {
         const matchesTitle = res.title.toLowerCase().includes(q);
         const matchesDesc = res.description ? res.description.toLowerCase().includes(q) : false;
         const matchesDomain = res.domain.toLowerCase().includes(q);
-        const matchesTags = res.tags ? res.tags.some((t) => t.toLowerCase() === cleanTagQuery(q)) : false;
+        const matchesTags = res.tags ? res.tags.some((t) => t.toLowerCase().includes(q)) : false;
         const matchesUc = res.use_cases ? res.use_cases.some((u) => u.toLowerCase().includes(q)) : false;
         if (!matchesTitle && !matchesDesc && !matchesDomain && !matchesTags && !matchesUc) {
           return false;
@@ -102,254 +103,175 @@ export default function LibraryPage() {
     sortBy,
   ]);
 
-  function cleanTagQuery(q: string) {
-    return q.replace(/^#/, '');
-  }
-
-  const hasActiveFilters =
-    searchQuery ||
-    selectedType !== 'all' ||
-    selectedTag !== 'all' ||
-    selectedUseCase !== 'all' ||
-    filterFavoriteOnly ||
-    filterArchivedOnly;
-
-  const resetFilters = () => {
-    setSearchQuery('');
-    setSelectedType('all');
-    setSelectedTag('all');
-    setSelectedUseCase('all');
-    setFilterFavoriteOnly(false);
-    setFilterArchivedOnly(false);
-  };
-
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-100">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
       
-      {/* ============================================================ */}
-      {/* HEADER: NEO-BRUTALIST RESEARCH ARCHIVE POSTER */}
-      {/* ============================================================ */}
-      <div className="border-b-4 border-black pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <NeoSticker color="violet" rotate="-1">
-              RESEARCH ARCHIVE
-            </NeoSticker>
-            <NeoSticker color="yellow" rotate="2" size="sm">
-              INDEX V2
-            </NeoSticker>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-black leading-[0.88]">
-            RESEARCH<br />
-            ARCHIVE.
-          </h1>
-          <p className="text-sm font-black text-black/70 mt-3 max-w-xl leading-relaxed">
-            Everything you have captured, indexed, and synthesized. Structured for immediate operational retrieval.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="p-4 bg-white border-4 border-black shadow-[6px_6px_0px_0px_#000]">
-            <span className="text-[10px] font-mono font-black uppercase block text-black/60">INDEX COUNT</span>
-            <span className="text-3xl font-black text-black leading-none">{filteredResources.length} ITEMS</span>
-          </div>
+      {/* Top Header & Capture CTA */}
+      <PageHeader
+        eyebrow="RESEARCH ARCHIVE"
+        eyebrowColor="yellow"
+        eyebrowIcon={<span className="w-2 h-2 rounded-full bg-black inline-block" />}
+        title="RESEARCH LIBRARY."
+        description={`${filteredResources.length} ${filteredResources.length === 1 ? 'resource' : 'resources'} indexed across websites, documents, and tools.`}
+        actions={
           <button
             onClick={openSaveModal}
-            className="btn-neo px-6 py-4 bg-[#FF6B6B] hover:bg-[#ff5252] text-black border-4 border-black font-black uppercase text-xs md:text-sm tracking-wider shadow-[6px_6px_0px_0px_#000]"
+            className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-2 border-black shadow-[3px_3px_0px_#000]"
           >
-            + CAPTURE NEW
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>+ CAPTURE NEW</span>
           </button>
-        </div>
-      </div>
+        }
+      />
 
-      {/* ============================================================ */}
-      {/* CONTROLS: LARGE SEARCH BAR (FOCUS YELLOW) + STICKER FILTERS */}
-      {/* ============================================================ */}
-      <div className="space-y-4">
-        
-        {/* Search Bar + Sort & View Controls */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          
-          {/* SEARCH BAR: White h-16 box, on focus turns yellow with 8px hard shadow */}
-          <div className="relative flex-1 max-w-2xl">
-            <Search className="w-6 h-6 text-black absolute left-4 top-1/2 -translate-y-1/2 stroke-[3]" />
-            <input
-              type="text"
-              placeholder="SEARCH YOUR RESEARCH (TITLE, DOMAIN, TAG, USE CASE)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-16 pl-14 pr-12 rounded-none bg-white focus:bg-[#FFD93D] border-4 border-black text-black placeholder-black/50 text-xs md:text-sm font-black uppercase focus:outline-none shadow-[6px_6px_0px_0px_#000] focus:shadow-[8px_8px_0px_0px_#000] transition-all"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-black font-black hover:scale-110"
-              >
-                <X className="w-5 h-5 stroke-[3]" />
-              </button>
-            )}
-          </div>
-
-          {/* Sort & Mode Toggles */}
-          <div className="flex items-center gap-3 self-end lg:self-auto">
-            {/* Sort Select */}
-            <div className="flex items-center gap-1.5 px-3.5 py-3 rounded-none bg-white border-4 border-black text-xs font-black text-black shadow-[4px_4px_0px_0px_#000]">
-              <ArrowUpDown className="w-4 h-4 text-black stroke-[3]" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-transparent text-xs font-black uppercase tracking-wider text-black focus:outline-none cursor-pointer"
-              >
-                <option value="newest">NEWEST FIRST</option>
-                <option value="oldest">OLDEST FIRST</option>
-                <option value="recently_opened">RECENTLY OPENED</option>
-                <option value="recently_updated">RECENTLY UPDATED</option>
-                <option value="alphabetical">ALPHABETICAL</option>
-              </select>
-            </div>
-
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-white border-4 border-black p-1 shadow-[4px_4px_0px_0px_#000]">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-none transition-colors border-2 ${
-                  viewMode === 'grid'
-                    ? 'bg-black text-white border-black'
-                    : 'text-black border-transparent hover:bg-[#FFFDF5]'
-                }`}
-                title="Grid view"
-              >
-                <LayoutGrid className="w-4 h-4 stroke-[2.5]" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-none transition-colors border-2 ${
-                  viewMode === 'list'
-                    ? 'bg-black text-white border-black'
-                    : 'text-black border-transparent hover:bg-[#FFFDF5]'
-                }`}
-                title="List view"
-              >
-                <List className="w-4 h-4 stroke-[2.5]" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* PRIMARY NEO-BRUTALIST TYPE FILTER BUTTONS */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          {TYPE_FILTER_BUTTONS.map((btn) => {
-            const isActive = selectedType === btn.id;
-            return (
-              <button
-                key={btn.id}
-                onClick={() => setSelectedType(btn.id)}
-                className={`btn-neo px-4 py-2 rounded-none border-4 border-black text-xs font-black uppercase tracking-wider transition-all ${
-                  isActive
-                    ? `${btn.color} shadow-[4px_4px_0px_0px_#000] -rotate-1`
-                    : 'bg-white text-black hover:bg-[#FFFDF5] hover:shadow-[2px_2px_0px_0px_#000]'
-                }`}
-              >
-                {btn.label}
-              </button>
-            );
-          })}
-
-          {/* Favorites quick toggle */}
-          <button
-            onClick={() => setFilterFavoriteOnly(!filterFavoriteOnly)}
-            className={`btn-neo flex items-center gap-1.5 px-4 py-2 rounded-none text-xs font-black uppercase tracking-wider border-4 border-black transition-all ${
-              filterFavoriteOnly
-                ? 'bg-[#FF6B6B] text-black shadow-[4px_4px_0px_0px_#000]'
-                : 'bg-white text-black hover:bg-[#FFD93D]'
-            }`}
-          >
-            <Heart className={`w-3.5 h-3.5 ${filterFavoriteOnly ? 'fill-black' : ''}`} />
-            <span>FAVORITES</span>
-          </button>
-
-          {/* Archived view toggle */}
-          <button
-            onClick={() => setFilterArchivedOnly(!filterArchivedOnly)}
-            className={`btn-neo flex items-center gap-1.5 px-4 py-2 rounded-none text-xs font-black uppercase tracking-wider border-4 border-black transition-all ${
-              filterArchivedOnly
-                ? 'bg-black text-white shadow-[4px_4px_0px_0px_#000]'
-                : 'bg-white text-black hover:bg-[#E0E0E0]'
-            }`}
-          >
-            <Archive className="w-3.5 h-3.5" />
-            <span>ARCHIVED</span>
-          </button>
-
-          {/* Reset Filters */}
-          {hasActiveFilters && (
+      {/* Search Bar & View Controls */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-black absolute left-3.5 top-1/2 -translate-y-1/2 stroke-[2.5]" />
+          <input
+            type="text"
+            placeholder="Search resources by title, domain, description, or tags..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-10 py-2.5 bg-white border-2 border-black text-black font-normal text-xs sm:text-sm placeholder-black/50 focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_#000]"
+          />
+          {searchQuery && (
             <button
-              onClick={resetFilters}
-              className="px-3.5 py-2 rounded-none border-4 border-[#FF6B6B] bg-[#FF6B6B] text-black font-black uppercase text-xs tracking-wider transition-colors ml-auto shadow-[3px_3px_0px_0px_#000]"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-black/60 hover:text-black"
             >
-              RESET FILTERS ✕
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        {/* Secondary Dropdowns: Tags & Use Cases */}
-        <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
+        {/* View Mode & Sort Dropdowns */}
+        <div className="flex items-center gap-2">
           <select
-            value={selectedTag}
-            onChange={(e) => setSelectedTag(e.target.value)}
-            className="px-3.5 py-2 rounded-none bg-white border-4 border-black text-xs font-black uppercase tracking-wider text-black focus:outline-none shadow-[3px_3px_0px_0px_#000]"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="px-3 py-2.5 bg-white border-2 border-black text-xs font-bold text-black focus:outline-none shadow-[2px_2px_0px_#000]"
           >
-            <option value="all">ALL TAGS</option>
-            {INITIAL_SUGGESTED_TAGS.map((tag) => (
-              <option key={tag} value={tag}>
-                #{tag.toUpperCase()}
-              </option>
-            ))}
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="alphabetical">Alphabetical</option>
+            <option value="recently_opened">Recently Opened</option>
+            <option value="recently_updated">Recently Updated</option>
           </select>
 
-          <select
-            value={selectedUseCase}
-            onChange={(e) => setSelectedUseCase(e.target.value)}
-            className="px-3.5 py-2 rounded-none bg-white border-4 border-black text-xs font-black uppercase tracking-wider text-black focus:outline-none shadow-[3px_3px_0px_0px_#000]"
-          >
-            <option value="all">ALL USE CASES</option>
-            {INITIAL_SUGGESTED_USE_CASES.map((uc) => (
-              <option key={uc} value={uc}>
-                {uc.toUpperCase()}
-              </option>
-            ))}
-          </select>
+          <div className="flex border-2 border-black bg-white shadow-[2px_2px_0px_#000]">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 transition-colors ${
+                viewMode === 'grid' ? 'bg-[#FFD93D] text-black font-black' : 'text-black/60 hover:text-black'
+              }`}
+              title="Grid View"
+            >
+              <LayoutGrid className="w-4 h-4 stroke-[2.5]" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 transition-colors border-l-2 border-black ${
+                viewMode === 'list' ? 'bg-[#FFD93D] text-black font-black' : 'text-black/60 hover:text-black'
+              }`}
+              title="List View"
+            >
+              <List className="w-4 h-4 stroke-[2.5]" />
+            </button>
+          </div>
         </div>
-
       </div>
 
-      {/* ============================================================ */}
-      {/* GRID OR LIST DISPLAY */}
-      {/* ============================================================ */}
+      {/* Primary Category Filter Buttons */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        {TYPE_FILTER_BUTTONS.map((btn) => {
+          const isSelected = selectedType === btn.id;
+          return (
+            <button
+              key={btn.id}
+              onClick={() => setSelectedType(btn.id)}
+              className={`px-3 py-1.5 border-2 border-black font-bold uppercase transition-all whitespace-nowrap shadow-[2px_2px_0px_#000] ${
+                isSelected
+                  ? 'bg-[#FFD93D] text-black font-black -translate-y-0.5'
+                  : 'bg-white text-black/80 hover:bg-[#FFFDF5]'
+              }`}
+            >
+              {btn.label}
+            </button>
+          );
+        })}
+
+        <button
+          onClick={() => setFilterFavoriteOnly(!filterFavoriteOnly)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 border-2 border-black font-bold uppercase whitespace-nowrap shadow-[2px_2px_0px_#000] ml-auto ${
+            filterFavoriteOnly ? 'bg-[#FF6B6B] text-black font-black' : 'bg-white text-black hover:bg-[#FFFDF5]'
+          }`}
+        >
+          <Heart className={`w-3.5 h-3.5 ${filterFavoriteOnly ? 'fill-black' : ''}`} />
+          <span>Favorites</span>
+        </button>
+      </div>
+
+      {/* Active Filter Tags */}
+      {(selectedType !== 'all' || selectedTag !== 'all' || selectedUseCase !== 'all' || filterFavoriteOnly || filterArchivedOnly || searchQuery) && (
+        <div className="flex items-center gap-2 flex-wrap text-xs pt-1">
+          <span className="font-mono text-[11px] text-black/60 font-bold uppercase">Active:</span>
+          {selectedType !== 'all' && (
+            <span className="px-2 py-0.5 bg-white border border-black text-[11px] font-bold">
+              Type: {selectedType}
+            </span>
+          )}
+          {filterFavoriteOnly && (
+            <span className="px-2 py-0.5 bg-[#FF6B6B] border border-black text-[11px] font-bold">
+              Favorites
+            </span>
+          )}
+          {searchQuery && (
+            <span className="px-2 py-0.5 bg-[#FFD93D] border border-black text-[11px] font-bold">
+              Query: "{searchQuery}"
+            </span>
+          )}
+          <button
+            onClick={() => {
+              setSelectedType('all');
+              setSelectedTag('all');
+              setSelectedUseCase('all');
+              setFilterFavoriteOnly(false);
+              setFilterArchivedOnly(false);
+              setSearchQuery('');
+            }}
+            className="text-[11px] font-bold text-black underline hover:text-[#FF6B6B]"
+          >
+            Reset Filters
+          </button>
+        </div>
+      )}
+
+      {/* Resources Render */}
       {isLoading ? (
         <ResourceSkeleton count={6} viewMode={viewMode} />
       ) : filteredResources.length === 0 ? (
         <EmptyState
           icon={BookOpen}
-          title={filterArchivedOnly ? 'NO ARCHIVED RESEARCH' : 'NO RESEARCH MATCHES CRITERIA'}
+          title="NO MATCHING RESEARCH FOUND"
           description={
-            filterArchivedOnly
-              ? 'Archived resources will appear here when moved out of active index.'
-              : 'Try broadening your query keywords or capture a new resource.'
+            searchQuery || selectedType !== 'all'
+              ? 'Try broadening your search query or removing active filters.'
+              : 'Your research archive is currently empty. Capture your first resource to build your personal intelligence layer.'
           }
-          actionLabel={filterArchivedOnly ? undefined : '+ CAPTURE FIRST RESOURCE'}
+          actionLabel="+ CAPTURE FIRST RESOURCE"
           onAction={openSaveModal}
         />
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      ) : viewMode === 'list' ? (
+        <div className="space-y-2">
           {filteredResources.map((res) => (
-            <ResourceCard key={res.id} resource={res} viewMode="grid" />
+            <ResourceCard key={res.id} resource={res} viewMode="list" />
           ))}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredResources.map((res) => (
-            <ResourceCard key={res.id} resource={res} viewMode="list" />
+            <ResourceCard key={res.id} resource={res} viewMode="grid" />
           ))}
         </div>
       )}

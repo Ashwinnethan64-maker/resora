@@ -6,6 +6,7 @@ import { useResora } from '@/context/ResoraContext';
 import { ResourceCard } from '@/components/resources/ResourceCard';
 import { ResourceSkeleton } from '@/components/resources/ResourceSkeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { PageHeader } from '@/components/ui/SectionLabel';
 import { Heart } from 'lucide-react';
 
 export default function FavoritesPage() {
@@ -13,28 +14,21 @@ export default function FavoritesPage() {
   const favoriteResources = resources.filter((r) => r.is_favorite && !r.is_archived);
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-200">
-      {/* Header: Neo-Brutalist Bookmarked Assets */}
-      <div className="border-b-4 border-black pb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B6B] text-black border-2 border-black text-xs font-black uppercase tracking-wider mb-3 shadow-[3px_3px_0px_0px_#000] -rotate-1">
-            <Heart className="w-3.5 h-3.5 fill-black" />
-            BOOKMARKED ASSETS
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
+      {/* Top Header */}
+      <PageHeader
+        eyebrow="BOOKMARKED ASSETS"
+        eyebrowColor="coral"
+        eyebrowIcon={<Heart className="w-3 h-3 fill-black stroke-black" />}
+        title="MISSION-CRITICAL FAVORITES."
+        description="Your prioritized, high-conviction research resources accessible across all projects and intelligence queries."
+        actions={
+          <div className="p-3.5 bg-[#FFD93D] border-2 border-black shadow-[3px_3px_0px_#000]">
+            <span className="text-[10px] font-mono font-black uppercase text-black block">PINNED ASSETS</span>
+            <span className="text-2xl font-black text-black">{favoriteResources.length} ITEMS</span>
           </div>
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-black leading-none">
-            MISSION-CRITICAL<br />
-            FAVORITES.
-          </h1>
-          <p className="text-sm md:text-base font-bold text-black mt-3 max-w-xl">
-            Your prioritized, high-conviction research resources accessible across all projects and intelligence queries.
-          </p>
-        </div>
-
-        <div className="p-5 bg-[#FFD93D] border-4 border-black shadow-[6px_6px_0px_0px_#000] rotate-1">
-          <span className="text-[10px] font-mono font-black uppercase text-black block">PINNED ASSETS</span>
-          <span className="text-3xl font-black text-black">{favoriteResources.length} ITEMS</span>
-        </div>
-      </div>
+        }
+      />
 
       {/* Grid or Empty State */}
       {isLoading ? (

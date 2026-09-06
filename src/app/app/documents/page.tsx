@@ -7,6 +7,7 @@ import { ResourceCard } from '@/components/resources/ResourceCard';
 import { DocumentDropzone } from '@/components/documents/DocumentDropzone';
 import { DocumentViewerModal } from '@/components/documents/DocumentViewerModal';
 import { ResourceModel } from '@/types/database';
+import { PageHeader } from '@/components/ui/SectionLabel';
 import {
   FileText,
   Upload,
@@ -47,42 +48,35 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-200">
-      {/* Header: Neo-Brutalist Document Archive */}
-      <div className="border-b-4 border-black pb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFD93D] text-black border-2 border-black text-xs font-black uppercase tracking-wider mb-3 shadow-[3px_3px_0px_0px_#000] -rotate-1">
-            <span className="w-2.5 h-2.5 rounded-none bg-[#FF6B6B] border border-black" />
-            DOCUMENT INTELLIGENCE ARCHIVE
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
+      {/* Top Header */}
+      <PageHeader
+        eyebrow="DOCUMENT INTELLIGENCE"
+        eyebrowColor="coral"
+        eyebrowIcon={<span className="w-2.5 h-2.5 bg-black inline-block shrink-0" />}
+        title="DOCUMENTS & RESEARCH."
+        description="Research papers, PDFs, system briefs, and uploaded files parsed with page-level intelligence."
+        actions={
+          <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
+            <button
+              onClick={() => setShowDropzone((prev) => !prev)}
+              className="btn-neo flex items-center gap-2 px-5 py-3 bg-white hover:bg-[#FFFDF5] text-black text-xs md:text-sm font-black uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_#000]"
+            >
+              <Upload className="w-4 h-4 stroke-[3px]" />
+              <span>{showDropzone ? 'HIDE UPLOAD' : 'UPLOAD FILES'}</span>
+              {showDropzone ? <ChevronUp className="w-4 h-4 stroke-[3px] ml-0.5" /> : <ChevronDown className="w-4 h-4 stroke-[3px] ml-0.5" />}
+            </button>
+
+            <button
+              onClick={openSaveModal}
+              className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-2 border-black shadow-[3px_3px_0px_#000]"
+            >
+              <Plus className="w-4 h-4 stroke-[3px]" />
+              <span>+ SAVE LINK / DRIVE</span>
+            </button>
           </div>
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-black leading-none">
-            DOCUMENTS &<br />
-            RESEARCH.
-          </h1>
-          <p className="text-sm md:text-base font-bold text-black mt-3 max-w-xl">
-            Research papers, PDFs, system briefs, and uploaded files parsed with page-level intelligence.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
-          <button
-            onClick={() => setShowDropzone((prev) => !prev)}
-            className="btn-neo flex items-center gap-2 px-5 py-3.5 bg-white hover:bg-[#FFFDF5] text-black text-xs md:text-sm font-black uppercase tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
-          >
-            <Upload className="w-4 h-4 stroke-[3px]" />
-            <span>{showDropzone ? 'HIDE UPLOAD' : 'UPLOAD FILES'}</span>
-            {showDropzone ? <ChevronUp className="w-4 h-4 stroke-[3px] ml-0.5" /> : <ChevronDown className="w-4 h-4 stroke-[3px] ml-0.5" />}
-          </button>
-
-          <button
-            onClick={openSaveModal}
-            className="btn-neo flex items-center gap-2 px-6 py-3.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
-          >
-            <Plus className="w-4 h-4 stroke-[3px]" />
-            <span>+ SAVE LINK / DRIVE</span>
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Upload Dropzone Collapse Area */}
       {showDropzone && (

@@ -5,28 +5,28 @@ import { useSearchParams } from 'next/navigation';
 import { useResora } from '@/context/ResoraContext';
 import { SourceCard } from '@/components/assistant/SourceCard';
 import { DocumentViewerModal } from '@/components/documents/DocumentViewerModal';
-import { NeoSticker } from '@/components/brand/NeoSticker';
 import {
   AssistantScopeType,
   AssistantMessageModel,
   ResourceModel
 } from '@/types/database';
+import { PageHeader, SectionLabel } from '@/components/ui/SectionLabel';
 import {
   Send,
   Loader2,
   RotateCcw,
+  Sparkles,
+  Search,
+  BookOpen,
   ArrowRight,
-  Info,
-  Compass
+  Plus
 } from 'lucide-react';
 
 const SUGGESTED_QUESTIONS = [
   'What AI coding tools did I save?',
-  'Where did I save information about AI agent memory?',
   'Compare Supabase and Firebase based on my research.',
-  'What resources can help with my hackathon build?',
-  'What PDFs contain information about compound systems?',
-  'Show me my best developer tools.',
+  'What resources can help with my hackathon project?',
+  'Summarize compound AI systems from my papers.',
 ];
 
 function AssistantContent() {
@@ -102,237 +102,222 @@ function AssistantContent() {
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch {
-      showToast('Resora Assistant could not complete the request. Please try again.');
+      showToast('Failed to get answer from Resora assistant');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOpenDocPage = (resourceId: string, pageNumber: number) => {
-    const docRes = resources.find((r) => r.id === resourceId);
-    if (docRes) {
-      setSelectedViewerDoc(docRes);
+  const getActiveScopeLabel = () => {
+    if (scopeType === 'library') return 'Entire Research Library';
+    if (scopeType === 'project') {
+      const p = projects.find((x) => x.id === scopeId);
+      return p ? `Project: ${p.name}` : 'Selected Project';
     }
-  };
-
-  const getScopeName = () => {
-    if (scopeType === 'project' && scopeId) {
-      const p = projects.find((proj) => proj.id === scopeId);
-      return p ? `PROJECT: ${p.name.toUpperCase()}` : 'CURRENT PROJECT';
+    if (scopeType === 'collection') {
+      const c = collections.find((x) => x.id === scopeId);
+      return c ? `Collection: ${c.name}` : 'Selected Collection';
     }
-    if (scopeType === 'collection' && scopeId) {
-      const c = collections.find((col) => col.id === scopeId);
-      return c ? `COLLECTION: ${c.name.toUpperCase()}` : 'CURRENT COLLECTION';
-    }
-    if (scopeType === 'documents') return 'DOCUMENTS ONLY';
-    if (scopeType === 'tools') return 'DEV TOOLS';
-    if (scopeType === 'favorites') return 'FAVORITES ONLY';
-    return 'ENTIRE LIBRARY';
+    if (scopeType === 'document') return 'Selected Document';
+    return 'Library';
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-[#FFFDF5] text-black animate-in fade-in duration-100">
-      {/* Top Scope & Controls Header */}
-      <div className="h-16 border-b-4 border-black px-4 sm:px-8 flex items-center justify-between bg-white shrink-0 shadow-[0px_4px_0px_0px_#000] z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-none bg-[#FFD93D] border-4 border-black flex items-center justify-center text-black shadow-[3px_3px_0px_#000]">
-            <Compass className="w-5 h-5 stroke-[3]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-black uppercase tracking-wider text-black">ASK RESORA</h1>
-              <NeoSticker color="yellow" size="sm" rotate="-1">
-                RESEARCH CONSOLE
-              </NeoSticker>
-            </div>
-            <p className="text-[11px] font-black text-black/60 hidden sm:block">
-              Synthesize factual answers grounded strictly in your personal indexed research.
-            </p>
-          </div>
-        </div>
-
-        {/* Scope Dropdown */}
-        <div className="flex items-center gap-2">
-          <label className="text-[11px] font-mono font-black text-black uppercase hidden sm:inline">SCOPE:</label>
-          <select
-            value={scopeType}
-            onChange={(e) => {
-              setScopeType(e.target.value as AssistantScopeType);
-              if (e.target.value === 'library' || e.target.value === 'documents' || e.target.value === 'tools' || e.target.value === 'favorites') {
+    <div className="p-4 md:p-8 max-w-5xl mx-auto flex flex-col min-h-[calc(100vh-4rem)] justify-between space-y-6 animate-in fade-in duration-150">
+      
+      {/* Top Header & Scope Selector */}
+      <PageHeader
+        eyebrow="RESEARCH CONSOLE"
+        eyebrowColor="violet"
+        eyebrowIcon={<Sparkles className="w-3 h-3 stroke-[2.5]" />}
+        title="ASK RESORA."
+        description="A private research intelligence console grounded directly in your personal archive with verifiable citations."
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            <select
+              value={scopeType}
+              onChange={(e) => {
+                setScopeType(e.target.value as AssistantScopeType);
                 setScopeId(undefined);
-              }
-            }}
-            className="rounded-none bg-white border-4 border-black px-3 py-1.5 text-xs font-black uppercase text-black focus:outline-none cursor-pointer shadow-[3px_3px_0px_0px_#000]"
-          >
-            <option value="library">ENTIRE LIBRARY</option>
-            <option value="documents">DOCUMENTS & PDFS</option>
-            <option value="tools">DEV TOOLS</option>
-            <option value="favorites">FAVORITES ONLY</option>
-            {projects.map((p) => (
-              <option key={p.id} value="project">
-                PROJECT: {p.name.toUpperCase()}
-              </option>
-            ))}
-          </select>
-          {messages.length > 0 && (
-            <button
-              onClick={() => setMessages([])}
-              className="btn-neo p-2 bg-white border-4 border-black text-black shadow-[3px_3px_0px_0px_#000]"
-              title="Reset conversation"
+              }}
+              className="px-3.5 py-2.5 bg-white border-2 border-black text-xs font-black text-black shadow-[2px_2px_0px_#000] focus:outline-none uppercase tracking-wider"
             >
-              <RotateCcw className="w-4 h-4 stroke-[3]" />
-            </button>
-          )}
+              <option value="library">SCOPE: ENTIRE LIBRARY</option>
+              <option value="project">SCOPE: PROJECTS</option>
+              <option value="collection">SCOPE: COLLECTIONS</option>
+              <option value="document">SCOPE: DOCUMENTS ONLY</option>
+            </select>
+
+            {messages.length > 0 && (
+              <button
+                onClick={() => setMessages([])}
+                className="btn-neo flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-[#FF6B6B] text-black border-2 border-black text-xs font-black uppercase tracking-wider shadow-[2px_2px_0px_#000] transition-colors"
+                title="Reset research conversation"
+              >
+                <RotateCcw className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span className="hidden sm:inline">RESET</span>
+              </button>
+            )}
+          </div>
+        }
+      />
+
+      <div className="space-y-4">
+        {/* Active Scope Pill */}
+        <div className="flex items-center gap-2 text-xs font-mono font-bold">
+          <span className="text-black/60 uppercase">Active Retrieval Grounding:</span>
+          <span className="px-2 py-0.5 bg-[#FFD93D] border border-black text-black">
+            {getActiveScopeLabel()}
+          </span>
         </div>
       </div>
 
-      {/* Main Conversation Stream */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 max-w-4xl mx-auto w-full">
+      {/* Message Feed / Grounded Conversation */}
+      <div className="flex-1 space-y-6 overflow-y-auto py-2">
         {messages.length === 0 ? (
-          <div className="py-8 text-center space-y-6">
-            <div className="flex items-center justify-center gap-3">
-              <NeoSticker color="yellow" rotate="-2">FACTUAL</NeoSticker>
-              <div className="w-12 h-12 rounded-none bg-[#FF6B6B] border-4 border-black shadow-[4px_4px_0px_#000] flex items-center justify-center text-black font-black text-xs">
-                RES
-              </div>
-              <NeoSticker color="violet" rotate="2">CITATIONS</NeoSticker>
+          <div className="p-8 sm:p-12 bg-white border-3 border-black shadow-[6px_6px_0px_#000] text-center space-y-5">
+            <div className="w-12 h-12 bg-[#FFD93D] border-2 border-black flex items-center justify-center mx-auto shadow-[3px_3px_0px_#000]">
+              <Sparkles className="w-6 h-6 text-black stroke-[2.5]" />
             </div>
 
-            <div className="space-y-2 max-w-lg mx-auto">
-              <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter text-black">
-                QUERY YOUR COLLECTIVE RESEARCH
-              </h2>
-              <p className="text-xs sm:text-sm font-bold text-black/80 leading-relaxed">
-                Query across your captured websites, documents, and tools. Resora retrieves relevant context, references page citations, and constructs verified answers.
+            <div className="space-y-1">
+              <h3 className="text-lg font-black uppercase text-black">
+                Your Research Console is Ready
+              </h3>
+              <p className="text-xs sm:text-sm text-black/75 max-w-md mx-auto font-normal">
+                Ask natural questions across your saved websites, GitHub repositories, PDFs, and developer tools. Every answer includes verifiable sources.
               </p>
             </div>
 
-            {/* Clickable Suggested Queries */}
-            <div className="pt-4 max-w-2xl mx-auto">
-              <div className="text-[11px] font-mono font-black uppercase tracking-wider text-black mb-3 text-left">
-                SUGGESTED RESEARCH QUERIES:
+            {/* Suggested Prompts */}
+            <div className="pt-3">
+              <div className="text-[11px] font-mono font-bold text-black/60 uppercase mb-2.5">
+                Try asking:
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
-                {SUGGESTED_QUESTIONS.map((q, idx) => (
+              <div className="flex flex-wrap justify-center gap-2 max-w-xl mx-auto">
+                {SUGGESTED_QUESTIONS.map((q) => (
                   <button
                     key={q}
                     onClick={() => handleSend(q)}
-                    className="card-neo p-4 bg-white hover:bg-[#FFD93D] border-4 border-black shadow-[4px_4px_0px_0px_#000] text-xs font-black text-black transition-all flex items-center justify-between group"
+                    className="btn-neo text-xs text-black font-bold px-3 py-1.5 bg-[#FFFDF5] hover:bg-[#FFD93D] border-2 border-black shadow-[2px_2px_0px_#000]"
                   >
-                    <span className="truncate pr-2">{q}</span>
-                    <ArrowRight className="w-4 h-4 text-black stroke-[3] group-hover:translate-x-1 transition-transform shrink-0" />
+                    "{q}"
                   </button>
                 ))}
               </div>
             </div>
           </div>
         ) : (
-          messages.map((msg, idx) => (
-            <div
-              key={msg.id || idx}
-              className={`space-y-3 ${msg.role === 'user' ? 'pl-6 sm:pl-16' : 'pr-6 sm:pr-16'}`}
-            >
+          messages.map((m) => {
+            const isUser = m.role === 'user';
+            return (
               <div
-                className={`p-5 rounded-none border-4 border-black shadow-[6px_6px_0px_0px_#000] leading-relaxed text-xs sm:text-sm whitespace-pre-wrap ${
-                  msg.role === 'user'
-                    ? 'bg-[#FFD93D] text-black ml-auto'
-                    : 'bg-white text-black'
-                }`}
+                key={m.id}
+                className={`space-y-3 ${isUser ? 'flex flex-col items-end' : 'flex flex-col items-start'}`}
               >
-                {msg.role === 'assistant' && (
-                  <div className="flex items-center gap-2 text-[11px] font-mono font-black text-black uppercase mb-3 pb-2 border-b-2 border-black">
-                    <span className="w-2.5 h-2.5 bg-[#FF6B6B] border border-black" />
-                    <span>RESORA RESEARCH DOSSIER · {getScopeName()}</span>
+                {/* Message Header */}
+                <div className="flex items-center gap-2 text-[11px] font-mono font-bold uppercase">
+                  <span
+                    className={`px-2 py-0.5 border border-black ${
+                      isUser ? 'bg-[#FFD93D] text-black' : 'bg-[#FF6B6B] text-black'
+                    }`}
+                  >
+                    {isUser ? 'YOU' : 'RESORA AI'}
+                  </span>
+                  <span className="text-black/50">
+                    {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+
+                {/* Message Bubble Body */}
+                <div
+                  className={`p-4 sm:p-5 border-2 border-black text-xs sm:text-sm leading-relaxed max-w-2xl ${
+                    isUser
+                      ? 'bg-[#FFD93D] text-black font-bold shadow-[3px_3px_0px_#000]'
+                      : 'bg-white text-black font-normal shadow-[4px_4px_0px_#000] whitespace-pre-wrap'
+                  }`}
+                >
+                  {m.content}
+                </div>
+
+                {/* Citations & Source Cards (Assistant Only) */}
+                {!isUser && m.citations && m.citations.length > 0 && (
+                  <div className="w-full max-w-2xl pt-2 space-y-2">
+                    <div className="text-[11px] font-mono font-bold uppercase text-black/60">
+                      Cited Sources ({m.citations.length}):
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {m.citations.map((c, i) => (
+                        <SourceCard
+                          key={i}
+                          citation={c}
+                          index={i + 1}
+                          onOpenDocumentPage={(resId) => {
+                            const found = resources.find((r) => r.id === resId);
+                            if (found) setSelectedViewerDoc(found);
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
-                <div className="font-bold leading-relaxed">{msg.content}</div>
               </div>
-
-              {/* Citations Shelf */}
-              {msg.citations && msg.citations.length > 0 && (
-                <div className="pt-2 space-y-2">
-                  <div className="text-[11px] font-mono font-black uppercase tracking-wider text-black flex items-center gap-1.5">
-                    <Info className="w-4 h-4 text-black stroke-[3]" />
-                    <span>VERIFIED CITATIONS ({msg.citations.length})</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {msg.citations.map((cite, i) => (
-                      <SourceCard
-                        key={i}
-                        citation={cite}
-                        index={i}
-                        onOpenDocumentPage={handleOpenDocPage}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))
+            );
+          })
         )}
 
         {isLoading && (
-          <div className="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_#000] flex items-center gap-3 text-xs font-black uppercase text-black">
-            <Loader2 className="w-4 h-4 text-black animate-spin stroke-[3]" />
-            <span>SEARCHING RESEARCH INDEX AND SYNTHESIZING GROUNDED ANSWER...</span>
+          <div className="p-4 bg-white border-2 border-black shadow-[3px_3px_0px_#000] w-max flex items-center gap-2.5 text-xs font-bold text-black">
+            <Loader2 className="w-4 h-4 animate-spin stroke-[2.5]" />
+            <span>Resora is synthesizing your saved research...</span>
           </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Composer Input Bar: White Rectangle with 4px Black Border & Hard Shadow */}
-      <div className="p-4 sm:p-6 border-t-4 border-black bg-white shrink-0 shadow-[0px_-4px_0px_0px_#000]">
+      {/* Composer Input Bar */}
+      <div className="pt-2">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSend();
           }}
-          className="max-w-4xl mx-auto relative"
+          className="relative flex items-center bg-white border-3 border-black shadow-[5px_5px_0px_#000]"
         >
-          <div className="flex items-center rounded-none bg-white border-4 border-black shadow-[6px_6px_0px_0px_#000] p-2 focus-within:bg-[#FFD93D] transition-colors">
-            <input
-              type="text"
-              autoFocus
-              placeholder={`ASK YOUR RESEARCH IN ${getScopeName()}...`}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              disabled={isLoading}
-              className="w-full px-3 py-2 bg-transparent text-black placeholder-black/50 font-black uppercase focus:outline-none text-xs sm:text-sm"
-            />
-            <button
-              type="submit"
-              disabled={!query.trim() || isLoading}
-              className="btn-neo px-6 py-3 rounded-none bg-[#FF6B6B] hover:bg-[#ff5252] text-black border-4 border-black font-black uppercase text-xs tracking-wider shadow-[3px_3px_0px_0px_#000] disabled:opacity-50 shrink-0 ml-2"
-              title="Send query"
-            >
-              <Send className="w-4 h-4 stroke-[3]" />
-            </button>
-          </div>
+          <input
+            type="text"
+            placeholder="Ask anything about your saved research..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            disabled={isLoading}
+            className="flex-1 px-4 py-3.5 bg-transparent text-black text-xs sm:text-sm font-normal focus:outline-none placeholder-black/50"
+          />
+
+          <button
+            type="submit"
+            disabled={!query.trim() || isLoading}
+            className="btn-neo m-1.5 px-4 py-2 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs border-2 border-black shadow-[2px_2px_0px_#000] flex items-center gap-1.5 disabled:opacity-40"
+          >
+            <span>Ask</span>
+            <Send className="w-3.5 h-3.5 stroke-[2.5]" />
+          </button>
         </form>
       </div>
 
-      {/* Document Reader Modal */}
-      {selectedViewerDoc && (
-        <DocumentViewerModal
-          resource={selectedViewerDoc}
-          isOpen={!!selectedViewerDoc}
-          onClose={() => setSelectedViewerDoc(null)}
-        />
-      )}
+      {/* Document Viewer Modal if citation opened */}
+      <DocumentViewerModal
+        isOpen={Boolean(selectedViewerDoc)}
+        resource={selectedViewerDoc}
+        onClose={() => setSelectedViewerDoc(null)}
+      />
     </div>
   );
 }
 
 export default function AssistantPage() {
   return (
-    <Suspense fallback={
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm font-black uppercase text-black">
-          LOADING RESORA RESEARCH ASSISTANT...
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<div className="p-8"><Loader2 className="w-6 h-6 animate-spin" /></div>}>
       <AssistantContent />
     </Suspense>
   );

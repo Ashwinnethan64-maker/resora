@@ -14,10 +14,10 @@
   --border: #000000;
 
   /* Solid Hard Zero-Blur Shadows */
-  --shadow-neo-sm: 4px 4px 0px 0px #000000;
-  --shadow-neo-md: 8px 8px 0px 0px #000000;
-  --shadow-neo-lg: 12px 12px 0px 0px #000000;
-  --shadow-neo-xl: 16px 16px 0px 0px #000000;
+  --shadow-neo-sm: 3px 3px 0px 0px #000000;
+  --shadow-neo-md: 6px 6px 0px 0px #000000;
+  --shadow-neo-lg: 10px 10px 0px 0px #000000;
+  --shadow-neo-xl: 14px 14px 0px 0px #000000;
 }
 
 body {
@@ -30,42 +30,42 @@ body {
 
 /* Subtle Halftone Background Texture Utility */
 .bg-halftone {
-  background-image: radial-gradient(#000000 1.5px, transparent 1.5px);
-  background-size: 18px 18px;
+  background-image: radial-gradient(#000000 1.2px, transparent 1.2px);
+  background-size: 20px 20px;
 }
 
 .bg-grid-paper {
   background-image: 
-    linear-gradient(to right, rgba(0, 0, 0, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
-  background-size: 24px 24px;
+    linear-gradient(to right, rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 /* Neo-Brutalist Hard Shadows */
 .shadow-neo-sm {
-  box-shadow: 4px 4px 0px 0px #000000;
+  box-shadow: 3px 3px 0px 0px #000000;
 }
 
 .shadow-neo-md {
-  box-shadow: 8px 8px 0px 0px #000000;
+  box-shadow: 6px 6px 0px 0px #000000;
 }
 
 .shadow-neo-lg {
-  box-shadow: 12px 12px 0px 0px #000000;
+  box-shadow: 10px 10px 0px 0px #000000;
 }
 
 .shadow-neo-xl {
-  box-shadow: 16px 16px 0px 0px #000000;
+  box-shadow: 14px 14px 0px 0px #000000;
 }
 
 /* Tactile Physical Button Interactions */
 .btn-neo {
-  transition: transform 100ms ease-linear, box-shadow 100ms ease-linear;
+  transition: transform 100ms ease-out, box-shadow 100ms ease-out, background-color 100ms ease-out;
 }
 
 .btn-neo:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px 0px #000000;
+  box-shadow: 5px 5px 0px 0px #000000;
 }
 
 .btn-neo:active {
@@ -75,12 +75,12 @@ body {
 
 /* Card Physical Lift Interaction */
 .card-neo {
-  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out, border-color 150ms ease-out;
 }
 
 .card-neo:hover {
-  transform: translateY(-8px);
-  box-shadow: 12px 12px 0px 0px #000000;
+  transform: translateY(-4px);
+  box-shadow: 8px 8px 0px 0px #000000;
 }
 
 /* Sticker Elements with Controlled Angles */
@@ -90,20 +90,14 @@ body {
   gap: 0.25rem;
   padding: 0.25rem 0.625rem;
   border: 2px solid #000000;
-  font-weight: 900;
+  font-weight: 800;
   text-transform: uppercase;
   font-size: 0.6875rem;
   letter-spacing: 0.05em;
   box-shadow: 2px 2px 0px 0px #000000;
 }
 
-/* Outlined Display Text Effect */
-.text-stroke-black {
-  -webkit-text-stroke: 2px #000000;
-  color: transparent;
-}
-
-/* Custom Neo-Brutalist Scrollbar */
+/* Custom Scrollbar - Neo-Brutalist High Contrast */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -111,21 +105,14 @@ body {
 
 ::-webkit-scrollbar-track {
   background: #FFFDF5;
-  border-left: 3px solid #000000;
+  border-left: 2px solid #000000;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #000000;
-  border: 1px solid #FFFDF5;
-  border-radius: 0px;
+  background: #FFD93D;
+  border: 2px solid #000000;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #FF6B6B;
-}
-
-/* High Contrast Selection */
-::selection {
-  background: #FFD93D;
-  color: #000000;
 }
