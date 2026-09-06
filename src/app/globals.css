@@ -1,26 +1,91 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Bauhaus Core Palette */
+  --bauhaus-bg: #F0F0F0;
+  --bauhaus-black: #121212;
+  --bauhaus-red: #D02020;
+  --bauhaus-blue: #1040C0;
+  --bauhaus-yellow: #F0C020;
+  --bauhaus-muted: #E0E0E0;
+  --bauhaus-white: #FFFFFF;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --background: #F0F0F0;
+  --foreground: #121212;
+  --border: #121212;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --shadow-sm: 4px 4px 0px 0px #121212;
+  --shadow-md: 6px 6px 0px 0px #121212;
+  --shadow-lg: 8px 8px 0px 0px #121212;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bauhaus-bg);
+  color: var(--bauhaus-black);
+  font-family: var(--font-outfit), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Bauhaus Architectural Hard Shadows */
+.shadow-bauhaus-sm {
+  box-shadow: 4px 4px 0px 0px #121212;
+}
+
+.shadow-bauhaus-md {
+  box-shadow: 6px 6px 0px 0px #121212;
+}
+
+.shadow-bauhaus-lg {
+  box-shadow: 8px 8px 0px 0px #121212;
+}
+
+.shadow-bauhaus-red {
+  box-shadow: 6px 6px 0px 0px #D02020;
+}
+
+.shadow-bauhaus-blue {
+  box-shadow: 6px 6px 0px 0px #1040C0;
+}
+
+.shadow-bauhaus-yellow {
+  box-shadow: 6px 6px 0px 0px #F0C020;
+}
+
+/* Mechanical Button Press Interaction */
+.btn-bauhaus {
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+.btn-bauhaus:hover {
+  transform: translate(-1px, -1px);
+}
+.btn-bauhaus:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0px 0px #121212 !important;
+}
+
+/* Custom Bauhaus Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #E0E0E0;
+  border-left: 2px solid #121212;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #121212;
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #D02020;
+}
+
+/* Selection */
+::selection {
+  background: #F0C020;
+  color: #121212;
 }

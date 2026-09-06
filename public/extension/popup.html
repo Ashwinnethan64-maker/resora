@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 320px;
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d0f17;
+      color: #f1f5f9;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .logo {
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      color: #6366f1;
+    }
+    .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      font-weight: 500;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      font-size: 11px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+    input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: #151824;
+      border: 1px solid #23283c;
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #fff;
+      font-size: 12px;
+      outline: none;
+    }
+    input:focus, textarea:focus {
+      border-color: #6366f1;
+    }
+    button {
+      width: 100%;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.15s;
+    }
+    button:hover {
+      background: #4338ca;
+    }
+    .status {
+      margin-top: 10px;
+      font-size: 11px;
+      text-align: center;
+      display: none;
+    }
+    .success {
+      color: #34d399;
+    }
+    .error {
+      color: #f87171;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">RESORA</div>
+    <div class="badge">Quick Capture</div>
+  </div>
+
+  <div class="form-group">
+    <label>Title</label>
+    <input type="text" id="title" placeholder="Loading page title...">
+  </div>
+
+  <div class="form-group">
+    <label>URL</label>
+    <input type="text" id="url" readonly>
+  </div>
+
+  <div class="form-group">
+    <label>Tags (comma-separated)</label>
+    <input type="text" id="tags" placeholder="AI, Research, Coding">
+  </div>
+
+  <div class="form-group">
+    <label>Personal Note (optional)</label>
+    <textarea id="note" rows="2" placeholder="Why is this useful?"></textarea>
+  </div>
+
+  <button id="save-btn">Save to Resora</button>
+  <div id="status" class="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

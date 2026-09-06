@@ -1,0 +1,21 @@
+{
+  "name": "Resora — Personal Research Intelligence",
+  "short_name": "Resora",
+  "description": "Save it. Understand it. Use it. Turn scattered research into compound knowledge.",
+  "start_url": "/app",
+  "display": "standalone",
+  "background_color": "#08090e",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/Resora_logo.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/Resora_logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png"
+    }
+  ]
+}

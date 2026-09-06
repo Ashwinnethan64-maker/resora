@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Resora — Save to Research Intelligence",
+  "version": "1.0.0",
+  "description": "1-click save any website, article, tool, or document directly to your Resora research library.",
+  "permissions": ["activeTab"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Save to Resora"
+  }
+}
