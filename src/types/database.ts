@@ -300,3 +300,20 @@ export interface SavedAnswerModel {
   citations?: AssistantCitation[];
   created_at: string;
 }
+
+export type AIJobStatus = 'queued' | 'processing' | 'completed' | 'failed';
+
+export interface AIJobModel {
+  id: string;
+  conversation_id: string;
+  user_id: string;
+  status: AIJobStatus;
+  query: string;
+  scope_type: AssistantScopeType;
+  scope_id?: string;
+  result_message_id?: string;
+  result_message?: AssistantMessageModel;
+  error?: string;
+  created_at: string;
+  completed_at?: string;
+}

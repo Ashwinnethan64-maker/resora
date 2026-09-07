@@ -8,18 +8,15 @@ import { DocumentViewerModal } from '@/components/documents/DocumentViewerModal'
 import {
   AssistantScopeType,
   AssistantMessageModel,
-  ResourceModel
+  ResourceModel,
 } from '@/types/database';
-import { PageHeader, SectionLabel } from '@/components/ui/SectionLabel';
+import { ConversationService } from '@/lib/services/conversation-service';
+import { PageHeader } from '@/components/ui/SectionLabel';
 import {
   Send,
   Loader2,
   RotateCcw,
   Sparkles,
-  Search,
-  BookOpen,
-  ArrowRight,
-  Plus
 } from 'lucide-react';
 
 const SUGGESTED_QUESTIONS = [
@@ -28,6 +25,8 @@ const SUGGESTED_QUESTIONS = [
   'What resources can help with my hackathon project?',
   'Summarize compound AI systems from my papers.',
 ];
+
+const STORAGE_ACTIVE_CONV = 'resora_assistant_active_conv_id';
 
 function AssistantContent() {
   const searchParams = useSearchParams();
@@ -38,13 +37,16 @@ function AssistantContent() {
 
   const [scopeType, setScopeType] = useState<AssistantScopeType>(initialScope);
   const [scopeId, setScopeId] = useState<string | undefined>(initialScopeId);
+  const [conversationId, setConversationId] = useState<string>('conv_default');
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<AssistantMessageModel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
 
   const [selectedViewerDoc, setSelectedViewerDoc] = useState<ResourceModel | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const pollerRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -54,13 +56,94 @@ function AssistantContent() {
     scrollToBottom();
   }, [messages, isLoading]);
 
+  // 1. Restore persistent active conversation when scope changes or on mount
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const conv = await ConversationService.getActiveConversation('usr_local', scopeType, scopeId);
+        if (isMounted && conv) {
+          setConversationId(conv.id);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(STORAGE_ACTIVE_CONV, conv.id);
+          }
+          if (conv.messages) {
+            setMessages(conv.messages);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to restore assistant conversation:', err);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [scopeType, scopeId]);
+
+  // 2. Poll for active job status if a background query is running
+  useEffect(() => {
+    if (!activeJobId) {
+      if (pollerRef.current) {
+        clearInterval(pollerRef.current);
+        pollerRef.current = null;
+      }
+      return;
+    }
+
+    const checkJob = async () => {
+      try {
+        const res = await fetch(`/api/assistant/chat?jobId=${activeJobId}`);
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const job = data.job;
+
+        if (job && (job.status === 'completed' || job.status === 'failed')) {
+          setIsLoading(false);
+          setActiveJobId(null);
+
+          if (job.status === 'completed' && job.result_message) {
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === job.result_message.id)) return prev;
+              return [...prev, job.result_message];
+            });
+          } else if (job.status === 'failed') {
+            showToast('Resora was unable to finish synthesis: ' + (job.error || 'Server timeout'));
+          }
+        }
+      } catch (err) {
+        console.warn('Error checking background AI job:', err);
+      }
+    };
+
+    pollerRef.current = setInterval(checkJob, 1200);
+
+    return () => {
+      if (pollerRef.current) {
+        clearInterval(pollerRef.current);
+        pollerRef.current = null;
+      }
+    };
+  }, [activeJobId, showToast]);
+
+  const handleResetConversation = async () => {
+    try {
+      await ConversationService.resetConversation(conversationId);
+      setMessages([]);
+      showToast('Research conversation reset');
+    } catch {
+      setMessages([]);
+    }
+  };
+
   const handleSend = async (userPrompt?: string) => {
     const text = (userPrompt || query).trim();
     if (!text || isLoading) return;
 
     const userMessage: AssistantMessageModel = {
-      id: `msg-${Date.now()}`,
-      conversation_id: 'conv-active',
+      id: `msg_${Date.now()}_u`,
+      conversation_id: conversationId,
       user_id: 'usr_local',
       role: 'user',
       content: text,
@@ -79,31 +162,37 @@ function AssistantContent() {
           query: text,
           scopeType,
           scopeId,
+          conversationId,
+          asyncMode: true,
           messages: messages.map((m) => ({ role: m.role, content: m.content })),
         }),
       });
 
       if (!res.ok) {
-        throw new Error('Assistant query failed');
+        throw new Error('Assistant query request failed');
       }
 
       const data = await res.json();
 
-      const assistantMessage: AssistantMessageModel = {
-        id: `msg-${Date.now() + 1}`,
-        conversation_id: 'conv-active',
-        user_id: 'usr_local',
-        role: 'assistant',
-        content: data.answer,
-        citations: data.citations || [],
-        used_resource_ids: data.usedResourceIds || [],
-        created_at: new Date().toISOString(),
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
+      if (data.jobId) {
+        setActiveJobId(data.jobId);
+      } else if (data.answer) {
+        // Direct answer fallback
+        const assistantMessage: AssistantMessageModel = {
+          id: `msg_${Date.now() + 1}_a`,
+          conversation_id: conversationId,
+          user_id: 'usr_local',
+          role: 'assistant',
+          content: data.answer,
+          citations: data.citations || [],
+          used_resource_ids: data.usedResourceIds || [],
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+        setIsLoading(false);
+      }
     } catch {
       showToast('Failed to get answer from Resora assistant');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -140,7 +229,7 @@ function AssistantContent() {
                 setScopeType(e.target.value as AssistantScopeType);
                 setScopeId(undefined);
               }}
-              className="px-3.5 py-2.5 bg-white border-2 border-black text-xs font-black text-black shadow-[2px_2px_0px_#000] focus:outline-none uppercase tracking-wider"
+              className="px-3.5 py-2.5 bg-white border-2 border-black text-xs font-black text-black shadow-[2px_2px_0px_#000] focus:outline-none uppercase tracking-wider cursor-pointer"
             >
               <option value="library">SCOPE: ENTIRE LIBRARY</option>
               <option value="project">SCOPE: PROJECTS</option>
@@ -150,7 +239,7 @@ function AssistantContent() {
 
             {messages.length > 0 && (
               <button
-                onClick={() => setMessages([])}
+                onClick={handleResetConversation}
                 className="btn-neo flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-[#FF6B6B] text-black border-2 border-black text-xs font-black uppercase tracking-wider shadow-[2px_2px_0px_#000] transition-colors"
                 title="Reset research conversation"
               >
@@ -185,7 +274,7 @@ function AssistantContent() {
                 Your Research Console is Ready
               </h3>
               <p className="text-xs sm:text-sm text-black/75 max-w-md mx-auto font-normal">
-                Ask natural questions across your saved websites, GitHub repositories, PDFs, and developer tools. Every answer includes verifiable sources.
+                Ask natural questions across your saved websites, GitHub repositories, PDFs, and developer tools. Every answer includes verifiable sources and runs persistently in the background.
               </p>
             </div>
 
@@ -269,7 +358,7 @@ function AssistantContent() {
         {isLoading && (
           <div className="p-4 bg-white border-2 border-black shadow-[3px_3px_0px_#000] w-max flex items-center gap-2.5 text-xs font-bold text-black">
             <Loader2 className="w-4 h-4 animate-spin stroke-[2.5]" />
-            <span>Resora is synthesizing your saved research...</span>
+            <span>Resora is synthesizing your saved research... (Safe to navigate away)</span>
           </div>
         )}
 
@@ -297,7 +386,7 @@ function AssistantContent() {
           <button
             type="submit"
             disabled={!query.trim() || isLoading}
-            className="btn-neo m-1.5 px-4 py-2 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs border-2 border-black shadow-[2px_2px_0px_#000] flex items-center gap-1.5 disabled:opacity-40"
+            className="btn-neo m-1.5 px-4 py-2 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs border-2 border-black shadow-[2px_2px_0px_#000] flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
           >
             <span>Ask</span>
             <Send className="w-3.5 h-3.5 stroke-[2.5]" />
