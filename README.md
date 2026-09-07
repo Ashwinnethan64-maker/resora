@@ -1,16 +1,22 @@
 <div align="center">
-  <img src="public/Resora_logo.png" alt="RESORA Logo" width="96" height="96" style="border-radius: 16px; margin-bottom: 12px;" />
+  <img src="public/Resora_banner.png" alt="RESORA Banner" width="100%" style="border-radius: 8px; border: 3px solid #000; box-shadow: 6px 6px 0px #000; margin-bottom: 24px;" />
+
+  <br />
+
+  <img src="public/Resora_logo.png" alt="RESORA Logo" width="80" height="80" style="border-radius: 14px; margin-bottom: 8px;" />
   <h1>RESORA</h1>
   <p><strong>Personal Research Intelligence</strong></p>
   <p><em>Save it. Understand it. Use it.</em></p>
 
   <p>
-    <a href="#quick-start">Quick Start</a> •
-    <a href="#core-capabilities">Capabilities</a> •
-    <a href="#architecture">Architecture</a> •
-    <a href="#security--data-privacy">Security</a> •
-    <a href="#browser-extension">Browser Extension</a> •
-    <a href="ARCHITECTURE.md">System Design</a>
+    <a href="#-what-is-resora">About</a> •
+    <a href="#-core-capabilities">Capabilities</a> •
+    <a href="#-system-architecture">Architecture</a> •
+    <a href="#-keyboard-shortcuts">Keyboard Shortcuts</a> •
+    <a href="#-quick-start">Quick Start</a> •
+    <a href="#-security--data-privacy">Security</a> •
+    <a href="#-browser-extension">Extension</a> •
+    <a href="#-creator--community">Connect</a>
   </p>
 
   <p>
@@ -18,6 +24,7 @@
     <img src="https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react" alt="React 19" />
     <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript" alt="TypeScript" />
     <img src="https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=flat-square&logo=tailwind-css" alt="Tailwind CSS" />
+    <img src="https://img.shields.io/badge/Design-Neo--Brutalist-FFD93D?style=flat-square" alt="Design" />
     <img src="https://img.shields.io/badge/Supabase-Ready-3ECF8E?style=flat-square&logo=supabase" alt="Supabase" />
     <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License" />
   </p>
@@ -34,10 +41,10 @@ Most builders, developers, researchers, founders, and students save high-value r
 It is **NOT** a generic bookmark manager, and it is **NOT** a generic ChatGPT wrapper. RESORA is a grounded personal intelligence platform that structures, cross-connects, and retrieves your saved research with exact provenance.
 
 ```
-CAPTURE              INTELLIGENCE              ORGANIZATION              SYNTHESIS
-[ Web / Extension ]       │                         │                         │
-[ PDF / Text Docs ] ──▶ [ Metadata & Extraction ] ──▶ [ Projects & Stacks ] ──▶ [ Ask Resora (RAG) ]
-[ Mobile Bookmark ]       │ (Anti-SSRF & Magic Byte) │ (Zero-Duplication)      │ (Exact Page Citations)
+CAPTURE                     INTELLIGENCE                   ORGANIZATION                   SYNTHESIS
+[ Web / Extension ]              │                              │                              │
+[ PDF / Text Docs ] ──────▶ [ Metadata & Ingestion ] ──────▶ [ Workspaces & Stacks ] ─────▶ [ Ask Resora (RAG) ]
+[ Mobile / REST API ]            │ (Anti-SSRF & Magic Bytes)    │ (Zero Duplication)           │ (Page-Level Citations)
 ```
 
 ---
@@ -48,17 +55,19 @@ CAPTURE              INTELLIGENCE              ORGANIZATION              SYNTHES
 - **1-Click Web Capture**: Save articles, GitHub repos, technical documentation, tools, and social posts.
 - **Manifest V3 Browser Extension**: Native extension popup for Chromium browsers and Firefox (`public/extension/`).
 - **REST Quick Capture API**: Secure `/api/capture` endpoint for mobile shortcuts, CLI tools, and automation hooks.
-- **Smart URL Normalization**: Automatically strips tracking parameters (`utm_*`, `fbclid`, `gclid`), detects source types, and checks for existing duplicates before indexing.
+- **Smart Canonical URL Normalization**: Automatically strips tracking parameters (`utm_*`, `fbclid`, `gclid`), detects source types, and checks for existing duplicates before indexing.
+- **100% Real-Time Deduplication**: Automatic detection and instant deduplication across your entire library.
 
-### 2. Document & File Intelligence
+### 2. Document Intelligence & Page-Level Ingestion
 - **PDF & File Streaming Extraction**: Page-aware text extraction for PDF whitepapers, markdown docs, and text files.
 - **Magic Byte Signature Verification**: Validates binary headers (`%PDF-` / `0x25 0x50 0x44 0x46 0x2D`) to prevent spoofed uploads.
-- **SHA-256 Deduplication**: Prevents duplicate document storage through cryptographic content hashing.
+- **SHA-256 Cryptographic Hashing**: Prevents duplicate document storage through content hash matching.
 - **In-Browser Document Reader**: Deep page-by-page reader modal with keyword highlighting and text search.
 
-### 3. Project Workspaces & Recommendations
-- **Contextual Workspaces**: Organize resources by build objectives (Hackathons, SaaS, Research, Freelance, Startups).
-- **Zero-Duplication Data Model**: Resources are shared across projects without copying or fragmenting underlying records.
+### 3. Project Workspaces & Curated Collections
+- **Contextual Project Workspaces**: Organize resources by build objectives (Hackathons, SaaS builds, Research, Freelance).
+- **Curated Collections**: Thematic clusters of tools, libraries, and frameworks for rapid retrieval and cross-project reuse.
+- **Zero-Duplication Data Model**: Resources are referenced across projects without copying or fragmenting records.
 - **Explainable AI Recommendations**: Resora automatically matches relevant saved research to active project objectives with transparent scoring reasons.
 - **Decision Logs & Architectural Notes**: Keep a persistent audit trail of technical decisions linked to specific resources.
 
@@ -68,6 +77,26 @@ CAPTURE              INTELLIGENCE              ORGANIZATION              SYNTHES
 - **Multi-Scope Retrieval**: Ground queries across `Entire Library`, `Current Project`, `Current Collection`, `Documents Only`, `Developer Tools`, or `Favorites`.
 - **Page-Level Interactive Citations**: Answers reference `[Source 1]`, `[Source 2]` with exact PDF page numbers that deep link directly into the Document Reader.
 - **Deterministic Synthesis Fallback**: When an external AI provider API key is omitted, Resora generates structured comparison tables and grounded synthesis deterministically.
+
+---
+
+## ⌨️ Keyboard Shortcuts & Quick Actions
+
+RESORA includes a system of high-velocity keyboard shortcuts accessible from anywhere in the application:
+
+| Shortcut | Key Action | Scope |
+| :--- | :--- | :--- |
+| <kbd>⌘</kbd> + <kbd>K</kbd> / <kbd>Ctrl</kbd> + <kbd>K</kbd> | **Command Palette / Quick Actions** | Global |
+| <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> / <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | **Quick Capture Modal** | Global |
+| <kbd>Escape</kbd> | **Close Any Modal / Command Palette / Viewer** | Global |
+| <kbd>L</kbd> | **Navigate to Library** | When Palette / Quick Bar is Active |
+| <kbd>P</kbd> | **Navigate to Project Workspaces** | When Palette / Quick Bar is Active |
+| <kbd>A</kbd> | **Open Ask Resora AI Assistant** | When Palette / Quick Bar is Active |
+| <kbd>D</kbd> | **Open Documents & Research** | When Palette / Quick Bar is Active |
+| <kbd>T</kbd> | **Open Developer Tools** | When Palette / Quick Bar is Active |
+| <kbd>C</kbd> | **Open Curated Collections** | When Palette / Quick Bar is Active |
+| <kbd>I</kbd> | **Open Inbox** | When Palette / Quick Bar is Active |
+| <kbd>F</kbd> | **Open Starred Favorites** | When Palette / Quick Bar is Active |
 
 ---
 
@@ -98,7 +127,7 @@ Resora was built from the ground up for privacy-conscious researchers:
 | :--- | :--- | :--- |
 | **Framework** | [Next.js 16.3.4 (Turbopack)](https://nextjs.org/) | App Router, Server Components, Route Handlers |
 | **Runtime & UI** | [React 19](https://react.dev/), [TypeScript 5](https://www.typescriptlang.org/) | Strict typing, concurrent features, modern React |
-| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) | Curated dark-first design system |
+| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) | Neo-Brutalist high-contrast visual system |
 | **Icons & Typography** | [Lucide React](https://lucide.dev/), Inter, JetBrains Mono | Production icons and monospace accents |
 | **Database & Auth** | [Supabase](https://supabase.com/) (PostgreSQL + RLS) | Relational persistence, Row-Level Security, pgvector |
 | **AI & Inference** | OpenAI API / Local Deterministic Engine | Semantic synthesis, structured taxonomy extraction |
@@ -115,7 +144,7 @@ Resora was built from the ground up for privacy-conscious researchers:
 ### 2. Installation
 ```bash
 # Clone repository
-git clone https://github.com/your-username/resora.git
+git clone https://github.com/Ashwinnethan64-maker/resora.git
 cd resora
 
 # Install dependencies
@@ -174,6 +203,7 @@ RESORA includes a ready-to-use Manifest V3 browser extension located in `public/
 ```
 RESORA web/
 ├── public/
+│   ├── Resora_banner.png   # Official RESORA presentation banner
 │   ├── Resora_logo.ico     # Official RESORA brand asset
 │   ├── Resora_logo.png     # High-resolution PNG mark
 │   ├── manifest.json       # PWA Web App Manifest
@@ -184,7 +214,7 @@ RESORA web/
 ├── src/
 │   ├── app/
 │   │   ├── api/            # Route handlers (AI, Assistant, Capture, Documents, Metadata)
-│   │   ├── app/            # Authenticated workspace routes (Library, Projects, Assistant, etc.)
+│   │   ├── app/            # Authenticated workspace routes (Library, Projects, Collections, etc.)
 │   │   ├── auth/           # Authentication portal (Sign In, Sign Up, Reset)
 │   │   ├── privacy/        # Privacy policy transparency
 │   │   ├── terms/          # Terms of service
@@ -193,9 +223,9 @@ RESORA web/
 │   │   └── not-found.tsx   # Branded 404 handler
 │   ├── components/
 │   │   ├── assistant/      # SourceCards, chat components
-│   │   ├── brand/          # ResoraLogo component
+│   │   ├── brand/          # ResoraLogo, NeoSticker components
 │   │   ├── documents/      # PDF Dropzone, In-browser Document Reader
-│   │   ├── layout/         # AppShell, Navigation Sidebar, Header
+│   │   ├── layout/         # AppShell, Navigation Sidebar, Header, CommandPalette
 │   │   ├── onboarding/     # First-run onboarding modal
 │   │   └── resources/      # Resource cards, save dialogs, filter bars
 │   ├── context/            # ResoraContext (Reactive local & remote state)
@@ -209,6 +239,15 @@ RESORA web/
 └── supabase/
     └── migrations/         # PostgreSQL DDL, RLS policies, pgvector indexes
 ```
+
+---
+
+## 🤝 Creator & Community
+
+Follow the build, contribute, or connect:
+
+- **GitHub Repository**: [https://github.com/Ashwinnethan64-maker/resora.git](https://github.com/Ashwinnethan64-maker/resora.git)
+- **LinkedIn / Creator**: [Ashwin Nethan](https://www.linkedin.com/in/ashwin-nethan-a59259366/)
 
 ---
 
