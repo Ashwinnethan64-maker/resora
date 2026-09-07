@@ -32,7 +32,7 @@ const TYPE_FILTER_BUTTONS = [
 ];
 
 export default function LibraryPage() {
-  const { resources, isLoading, openSaveModal } = useResora();
+  const { resources, isLoading, openSaveModal, cleanAllDuplicates } = useResora();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -134,13 +134,24 @@ export default function LibraryPage() {
         title="RESEARCH LIBRARY."
         description={`${filteredResources.length} ${filteredResources.length === 1 ? 'resource' : 'resources'} indexed across websites, documents, and tools.`}
         actions={
-          <button
-            onClick={openSaveModal}
-            className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-2 border-black shadow-[3px_3px_0px_#000]"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>+ CAPTURE NEW</span>
-          </button>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              onClick={async () => {
+                await cleanAllDuplicates();
+              }}
+              className="btn-neo flex items-center gap-2 px-4 py-3 bg-[#FFD93D] hover:bg-[#ffe169] text-black font-black uppercase text-xs md:text-sm tracking-wider border-2 border-black shadow-[3px_3px_0px_#000]"
+              title="Merge and eliminate duplicate URLs across library"
+            >
+              <span>CLEAN DUPLICATES</span>
+            </button>
+            <button
+              onClick={openSaveModal}
+              className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-2 border-black shadow-[3px_3px_0px_#000]"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>+ CAPTURE NEW</span>
+            </button>
+          </div>
         }
       />
 

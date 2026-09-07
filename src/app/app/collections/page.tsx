@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useResora } from '@/context/ResoraContext';
-import { ArrowRight, Plus, Sparkles } from 'lucide-react';
+import { ArrowRight, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/SectionLabel';
 
 export default function CollectionsPage() {
-  const { collections, createCollection } = useResora();
+  const { collections, createCollection, deleteCollection } = useResora();
   const [isCreating, setIsCreating] = useState(false);
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
@@ -105,42 +105,71 @@ export default function CollectionsPage() {
       )}
 
       {/* Collections Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {collections.map((col, idx) => (
-          <Link
-            key={col.id}
-            href={`/app/collections/${col.id}`}
-            className="card-neo p-6 rounded-none bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] group flex flex-col justify-between space-y-4 relative"
+      {collections.length === 0 ? (
+        <div className="p-8 text-center bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] space-y-3">
+          <p className="text-sm font-bold text-black uppercase tracking-wider">NO CURATED COLLECTIONS YET</p>
+          <p className="text-xs text-black/70">Create a thematic collection to cluster related resources and stacks.</p>
+          <button
+            onClick={() => setIsCreating(true)}
+            className="btn-neo px-4 py-2 bg-[#FF6B6B] text-black font-black uppercase text-xs border-2 border-black shadow-[2px_2px_0px_#000]"
           >
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className={`text-[10px] font-mono font-black uppercase px-2.5 py-0.5 rounded-none ${getCollectionBadge(idx)}`}>
-                  {col.topic || 'CURATED'}
-                </span>
-                <span className="text-xs font-mono font-black text-black bg-[#FFFDF5] px-2 py-0.5 border border-black uppercase">
-                  {col.resource_ids?.length || 0} RESOURCES
-                </span>
+            + CREATE FIRST COLLECTION
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {collections.map((col, idx) => (
+            <Link
+              key={col.id}
+              href={`/app/collections/${col.id}`}
+              className="card-neo p-6 rounded-none bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] group flex flex-col justify-between space-y-4 relative"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className={`text-[10px] font-mono font-black uppercase px-2.5 py-0.5 rounded-none ${getCollectionBadge(idx)}`}>
+                    {col.topic || 'CURATED'}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-mono font-black text-black bg-[#FFFDF5] px-2 py-0.5 border border-black uppercase">
+                      {col.resource_ids?.length || 0} RESOURCES
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (confirm(`Delete collection "${col.name}"?`)) {
+                          deleteCollection(col.id);
+                        }
+                      }}
+                      className="p-1 text-black/60 hover:text-black hover:bg-[#FF6B6B] border border-black transition-colors"
+                      title="Delete Collection"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </button>
+                  </div>
+                </div>
+
+                <h3 className="text-xl md:text-2xl font-black uppercase text-black group-hover:text-[#FF6B6B] transition-colors leading-tight">
+                  {col.name}
+                </h3>
+                <p className="text-xs md:text-sm font-medium text-black mt-2 leading-relaxed line-clamp-2">
+                  {col.description || 'Curated resource collection.'}
+                </p>
               </div>
 
-              <h3 className="text-xl md:text-2xl font-black uppercase text-black group-hover:text-[#FF6B6B] transition-colors leading-tight">
-                {col.name}
-              </h3>
-              <p className="text-xs md:text-sm font-medium text-black mt-2 leading-relaxed line-clamp-2">
-                {col.description || 'Curated resource collection.'}
-              </p>
-            </div>
-
-            <div className="pt-4 border-t-2 border-black flex items-center justify-between text-xs text-black">
-              <span className="font-mono font-bold text-[11px] text-black uppercase">
-                UPDATED {new Date(col.updated_at).toLocaleDateString()}
-              </span>
-              <span className="text-black group-hover:text-[#FF6B6B] flex items-center gap-1.5 font-black text-xs uppercase tracking-wider group-hover:translate-x-1 transition-all">
-                EXPLORE STACK <ArrowRight className="w-4 h-4 stroke-[3px]" />
-              </span>
-            </div>
-          </Link>
-        ))}
-      </div>
+              <div className="pt-4 border-t-2 border-black flex items-center justify-between text-xs text-black">
+                <span className="font-mono font-bold text-[11px] text-black uppercase">
+                  UPDATED {new Date(col.updated_at).toLocaleDateString()}
+                </span>
+                <span className="text-black group-hover:text-[#FF6B6B] flex items-center gap-1.5 font-black text-xs uppercase tracking-wider group-hover:translate-x-1 transition-all">
+                  EXPLORE STACK <ArrowRight className="w-4 h-4 stroke-[3px]" />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

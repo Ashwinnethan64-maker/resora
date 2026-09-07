@@ -108,31 +108,6 @@ const SEED_RESOURCES: ResourceModel[] = [
     use_cases: ['Design', 'Build'],
   },
   {
-    id: 'res-5',
-    user_id: 'usr_local',
-    title: 'AI Agents Research.pdf',
-    url: '/documents/AI_Agents_Research.pdf',
-    domain: 'documents.local',
-    description: 'A comprehensive research study on compound AI systems, memory architectures, and stateful agent coordination.',
-    resource_type: 'pdf',
-    source_type: 'upload',
-    favicon_url: 'https://www.google.com/s2/favicons?domain=arxiv.org&sz=64',
-    personal_note: 'Section 4 details long-term memory retrieval using sparse vector hybrid indexes.',
-    is_favorite: false,
-    is_archived: false,
-    is_inbox: false,
-    created_at: '2026-08-30T16:45:00.000Z',
-    updated_at: '2026-08-30T16:45:00.000Z',
-    tags: ['Research', 'AI', 'Agents'],
-    use_cases: ['Research', 'Learn'],
-    file_name: 'AI_Agents_Research.pdf',
-    file_size: 4800000,
-    page_count: 38,
-    mime_type: 'application/pdf',
-    storage_path: 'documents/usr_local/res-5/AI_Agents_Research.pdf',
-    extraction_status: 'completed',
-  },
-  {
     id: 'res-6',
     user_id: 'usr_local',
     title: 'Claude Cowork Guide',
@@ -150,31 +125,6 @@ const SEED_RESOURCES: ResourceModel[] = [
     updated_at: '2026-08-29T11:20:00.000Z',
     tags: ['Tutorial', 'Learning', 'AI'],
     use_cases: ['Learn', 'Code'],
-  },
-  {
-    id: 'res-doc-2',
-    user_id: 'usr_local',
-    title: 'Hackathon Guidelines 2026.pdf',
-    url: '/documents/Hackathon_Guidelines_2026.pdf',
-    domain: 'documents.local',
-    description: 'Judging rubric, API sponsor keys, presentation constraints, and submission deadlines.',
-    resource_type: 'pdf',
-    source_type: 'upload',
-    favicon_url: 'https://www.google.com/s2/favicons?domain=documents.local&sz=64',
-    personal_note: 'Review slide deck requirements 3 hours before deadline.',
-    is_favorite: true,
-    is_archived: false,
-    is_inbox: false,
-    created_at: '2026-08-28T14:00:00.000Z',
-    updated_at: '2026-08-28T14:00:00.000Z',
-    tags: ['Hackathon', 'Guidelines'],
-    use_cases: ['Hackathon', 'Present'],
-    file_name: 'Hackathon_Guidelines_2026.pdf',
-    file_size: 1250000,
-    page_count: 12,
-    mime_type: 'application/pdf',
-    storage_path: 'documents/usr_local/res-doc-2/Hackathon_Guidelines_2026.pdf',
-    extraction_status: 'completed',
   },
   {
     id: 'res-inbox-1',
@@ -225,202 +175,17 @@ const SEED_INTELLIGENCE: Record<string, ResourceIntelligence> = {
     created_at: '2026-09-04T10:05:00.000Z',
     updated_at: '2026-09-04T10:05:00.000Z',
   },
-  'res-5': {
-    id: 'intel-5',
-    resource_id: 'res-5',
-    user_id: 'usr_local',
-    status: 'completed',
-    summary: 'A formal research paper detailing compound AI system design, long-term memory retrieval, and agent reflection architectures.',
-    what_it_is: 'An academic whitepaper on distributed stateful coordination for autonomous reasoning agents.',
-    best_for: [
-      'Academic citation',
-      'System design reference',
-      'Memory architecture research',
-    ],
-    key_points: [
-      'Sparse vector hybrid indexing evaluation (Page 4)',
-      'Stateful reflection buffers and error recovery (Page 9)',
-      'Comprehensive benchmark topologies across agentic models (Page 14)',
-    ],
-    topics: ['Research', 'AI', 'Architecture'],
-    suggested_tags: ['Paper', 'Architecture', 'Agents'],
-    suggested_use_cases: ['Research', 'Learn'],
-    confidence: 'high',
-    model: 'resora-intelligence-v1',
-    created_at: '2026-08-30T16:50:00.000Z',
-    updated_at: '2026-08-30T16:50:00.000Z',
-  },
 };
 
-const SEED_DOCUMENTS: Record<string, DocumentModel> = {
-  'res-5': {
-    id: 'doc-res-5',
-    resource_id: 'res-5',
-    user_id: 'usr_local',
-    file_name: 'AI_Agents_Research.pdf',
-    file_size: 4800000,
-    mime_type: 'application/pdf',
-    storage_path: 'documents/usr_local/res-5/AI_Agents_Research.pdf',
-    page_count: 38,
-    extraction_status: 'completed',
-    extracted_text: 'Taxonomy of autonomous reasoning agents, planning topologies, and reflective memory buffers.',
-    content_hash: 'sha256_seed_doc_1',
-    created_at: '2026-08-30T16:45:00.000Z',
-    updated_at: '2026-08-30T16:45:00.000Z',
-  },
-  'res-doc-2': {
-    id: 'doc-res-doc-2',
-    resource_id: 'res-doc-2',
-    user_id: 'usr_local',
-    file_name: 'Hackathon_Guidelines_2026.pdf',
-    file_size: 1250000,
-    mime_type: 'application/pdf',
-    storage_path: 'documents/usr_local/res-doc-2/Hackathon_Guidelines_2026.pdf',
-    page_count: 12,
-    extraction_status: 'completed',
-    extracted_text: 'Judging rubric, API sponsor keys, presentation constraints, and submission deadlines.',
-    content_hash: 'sha256_seed_doc_2',
-    created_at: '2026-08-28T14:00:00.000Z',
-    updated_at: '2026-08-28T14:00:00.000Z',
-  },
-};
+const SEED_DOCUMENTS: Record<string, DocumentModel> = {};
 
-const SEED_PROJECTS: ProjectModel[] = [
-  {
-    id: 'proj-1',
-    user_id: 'usr_local',
-    name: 'Hackathon 2026',
-    description: 'Autonomous research intelligence assistant prototype for the upcoming global AI hackathon.',
-    objective: 'Build an autonomous agentic research copilot that indexes developer libraries and presents page-level insights.',
-    status: 'active',
-    project_type: 'hackathon',
-    template_id: 'hackathon',
-    color: '#6366f1',
-    technologies: ['Next.js', 'TypeScript', 'Supabase', 'TailwindCSS', 'NVIDIA Nemotron API'],
-    constraints: 'Must complete and present 2-minute demo within the 48-hour sprint window.',
-    target_users: 'Hackathon builders, indie developers, and autonomous agent researchers.',
-    keywords: ['Agent', 'Research', 'Hackathon', 'Vector', 'Supabase'],
-    groups: [
-      'Problem Research',
-      'Existing Solutions',
-      'Technology & APIs',
-      'UI & Design Inspiration',
-      'Implementation',
-      'Pitch & Presentation',
-    ],
-    created_at: '2026-08-25T10:00:00.000Z',
-    updated_at: '2026-09-06T10:00:00.000Z',
-    last_opened_at: '2026-09-06T12:00:00.000Z',
-    resource_ids: ['res-1', 'res-2', 'res-5', 'res-doc-2'],
-  },
-  {
-    id: 'proj-2',
-    user_id: 'usr_local',
-    name: 'AI SaaS Prototype',
-    description: 'Production architecture, database schema, payment gateways, and design system tokens.',
-    objective: 'Ship a production-ready AI SaaS boilerplate with robust multi-tenant RLS and automated billing.',
-    status: 'active',
-    project_type: 'software_project',
-    template_id: 'software_project',
-    color: '#06b6d4',
-    technologies: ['React', 'Next.js', 'PostgreSQL', 'Prisma', 'Stripe'],
-    constraints: 'Multi-tenant data isolation must be enforced at database engine level via RLS.',
-    target_users: 'B2B SaaS builders and early-stage founders.',
-    keywords: ['SaaS', 'PostgreSQL', 'RLS', 'Stripe', 'Architecture'],
-    groups: [
-      'System Architecture',
-      'Database Schema',
-      'Authentication & Security',
-      'Frontend & UI System',
-      'Integrations & Webhooks',
-      'Deployment & Monitoring',
-    ],
-    created_at: '2026-08-20T10:00:00.000Z',
-    updated_at: '2026-09-05T14:00:00.000Z',
-    last_opened_at: '2026-09-05T15:30:00.000Z',
-    resource_ids: ['res-4'],
-  },
-];
+const SEED_PROJECTS: ProjectModel[] = [];
 
-const SEED_PROJECT_NOTES: Record<string, ProjectNoteModel[]> = {
-  'proj-1': [
-    {
-      id: 'note-1',
-      project_id: 'proj-1',
-      user_id: 'usr_local',
-      title: 'Architecture Review: Compound Agent Loops',
-      content: 'Read Section 4 of the AI Agents PDF. We should utilize stateful reflection buffers rather than single-turn tool calls to avoid loop divergence.',
-      created_at: '2026-09-01T14:00:00.000Z',
-      updated_at: '2026-09-01T14:00:00.000Z',
-    },
-    {
-      id: 'note-2',
-      project_id: 'proj-1',
-      user_id: 'usr_local',
-      title: 'UI Component Selection',
-      content: 'Use Magic UI and TailwindCSS for clean, dark-mode terminal cards and fast first-glance demo impression.',
-      created_at: '2026-09-03T11:20:00.000Z',
-      updated_at: '2026-09-03T11:20:00.000Z',
-    },
-  ],
-  'proj-2': [
-    {
-      id: 'note-3',
-      project_id: 'proj-2',
-      user_id: 'usr_local',
-      title: 'Database Multi-Tenancy Strategy',
-      content: 'Evaluate Row Level Security vs schema-per-tenant. Native PostgreSQL RLS with Supabase auth UID claims is the cleanest for our scope.',
-      created_at: '2026-08-22T09:15:00.000Z',
-      updated_at: '2026-08-22T09:15:00.000Z',
-    },
-  ],
-};
+const SEED_PROJECT_NOTES: Record<string, ProjectNoteModel[]> = {};
 
-const SEED_PROJECT_DECISIONS: Record<string, ProjectDecisionModel[]> = {
-  'proj-1': [
-    {
-      id: 'dec-1',
-      project_id: 'proj-1',
-      user_id: 'usr_local',
-      decision: 'Use Supabase instead of Firebase',
-      reason: 'First-class PostgreSQL compatibility, strict relational schema constraints, and instant pgvector support.',
-      date: '2026-08-26',
-      created_at: '2026-08-26T12:00:00.000Z',
-    },
-    {
-      id: 'dec-2',
-      project_id: 'proj-1',
-      user_id: 'usr_local',
-      decision: 'Adopt Next.js Turbopack for local development',
-      reason: 'Sub-second cold boot times and fast HMR crucial during live hackathon demos.',
-      date: '2026-08-27',
-      created_at: '2026-08-27T16:30:00.000Z',
-    },
-  ],
-};
+const SEED_PROJECT_DECISIONS: Record<string, ProjectDecisionModel[]> = {};
 
-const SEED_COLLECTIONS: CollectionModel[] = [
-  {
-    id: 'col-1',
-    user_id: 'usr_local',
-    name: 'Hackathon Toolkit',
-    description: 'High-speed boilerplate, instant databases, deployment templates, and vector API endpoints.',
-    topic: 'Hackathons & Rapid Prototyping',
-    created_at: '2026-08-28T10:00:00.000Z',
-    updated_at: '2026-09-06T11:00:00.000Z',
-    resource_ids: ['res-1', 'res-2', 'res-doc-2'],
-  },
-  {
-    id: 'col-2',
-    user_id: 'usr_local',
-    name: 'AI Development Stack',
-    description: 'Core toolchain including model gateways, agent orchestrators, eval runners, and vector databases.',
-    topic: 'AI & LLM Engineering',
-    created_at: '2026-08-25T10:00:00.000Z',
-    updated_at: '2026-09-05T12:00:00.000Z',
-    resource_ids: ['res-1', 'res-2', 'res-5'],
-  },
-];
+const SEED_COLLECTIONS: CollectionModel[] = [];
 
 // In-memory store fallback for server-side environments (Node.js/Next.js Route Handlers)
 const SERVER_CACHE: Record<string, any> = {};
@@ -449,6 +214,8 @@ function setLocalItem<T>(key: string, value: T): void {
     console.error(`Failed to save ${key} in localStorage:`, e);
   }
 }
+
+const PURGE_MOCK_IDS = new Set(['proj-1', 'proj-2', 'col-1', 'col-2', 'res-5', 'res-doc-2']);
 
 export class ResourceService {
   static initStore() {
@@ -486,11 +253,44 @@ export class ResourceService {
       }));
       setLocalItem(STORAGE_KEYS.USE_CASES, ucs);
     }
+
+    // Auto-purge any stale mock cards ('proj-1', 'proj-2', 'col-1', 'col-2', 'res-5', 'res-doc-2')
+    try {
+      const storedProjs = getLocalItem<ProjectModel[]>(STORAGE_KEYS.PROJECTS, []);
+      if (storedProjs.some((p) => PURGE_MOCK_IDS.has(p.id))) {
+        setLocalItem(STORAGE_KEYS.PROJECTS, storedProjs.filter((p) => !PURGE_MOCK_IDS.has(p.id)));
+      }
+
+      const storedCols = getLocalItem<CollectionModel[]>(STORAGE_KEYS.COLLECTIONS, []);
+      if (storedCols.some((c) => PURGE_MOCK_IDS.has(c.id))) {
+        setLocalItem(STORAGE_KEYS.COLLECTIONS, storedCols.filter((c) => !PURGE_MOCK_IDS.has(c.id)));
+      }
+
+      const storedRes = getLocalItem<ResourceModel[]>(STORAGE_KEYS.RESOURCES, []);
+      if (storedRes.some((r) => PURGE_MOCK_IDS.has(r.id))) {
+        setLocalItem(STORAGE_KEYS.RESOURCES, storedRes.filter((r) => !PURGE_MOCK_IDS.has(r.id)));
+      }
+
+      const storedDocs = getLocalItem<Record<string, DocumentModel>>(STORAGE_KEYS.DOCUMENTS, {});
+      let docsChanged = false;
+      for (const k of Object.keys(storedDocs)) {
+        if (PURGE_MOCK_IDS.has(k)) {
+          delete storedDocs[k];
+          docsChanged = true;
+        }
+      }
+      if (docsChanged) {
+        setLocalItem(STORAGE_KEYS.DOCUMENTS, storedDocs);
+      }
+    } catch (e) {
+      console.error('Failed to purge mock seed data:', e);
+    }
   }
 
   static async getAllResources(): Promise<ResourceModel[]> {
     this.initStore();
-    return getLocalItem<ResourceModel[]>(STORAGE_KEYS.RESOURCES, SEED_RESOURCES);
+    const list = getLocalItem<ResourceModel[]>(STORAGE_KEYS.RESOURCES, SEED_RESOURCES);
+    return list.filter((r) => !PURGE_MOCK_IDS.has(r.id));
   }
 
   static async queryResources(options: ResourceFilterOptions = {}): Promise<ResourceModel[]> {
@@ -794,6 +594,61 @@ export class ResourceService {
     return true;
   }
 
+  /**
+   * Scans the current resource store, identifies all duplicate URLs or canonical variants,
+   * merges/preserves the earliest canonical record, and removes all duplicates.
+   */
+  static async cleanDuplicates(): Promise<{ removedCount: number; remainingCount: number }> {
+    const all = await this.getAllResources();
+    const seenUrls = new Map<string, ResourceModel>();
+    const idsToKeep = new Set<string>();
+    const idsToDelete = new Set<string>();
+
+    for (const r of all) {
+      const norm = normalizeCanonicalUrl(r.normalized_url || r.url || r.original_url || '');
+      const key = norm.isValid ? norm.normalizedUrl.toLowerCase().trim() : (r.url || r.id).toLowerCase().trim();
+
+      if (seenUrls.has(key)) {
+        // Duplicate found! Mark for deletion
+        idsToDelete.add(r.id);
+      } else {
+        seenUrls.set(key, r);
+        idsToKeep.add(r.id);
+      }
+    }
+
+    if (idsToDelete.size > 0) {
+      const cleanList = all.filter((r) => !idsToDelete.has(r.id));
+      setLocalItem(STORAGE_KEYS.RESOURCES, cleanList);
+
+      // Clean from projects
+      const projects = await this.getProjects();
+      const updatedProjects = projects.map((p) => ({
+        ...p,
+        resource_ids: p.resource_ids?.filter((rId) => !idsToDelete.has(rId)) || [],
+      }));
+      setLocalItem(STORAGE_KEYS.PROJECTS, updatedProjects);
+
+      // Clean from collections
+      const collections = await this.getCollections();
+      const updatedCollections = collections.map((c) => ({
+        ...c,
+        resource_ids: c.resource_ids?.filter((rId) => !idsToDelete.has(rId)) || [],
+      }));
+      setLocalItem(STORAGE_KEYS.COLLECTIONS, updatedCollections);
+
+      return {
+        removedCount: idsToDelete.size,
+        remainingCount: cleanList.length,
+      };
+    }
+
+    return {
+      removedCount: 0,
+      remainingCount: all.length,
+    };
+  }
+
   // -----------------------------------------------------------
   // DOCUMENTS & PAGES
   // -----------------------------------------------------------
@@ -1051,7 +906,8 @@ export class ResourceService {
 
   static async getCollections(): Promise<CollectionModel[]> {
     this.initStore();
-    return getLocalItem<CollectionModel[]>(STORAGE_KEYS.COLLECTIONS, SEED_COLLECTIONS);
+    const list = getLocalItem<CollectionModel[]>(STORAGE_KEYS.COLLECTIONS, SEED_COLLECTIONS);
+    return list.filter((c) => !PURGE_MOCK_IDS.has(c.id));
   }
 
   static async createCollection(name: string, description: string, topic?: string): Promise<CollectionModel> {
@@ -1070,9 +926,17 @@ export class ResourceService {
     return newCol;
   }
 
+  static async deleteCollection(id: string): Promise<boolean> {
+    const all = await this.getCollections();
+    const next = all.filter((c) => c.id !== id);
+    setLocalItem(STORAGE_KEYS.COLLECTIONS, next);
+    return true;
+  }
+
   static async getProjects(): Promise<ProjectModel[]> {
     this.initStore();
-    return getLocalItem<ProjectModel[]>(STORAGE_KEYS.PROJECTS, SEED_PROJECTS);
+    const list = getLocalItem<ProjectModel[]>(STORAGE_KEYS.PROJECTS, SEED_PROJECTS);
+    return list.filter((p) => !PURGE_MOCK_IDS.has(p.id));
   }
 
   static async getProjectById(id: string): Promise<ProjectModel | null> {

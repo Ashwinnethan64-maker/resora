@@ -43,6 +43,7 @@ interface ResoraContextType {
   openDeleteDialog: (res: ResourceModel) => void;
   closeDeleteDialog: () => void;
   refreshData: () => Promise<void>;
+  cleanAllDuplicates: () => Promise<{ removedCount: number; remainingCount: number }>;
   saveResource: (data: Partial<ResourceModel>) => Promise<ResourceModel>;
   updateResource: (id: string, updates: Partial<ResourceModel>) => Promise<void>;
   deleteResource: (id: string) => Promise<void>;
@@ -67,6 +68,7 @@ interface ResoraContextType {
   dismissRecommendation: (projectId: string, resourceId: string) => Promise<void>;
   getCrossProjectUsage: (resourceId: string) => Promise<ProjectModel[]>;
   createCollection: (name: string, description: string, topic?: string) => Promise<CollectionModel>;
+  deleteCollection: (id: string) => Promise<void>;
   getIntelligence: (resourceId: string) => Promise<ResourceIntelligence | null>;
   analyzeResource: (resourceId: string, force?: boolean) => Promise<ResourceIntelligence | null>;
   acceptSuggestedTag: (resourceId: string, tag: string) => Promise<void>;
@@ -179,9 +181,23 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [activeAiJob, showToast]);
 
+  const cleanAllDuplicates = useCallback(async () => {
+    const res = await ResourceService.cleanDuplicates();
+    await refreshData();
+    if (res.removedCount > 0) {
+      showToast(`Removed ${res.removedCount} duplicate resources`);
+    } else {
+      showToast('No duplicates found — your library is 100% deduplicated');
+    }
+    return res;
+  }, [showToast]);
+
   const refreshData = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Automatically keep the library 100% duplicate-free
+      await ResourceService.cleanDuplicates();
+
       const all = await ResourceService.getAllResources();
       const nonArchived = all.filter((r) => !r.is_archived);
       setResources(nonArchived.filter((r) => !r.is_inbox));
@@ -421,6 +437,12 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
     return col;
   };
 
+  const deleteCollection = async (id: string) => {
+    await ResourceService.deleteCollection(id);
+    await refreshData();
+    showToast('Collection deleted');
+  };
+
   // AI Intelligence Handlers
   const getIntelligence = async (resourceId: string) => {
     return ResourceService.getIntelligence(resourceId);
@@ -494,6 +516,7 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
         openDeleteDialog,
         closeDeleteDialog,
         refreshData,
+        cleanAllDuplicates,
         saveResource,
         updateResource,
         deleteResource,
@@ -518,6 +541,7 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
         dismissRecommendation,
         getCrossProjectUsage,
         createCollection,
+        deleteCollection,
         getIntelligence,
         analyzeResource,
         acceptSuggestedTag,

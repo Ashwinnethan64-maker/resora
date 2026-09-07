@@ -17,11 +17,12 @@ import {
   BookOpen,
   Briefcase,
   GraduationCap,
-  FileText
+  FileText,
+  Trash2
 } from 'lucide-react';
 
 export default function ProjectsPage() {
-  const { projects, resources } = useResora();
+  const { projects, resources, deleteProject } = useResora();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'hackathon' | 'archived'>('all');
 
@@ -138,9 +139,25 @@ export default function ProjectsPage() {
                       </span>
                     </div>
 
-                    <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 ${getStatusColor(project.status)}`}>
-                      {project.status}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 ${getStatusColor(project.status)}`}>
+                        {project.status}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (confirm(`Delete project "${project.name}"?`)) {
+                            deleteProject(project.id);
+                          }
+                        }}
+                        className="p-1 text-black/60 hover:text-black hover:bg-[#FF6B6B] border border-black transition-colors"
+                        title="Delete Project"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                      </button>
+                    </div>
                   </div>
 
                   <div>

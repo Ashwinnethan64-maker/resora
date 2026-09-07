@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { showToast, resources, projects, collections } = useResora();
+  const { showToast, resources, projects, collections, cleanAllDuplicates } = useResora();
   const currentUser = AuthService.getCurrentUser();
 
   const [activeTab, setActiveTab] = useState<'profile' | 'workspace' | 'data'>('profile');
@@ -293,6 +293,29 @@ export default function SettingsPage() {
               >
                 <FileSpreadsheet className="w-4 h-4 text-black stroke-[3px]" />
                 <span>EXPORT CSV</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Central Deduplication Engine Sweep */}
+          <div className="p-6 md:p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] space-y-3">
+            <div>
+              <div className="font-black uppercase text-sm md:text-base text-black bg-[#FFD93D] px-2 py-0.5 border border-black w-max">
+                CLEAN & DEDUPLICATE LIBRARY
+              </div>
+              <p className="text-black text-xs font-bold mt-2">
+                Scan all resources, merge duplicates, and ensure strict 1-to-1 canonical URLs across your workspace.
+              </p>
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  await cleanAllDuplicates();
+                }}
+                className="btn-neo inline-flex items-center gap-2 px-5 py-3 bg-[#FFD93D] hover:bg-[#ffe169] text-black border-4 border-black font-black uppercase text-xs tracking-wider shadow-[4px_4px_0px_0px_#000]"
+              >
+                <span>RUN GLOBAL DEDUPLICATION SWEEP</span>
               </button>
             </div>
           </div>
