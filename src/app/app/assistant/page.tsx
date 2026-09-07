@@ -3,8 +3,13 @@
 import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useResora } from '@/context/ResoraContext';
+import dynamic from 'next/dynamic';
 import { SourceCard } from '@/components/assistant/SourceCard';
-import { DocumentViewerModal } from '@/components/documents/DocumentViewerModal';
+
+const DocumentViewerModal = dynamic(
+  () => import('@/components/documents/DocumentViewerModal').then((mod) => mod.DocumentViewerModal),
+  { ssr: false }
+);
 import {
   AssistantScopeType,
   AssistantMessageModel,
@@ -33,7 +38,7 @@ function AssistantContent() {
   const initialScope = (searchParams.get('scope') as AssistantScopeType) || 'library';
   const initialScopeId = searchParams.get('scopeId') || undefined;
 
-  const { resources, projects, collections, showToast } = useResora();
+  const { resources, projects, collections, showToast, activeAiJob, trackAiJob, clearAiJob } = useResora();
 
   const [scopeType, setScopeType] = useState<AssistantScopeType>(initialScope);
   const [scopeId, setScopeId] = useState<string | undefined>(initialScopeId);
@@ -41,12 +46,14 @@ function AssistantContent() {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<AssistantMessageModel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [streamingContent, setStreamingContent] = useState<string>('');
+  const [streamingCitations, setStreamingCitations] = useState<any[]>([]);
+  const [streamingStatus, setStreamingStatus] = useState<'retrieving' | 'generating' | null>(null);
 
   const [selectedViewerDoc, setSelectedViewerDoc] = useState<ResourceModel | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pollerRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -54,7 +61,7 @@ function AssistantContent() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading]);
+  }, [messages, streamingContent, isLoading]);
 
   // 1. Restore persistent active conversation when scope changes or on mount
   useEffect(() => {
@@ -81,60 +88,66 @@ function AssistantContent() {
     };
   }, [scopeType, scopeId]);
 
-  // 2. Poll for active job status if a background query is running
+  // 2. Synchronize with global active AI job if user navigated away and came back
   useEffect(() => {
-    if (!activeJobId) {
-      if (pollerRef.current) {
-        clearInterval(pollerRef.current);
-        pollerRef.current = null;
+    if (activeAiJob && activeAiJob.status === 'completed' && activeAiJob.answer) {
+      const alreadyPresent = messages.some((m) => m.content === activeAiJob.answer);
+      if (!alreadyPresent) {
+        const assistantMsg: AssistantMessageModel = {
+          id: `msg_${Date.now()}_sync`,
+          conversation_id: conversationId,
+          user_id: 'usr_local',
+          role: 'assistant',
+          content: activeAiJob.answer,
+          citations: activeAiJob.citations || [],
+          used_resource_ids: [],
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
       }
-      return;
+      setIsLoading(false);
+      clearAiJob();
     }
-
-    const checkJob = async () => {
-      try {
-        const res = await fetch(`/api/assistant/chat?jobId=${activeJobId}`);
-        if (!res.ok) return;
-
-        const data = await res.json();
-        const job = data.job;
-
-        if (job && (job.status === 'completed' || job.status === 'failed')) {
-          setIsLoading(false);
-          setActiveJobId(null);
-
-          if (job.status === 'completed' && job.result_message) {
-            setMessages((prev) => {
-              if (prev.some((m) => m.id === job.result_message.id)) return prev;
-              return [...prev, job.result_message];
-            });
-          } else if (job.status === 'failed') {
-            showToast('Resora was unable to finish synthesis: ' + (job.error || 'Server timeout'));
-          }
-        }
-      } catch (err) {
-        console.warn('Error checking background AI job:', err);
-      }
-    };
-
-    pollerRef.current = setInterval(checkJob, 1200);
-
-    return () => {
-      if (pollerRef.current) {
-        clearInterval(pollerRef.current);
-        pollerRef.current = null;
-      }
-    };
-  }, [activeJobId, showToast]);
+  }, [activeAiJob, conversationId, messages, clearAiJob]);
 
   const handleResetConversation = async () => {
     try {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
       await ConversationService.resetConversation(conversationId);
       setMessages([]);
+      setStreamingContent('');
+      setStreamingCitations([]);
+      setIsLoading(false);
       showToast('Research conversation reset');
     } catch {
       setMessages([]);
     }
+  };
+
+  const handleStopGenerating = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+    if (streamingContent) {
+      const partialMsg: AssistantMessageModel = {
+        id: `msg_${Date.now()}_partial`,
+        conversation_id: conversationId,
+        user_id: 'usr_local',
+        role: 'assistant',
+        content: streamingContent + ' *(Generation stopped by user)*',
+        citations: streamingCitations,
+        used_resource_ids: [],
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, partialMsg]);
+    }
+    setStreamingContent('');
+    setStreamingCitations([]);
+    setStreamingStatus(null);
   };
 
   const handleSend = async (userPrompt?: string) => {
@@ -153,9 +166,39 @@ function AssistantContent() {
     setMessages((prev) => [...prev, userMessage]);
     setQuery('');
     setIsLoading(true);
+    setStreamingContent('');
+    setStreamingCitations([]);
+    setStreamingStatus('retrieving');
+
+    const activeController = new AbortController();
+    abortControllerRef.current = activeController;
+
+    fetch('/api/assistant/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: text,
+        scopeType,
+        scopeId,
+        conversationId,
+        asyncMode: true,
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      }),
+    }).then(async (res) => {
+      if (res.ok) {
+        const d = await res.json();
+        if (d.jobId) {
+          trackAiJob({
+            jobId: d.jobId,
+            query: text,
+            scopeLabel: getActiveScopeLabel(),
+          });
+        }
+      }
+    }).catch(() => {});
 
     try {
-      const res = await fetch('/api/assistant/chat', {
+      const response = await fetch('/api/assistant/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -163,37 +206,102 @@ function AssistantContent() {
           scopeType,
           scopeId,
           conversationId,
-          asyncMode: true,
           messages: messages.map((m) => ({ role: m.role, content: m.content })),
         }),
+        signal: activeController.signal,
       });
 
-      if (!res.ok) {
-        throw new Error('Assistant query request failed');
+      if (!response.ok || !response.body) {
+        throw new Error('Streaming connection failed');
       }
 
-      const data = await res.json();
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let accumulatedTokens = '';
+      let receivedCitations: any[] = [];
 
-      if (data.jobId) {
-        setActiveJobId(data.jobId);
-      } else if (data.answer) {
-        // Direct answer fallback
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop() || '';
+
+        for (const part of parts) {
+          const lines = part.split('\n');
+          let event = 'message';
+          let data = '';
+
+          for (const line of lines) {
+            if (line.startsWith('event: ')) {
+              event = line.slice(7).trim();
+            } else if (line.startsWith('data: ')) {
+              data = line.slice(6);
+            }
+          }
+
+          if (event === 'status') {
+            setStreamingStatus(data as any);
+          } else if (event === 'meta') {
+            try {
+              const meta = JSON.parse(data);
+              if (meta.citations) {
+                receivedCitations = meta.citations;
+                setStreamingCitations(meta.citations);
+              }
+            } catch {}
+          } else if (event === 'token') {
+            accumulatedTokens += data;
+            setStreamingContent(accumulatedTokens);
+          } else if (event === 'done') {
+            try {
+              const d = JSON.parse(data);
+              const assistantMessage: AssistantMessageModel = {
+                id: d.messageId || `msg_${Date.now()}_a`,
+                conversation_id: conversationId,
+                user_id: 'usr_local',
+                role: 'assistant',
+                content: d.fullAnswer || accumulatedTokens,
+                citations: receivedCitations,
+                used_resource_ids: [],
+                created_at: new Date().toISOString(),
+              };
+              setMessages((prev) => [...prev, assistantMessage]);
+              setStreamingContent('');
+              setStreamingCitations([]);
+              setStreamingStatus(null);
+              setIsLoading(false);
+              clearAiJob();
+              return;
+            } catch {}
+          }
+        }
+      }
+
+      if (accumulatedTokens) {
         const assistantMessage: AssistantMessageModel = {
-          id: `msg_${Date.now() + 1}_a`,
+          id: `msg_${Date.now()}_a`,
           conversation_id: conversationId,
           user_id: 'usr_local',
           role: 'assistant',
-          content: data.answer,
-          citations: data.citations || [],
-          used_resource_ids: data.usedResourceIds || [],
+          content: accumulatedTokens,
+          citations: receivedCitations,
+          used_resource_ids: [],
           created_at: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
-        setIsLoading(false);
       }
-    } catch {
-      showToast('Failed to get answer from Resora assistant');
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        showToast('Streaming interrupted; using background processing');
+      }
+    } finally {
       setIsLoading(false);
+      setStreamingContent('');
+      setStreamingCitations([]);
+      setStreamingStatus(null);
     }
   };
 
@@ -355,10 +463,52 @@ function AssistantContent() {
           })
         )}
 
+        {/* Live Streaming Response Bubble */}
         {isLoading && (
-          <div className="p-4 bg-white border-2 border-black shadow-[3px_3px_0px_#000] w-max flex items-center gap-2.5 text-xs font-bold text-black">
-            <Loader2 className="w-4 h-4 animate-spin stroke-[2.5]" />
-            <span>Resora is synthesizing your saved research... (Safe to navigate away)</span>
+          <div className="space-y-3 flex flex-col items-start animate-in fade-in duration-100">
+            <div className="flex items-center gap-2 text-[11px] font-mono font-bold uppercase">
+              <span className="px-2 py-0.5 border border-black bg-[#FF6B6B] text-black">
+                RESORA AI
+              </span>
+              <span className="text-black/60 flex items-center gap-1.5">
+                <Loader2 className="w-3 h-3 animate-spin stroke-[2.5]" />
+                {streamingStatus === 'retrieving' ? 'Retrieving library context...' : 'Streaming response...'}
+              </span>
+            </div>
+
+            {streamingContent ? (
+              <div className="p-4 sm:p-5 border-2 border-black text-xs sm:text-sm leading-relaxed max-w-2xl bg-white text-black font-normal shadow-[4px_4px_0px_#000] whitespace-pre-wrap">
+                {streamingContent}
+                <span className="inline-block w-2 h-4 ml-1 bg-black animate-pulse align-middle" />
+              </div>
+            ) : (
+              <div className="p-4 bg-white border-2 border-black shadow-[3px_3px_0px_#000] w-max flex items-center gap-2.5 text-xs font-bold text-black">
+                <Loader2 className="w-4 h-4 animate-spin stroke-[2.5]" />
+                <span>Resora is synthesizing your saved research... (Safe to navigate away)</span>
+              </div>
+            )}
+
+            {/* Citations arrived during stream */}
+            {streamingCitations.length > 0 && (
+              <div className="w-full max-w-2xl pt-2 space-y-2">
+                <div className="text-[11px] font-mono font-bold uppercase text-black/60">
+                  Cited Sources ({streamingCitations.length}):
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {streamingCitations.map((c, i) => (
+                    <SourceCard
+                      key={i}
+                      citation={c}
+                      index={i + 1}
+                      onOpenDocumentPage={(resId) => {
+                        const found = resources.find((r) => r.id === resId);
+                        if (found) setSelectedViewerDoc(found);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -383,14 +533,24 @@ function AssistantContent() {
             className="flex-1 px-4 py-3.5 bg-transparent text-black text-xs sm:text-sm font-normal focus:outline-none placeholder-black/50"
           />
 
-          <button
-            type="submit"
-            disabled={!query.trim() || isLoading}
-            className="btn-neo m-1.5 px-4 py-2 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs border-2 border-black shadow-[2px_2px_0px_#000] flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
-          >
-            <span>Ask</span>
-            <Send className="w-3.5 h-3.5 stroke-[2.5]" />
-          </button>
+          {isLoading ? (
+            <button
+              type="button"
+              onClick={handleStopGenerating}
+              className="btn-neo m-1.5 px-4 py-2 bg-[#FFD93D] hover:bg-[#ffe169] text-black font-black uppercase text-xs border-2 border-black shadow-[2px_2px_0px_#000] flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Stop</span>
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!query.trim()}
+              className="btn-neo m-1.5 px-4 py-2 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs border-2 border-black shadow-[2px_2px_0px_#000] flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
+            >
+              <span>Ask</span>
+              <Send className="w-3.5 h-3.5 stroke-[2.5]" />
+            </button>
+          )}
         </form>
       </div>
 

@@ -76,6 +76,16 @@ interface ResoraContextType {
   findRelatedResources: (resourceId: string, limit?: number) => Promise<ResourceModel[]>;
   activeToast: string | null;
   showToast: (msg: string) => void;
+  activeAiJob: {
+    jobId: string;
+    query: string;
+    scopeLabel: string;
+    status: 'queued' | 'processing' | 'completed' | 'failed';
+    answer?: string;
+    citations?: any[];
+  } | null;
+  trackAiJob: (job: { jobId: string; query: string; scopeLabel: string }) => void;
+  clearAiJob: () => void;
 }
 
 const ResoraContext = createContext<ResoraContextType | undefined>(undefined);
@@ -104,12 +114,70 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
   const [deletingResource, setDeletingResource] = useState<ResourceModel | null>(null);
   const [activeToast, setActiveToast] = useState<string | null>(null);
 
+  // Global Background AI Job Tracker
+  const [activeAiJob, setActiveAiJob] = useState<{
+    jobId: string;
+    query: string;
+    scopeLabel: string;
+    status: 'queued' | 'processing' | 'completed' | 'failed';
+    answer?: string;
+    citations?: any[];
+  } | null>(null);
+
+  const trackAiJob = useCallback((job: { jobId: string; query: string; scopeLabel: string }) => {
+    setActiveAiJob({
+      ...job,
+      status: 'queued',
+    });
+  }, []);
+
+  const clearAiJob = useCallback(() => {
+    setActiveAiJob(null);
+  }, []);
+
   const showToast = useCallback((msg: string) => {
     setActiveToast(msg);
     setTimeout(() => {
       setActiveToast((curr) => (curr === msg ? null : curr));
-    }, 3200);
+    }, 3500);
   }, []);
+
+  // Global background poller for active AI job across routes
+  useEffect(() => {
+    if (!activeAiJob || activeAiJob.status === 'completed' || activeAiJob.status === 'failed') {
+      return;
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/assistant/chat?jobId=${activeAiJob.jobId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const job = data.job;
+
+        if (job) {
+          if (job.status === 'completed') {
+            setActiveAiJob((prev) => prev ? {
+              ...prev,
+              status: 'completed',
+              answer: job.result_message?.content || '',
+              citations: job.result_message?.citations || [],
+            } : null);
+            showToast(`AI Synthesis Ready: "${activeAiJob.query.slice(0, 32)}..."`);
+          } else if (job.status === 'failed') {
+            setActiveAiJob((prev) => prev ? { ...prev, status: 'failed' } : null);
+            showToast('AI synthesis encountered an issue');
+          } else if (job.status === 'processing' && activeAiJob.status !== 'processing') {
+            setActiveAiJob((prev) => prev ? { ...prev, status: 'processing' } : null);
+          }
+        }
+      } catch {
+        // Silently retry next tick
+      }
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [activeAiJob, showToast]);
 
   const refreshData = useCallback(async () => {
     setIsLoading(true);
@@ -459,6 +527,9 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
         findRelatedResources,
         activeToast,
         showToast,
+        activeAiJob,
+        trackAiJob,
+        clearAiJob,
       }}
     >
       {children}

@@ -35,6 +35,7 @@ export default function LibraryPage() {
   const { resources, isLoading, openSaveModal } = useResora();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedTag, setSelectedTag] = useState('all');
   const [selectedUseCase, setSelectedUseCase] = useState('all');
@@ -42,6 +43,17 @@ export default function LibraryPage() {
   const [filterArchivedOnly, setFilterArchivedOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'recently_opened' | 'alphabetical' | 'recently_updated'>('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 24;
+
+  // Debounce search input by 200ms
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const filteredResources = useMemo(() => {
     return resources.filter((res) => {
@@ -64,8 +76,8 @@ export default function LibraryPage() {
         if (!res.use_cases?.some((u) => u.toLowerCase() === cleanUc)) return false;
       }
 
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.toLowerCase().trim();
         const matchesTitle = res.title.toLowerCase().includes(q);
         const matchesDesc = res.description ? res.description.toLowerCase().includes(q) : false;
         const matchesDomain = res.domain.toLowerCase().includes(q);
@@ -96,7 +108,7 @@ export default function LibraryPage() {
     });
   }, [
     resources,
-    searchQuery,
+    debouncedSearch,
     selectedType,
     selectedTag,
     selectedUseCase,
@@ -104,6 +116,12 @@ export default function LibraryPage() {
     filterArchivedOnly,
     sortBy,
   ]);
+
+  const totalPages = Math.ceil(filteredResources.length / PAGE_SIZE) || 1;
+  const paginatedResources = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredResources.slice(start, start + PAGE_SIZE);
+  }, [filteredResources, currentPage]);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
@@ -257,7 +275,7 @@ export default function LibraryPage() {
           icon={BookOpen}
           title="NO MATCHING RESEARCH FOUND"
           description={
-            searchQuery || selectedType !== 'all'
+            debouncedSearch || selectedType !== 'all'
               ? 'Try broadening your search query or removing active filters.'
               : 'Your research archive is currently empty. Capture your first resource to build your personal intelligence layer.'
           }
@@ -266,15 +284,46 @@ export default function LibraryPage() {
         />
       ) : viewMode === 'list' ? (
         <div className="space-y-2">
-          {filteredResources.map((res) => (
+          {paginatedResources.map((res) => (
             <ResourceCard key={res.id} resource={res} viewMode="list" />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredResources.map((res) => (
+          {paginatedResources.map((res) => (
             <ResourceCard key={res.id} resource={res} viewMode="grid" />
           ))}
+        </div>
+      )}
+
+      {/* Neo-Brutalist Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="pt-6 border-t-3 border-black flex items-center justify-between flex-wrap gap-3">
+          <div className="text-xs font-mono font-bold text-black">
+            Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredResources.length)} of {filteredResources.length}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage <= 1}
+              className="btn-neo px-3 py-1.5 bg-white border-2 border-black text-xs font-black uppercase text-black disabled:opacity-30 disabled:pointer-events-none hover:bg-[#FFD93D] shadow-[2px_2px_0px_#000]"
+            >
+              ← Prev
+            </button>
+
+            <span className="px-3 py-1.5 bg-[#FFD93D] border-2 border-black font-mono text-xs font-black text-black">
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
+              className="btn-neo px-3 py-1.5 bg-white border-2 border-black text-xs font-black uppercase text-black disabled:opacity-30 disabled:pointer-events-none hover:bg-[#FFD93D] shadow-[2px_2px_0px_#000]"
+            >
+              Next →
+            </button>
+          </div>
         </div>
       )}
     </div>

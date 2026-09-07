@@ -4,10 +4,15 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useResora } from '@/context/ResoraContext';
+import dynamic from 'next/dynamic';
 import { ResourceCard } from '@/components/resources/ResourceCard';
 import { ResourceIntelligencePanel } from '@/components/resources/ResourceIntelligencePanel';
-import { DocumentViewerModal } from '@/components/documents/DocumentViewerModal';
 import { RESOURCE_TYPE_CONFIGS } from '@/lib/resource-types';
+
+const DocumentViewerModal = dynamic(
+  () => import('@/components/documents/DocumentViewerModal').then((mod) => mod.DocumentViewerModal),
+  { ssr: false }
+);
 import { NeoBadge, NeoSticker } from '@/components/brand/NeoSticker';
 import { ResourceIntelligence, ResourceModel, DocumentModel, ProjectModel } from '@/types/database';
 import {

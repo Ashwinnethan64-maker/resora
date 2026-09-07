@@ -37,7 +37,11 @@ export function AppShell({ children }: AppShellProps) {
   const router = useRouter();
   const {
     openCommandPalette,
+    closeCommandPalette,
+    isCommandPaletteOpen,
     openSaveModal,
+    closeSaveModal,
+    isSaveModalOpen,
     editingResource,
     closeEditModal,
     updateResource,
@@ -46,7 +50,8 @@ export function AppShell({ children }: AppShellProps) {
     deleteResource,
     metrics,
     resources,
-    activeToast
+    activeToast,
+    activeAiJob,
   } = useResora();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -75,6 +80,74 @@ export function AppShell({ children }: AppShellProps) {
     if (exact) return pathname === href;
     return pathname.startsWith(href);
   };
+
+  // Global Quick Shortcuts (A, L, I, P, C, D, T, F, S) across the app when modal is closed
+  React.useEffect(() => {
+    const handleGlobalQuickKeys = (e: KeyboardEvent) => {
+      // If modal or dialog is open, do nothing here (CommandPalette handles its own)
+      if (isCommandPaletteOpen || isSaveModalOpen || editingResource || deletingResource) return;
+
+      // Do not trigger if user is holding modifier keys
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      // Do not trigger if focus is in an input, textarea, select, or contenteditable element
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      switch (key) {
+        case 'a':
+          e.preventDefault();
+          router.push('/app/assistant');
+          break;
+        case 'l':
+          e.preventDefault();
+          router.push('/app/library');
+          break;
+        case 'i':
+          e.preventDefault();
+          router.push('/app/inbox');
+          break;
+        case 'p':
+          e.preventDefault();
+          router.push('/app/projects');
+          break;
+        case 'c':
+          e.preventDefault();
+          router.push('/app/collections');
+          break;
+        case 'd':
+          e.preventDefault();
+          router.push('/app/documents');
+          break;
+        case 't':
+          e.preventDefault();
+          router.push('/app/tools');
+          break;
+        case 'f':
+          e.preventDefault();
+          router.push('/app/favorites');
+          break;
+        case 's':
+          e.preventDefault();
+          router.push('/app/settings');
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalQuickKeys);
+    return () => window.removeEventListener('keydown', handleGlobalQuickKeys);
+  }, [router, isCommandPaletteOpen, isSaveModalOpen, editingResource, deletingResource]);
 
   return (
     <div className="min-h-screen bg-[#FFFDF5] text-black flex flex-col antialiased selection:bg-[#FFD93D] selection:text-black">
@@ -138,14 +211,29 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Global Search & Command Actions */}
         <div className="flex items-center gap-3">
+          {/* Global AI Processing Indicator */}
+          {activeAiJob && (
+            <Link
+              href="/app/assistant"
+              className="flex items-center gap-2 px-3 py-1.5 bg-[#FFD93D] border-2 border-black shadow-[2px_2px_0px_#000] text-xs font-black uppercase tracking-wider hover:bg-[#ffe169] transition-all"
+              title="AI synthesis active - click to open Assistant"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-black stroke-[2.5] animate-spin" />
+              <span className="hidden sm:inline">AI RUNNING:</span>
+              <span className="truncate max-w-[100px] md:max-w-[140px] font-mono lowercase">
+                {activeAiJob.query}
+              </span>
+            </Link>
+          )}
+
           {/* Command Palette Search Trigger */}
           <button
             onClick={openCommandPalette}
-            className="flex items-center gap-2.5 px-3.5 py-2 bg-[#FFFDF5] hover:bg-[#FFD93D] border-2 border-black shadow-[3px_3px_0px_0px_#000] text-xs font-bold text-black w-44 sm:w-64 md:w-80 justify-between transition-all active:translate-x-0.5 active:translate-y-0.5"
+            className="flex items-center gap-2.5 px-3.5 py-2 bg-[#FFFDF5] hover:bg-[#FFD93D] border-2 border-black shadow-[3px_3px_0px_0px_#000] text-xs font-bold text-black w-36 sm:w-60 md:w-72 justify-between transition-all active:translate-x-0.5 active:translate-y-0.5"
           >
             <div className="flex items-center gap-2 truncate">
               <Search className="w-3.5 h-3.5 text-black shrink-0 stroke-[2.5]" />
-              <span className="truncate text-black/80 font-bold">Search library...</span>
+              <span className="truncate text-black/80 font-bold">Search...</span>
             </div>
             <kbd className="hidden sm:inline-flex items-center font-mono text-[10px] bg-black text-white px-1.5 py-0.5 font-bold">
               ⌘K
@@ -329,10 +417,67 @@ export function AppShell({ children }: AppShellProps) {
         )}
 
         {/* Content Pane */}
-        <main className="flex-1 overflow-y-auto bg-[#FFFDF5]">
+        <main className="flex-1 overflow-y-auto bg-[#FFFDF5] pb-16 md:pb-0">
           {children}
         </main>
       </div>
+
+      {/* Fixed Mobile Bottom Navigation Bar (Screens < 768px) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t-3 border-black shadow-[0px_-2px_0px_0px_#000] flex items-center justify-around h-15 px-2">
+        <Link
+          href="/app"
+          className={`flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-mono font-bold ${
+            isActive('/app', true) ? 'text-[#FF6B6B] font-black' : 'text-black'
+          }`}
+        >
+          <Home className="w-4 h-4 stroke-[2.5]" />
+          <span>Home</span>
+        </Link>
+
+        <Link
+          href="/app/assistant"
+          className={`flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-mono font-bold ${
+            isActive('/app/assistant') ? 'text-[#FF6B6B] font-black' : 'text-black'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 stroke-[2.5]" />
+          <span>Assistant</span>
+        </Link>
+
+        {/* Center Prominent Capture Button */}
+        <button
+          onClick={openSaveModal}
+          className="w-10 h-10 -mt-4 bg-[#FF6B6B] border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-center text-black font-black active:translate-x-0.5 active:translate-y-0.5"
+          aria-label="Capture Resource"
+        >
+          <Plus className="w-5 h-5 stroke-[3]" />
+        </button>
+
+        <Link
+          href="/app/library"
+          className={`flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-mono font-bold ${
+            isActive('/app/library') ? 'text-[#FF6B6B] font-black' : 'text-black'
+          }`}
+        >
+          <Library className="w-4 h-4 stroke-[2.5]" />
+          <span>Library</span>
+        </Link>
+
+        <Link
+          href="/app/inbox"
+          className={`flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-mono font-bold relative ${
+            isActive('/app/inbox') ? 'text-[#FF6B6B] font-black' : 'text-black'
+          }`}
+        >
+          <Inbox className="w-4 h-4 stroke-[2.5]" />
+          <span>Inbox</span>
+          {metrics.inbox > 0 && (
+            <span className="absolute top-0 right-3 px-1 text-[9px] font-black bg-[#FFD93D] border border-black text-black">
+              {metrics.inbox}
+            </span>
+          )}
+        </Link>
+      </nav>
     </div>
   );
 }

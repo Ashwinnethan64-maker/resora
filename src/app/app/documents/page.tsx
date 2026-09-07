@@ -1,13 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useResora } from '@/context/ResoraContext';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ResourceCard } from '@/components/resources/ResourceCard';
 import { DocumentDropzone } from '@/components/documents/DocumentDropzone';
-import { DocumentViewerModal } from '@/components/documents/DocumentViewerModal';
 import { ResourceModel } from '@/types/database';
 import { PageHeader } from '@/components/ui/SectionLabel';
+
+const DocumentViewerModal = dynamic(
+  () => import('@/components/documents/DocumentViewerModal').then((mod) => mod.DocumentViewerModal),
+  { ssr: false }
+);
 import {
   FileText,
   Upload,

@@ -150,8 +150,89 @@ export class NVIDIAClient {
   }
 
   /**
-   * Health check to test connectivity with NVIDIA endpoint
+   * Stream chat completion via NVIDIA Nemotron (Server-Sent Events)
    */
+  public static async *streamChatCompletion(
+    messages: ChatMessage[],
+    options: NVIDIACompletionOptions = {},
+    signal?: AbortSignal
+  ): AsyncGenerator<string, void, unknown> {
+    const key = this.apiKey;
+    if (!key) {
+      throw new Error('NVIDIA API key not configured on server.');
+    }
+
+    if (Date.now() < this.circuitBreakerUntil) {
+      const waitSec = Math.ceil((this.circuitBreakerUntil - Date.now()) / 1000);
+      throw new Error(`NVIDIA rate limit active. Circuit breaker engaged for ${waitSec}s.`);
+    }
+
+    const endpoint = `${this.baseURL}/chat/completions`;
+    const requestBody: Record<string, any> = {
+      model: this.model,
+      messages,
+      temperature: options.temperature ?? 0.2,
+      max_tokens: options.maxTokens ?? 1200,
+      stream: true,
+    };
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify(requestBody),
+      signal,
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 429) {
+        NVIDIAClient.circuitBreakerUntil = Date.now() + 45000;
+      }
+      throw new Error(`NVIDIA streaming error: HTTP ${status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No readable response body from NVIDIA API');
+    }
+
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith(':')) continue;
+          if (trimmed === 'data: [DONE]') return;
+
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const json = JSON.parse(trimmed.slice(6));
+              const chunk = json.choices?.[0]?.delta?.content;
+              if (chunk) {
+                yield chunk;
+              }
+            } catch {
+              // Ignore malformed SSE chunk
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
   public static async testConnection(): Promise<AIHealthStatus> {
     if (!this.isConfigured()) {
       return {

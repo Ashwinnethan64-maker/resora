@@ -4,10 +4,15 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useResora } from '@/context/ResoraContext';
+import dynamic from 'next/dynamic';
 import { ResourceCard } from '@/components/resources/ResourceCard';
 import { AddResourceToProjectModal } from '@/components/projects/AddResourceToProjectModal';
 import { ProjectRecommendationsPanel } from '@/components/projects/ProjectRecommendationsPanel';
-import { DocumentViewerModal } from '@/components/documents/DocumentViewerModal';
+
+const DocumentViewerModal = dynamic(
+  () => import('@/components/documents/DocumentViewerModal').then((mod) => mod.DocumentViewerModal),
+  { ssr: false }
+);
 import {
   ProjectModel,
   ResourceModel,
