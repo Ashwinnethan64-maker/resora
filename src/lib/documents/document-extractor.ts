@@ -4,6 +4,8 @@
  * Provides page-aware extraction, content hashing, and intelligent chunking.
  */
 
+import crypto from 'crypto';
+
 export interface PageExtraction {
   pageNumber: number;
   content: string;
@@ -246,10 +248,5 @@ function decodePdfString(str: string): string {
 }
 
 function computeBufferHash(buffer: Buffer): string {
-  let hash = 0;
-  for (let i = 0; i < buffer.length; i++) {
-    hash = (hash << 5) - hash + buffer[i];
-    hash |= 0;
-  }
-  return 'sha256_' + Math.abs(hash).toString(16);
+  return crypto.createHash('sha256').update(buffer).digest('hex');
 }

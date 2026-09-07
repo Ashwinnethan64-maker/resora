@@ -211,9 +211,21 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteResource = async (id: string) => {
-    await ResourceService.deleteResource(id);
-    await refreshData();
-    showToast('Resource deleted');
+    // Find all linked child resources to provide immediate optimistic UI removal
+    setResources((prev) => prev.filter((r) => r.id !== id && r.source_document_id !== id));
+    setInboxResources((prev) => prev.filter((r) => r.id !== id && r.source_document_id !== id));
+
+    try {
+      await ResourceService.deleteResource(id);
+      // Synchronize deletion with server state as well
+      fetch(`/api/resources/${id}`, { method: 'DELETE' }).catch(() => {});
+      await refreshData();
+      showToast('Resource removed');
+    } catch (err) {
+      console.error('Failed to delete resource:', err);
+      await refreshData();
+      showToast('Failed to delete resource');
+    }
   };
 
   const toggleFavorite = async (id: string) => {

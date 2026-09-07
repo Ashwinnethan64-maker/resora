@@ -12,6 +12,7 @@ import {
   ResourceFilterOptions,
 } from '@/types/database';
 import { INITIAL_SUGGESTED_TAGS, INITIAL_SUGGESTED_USE_CASES } from '@/lib/resource-types';
+import { normalizeCanonicalUrl } from '../resources/normalize-url';
 
 const STORAGE_KEYS = {
   RESOURCES: 'resora_resources_v2',
@@ -487,16 +488,6 @@ export class ResourceService {
     }
   }
 
-  static async checkDuplicate(url: string): Promise<ResourceModel | null> {
-    const cleanTarget = url.trim().toLowerCase();
-    const resources = await this.getAllResources();
-    return (
-      resources.find(
-        (r) => !r.is_archived && r.url.trim().toLowerCase() === cleanTarget
-      ) || null
-    );
-  }
-
   static async getAllResources(): Promise<ResourceModel[]> {
     this.initStore();
     return getLocalItem<ResourceModel[]>(STORAGE_KEYS.RESOURCES, SEED_RESOURCES);
@@ -570,6 +561,29 @@ export class ResourceService {
     return list;
   }
 
+  static async checkDuplicate(rawUrl: string): Promise<ResourceModel | null> {
+    if (!rawUrl) return null;
+    const norm = normalizeCanonicalUrl(rawUrl);
+    const list = await this.getAllResources();
+    const cleanNorm = norm.normalizedUrl.toLowerCase().trim();
+    const cleanRaw = rawUrl.toLowerCase().trim();
+
+    return (
+      list.find((r) => {
+        const rNorm = (r.normalized_url || '').toLowerCase().trim();
+        const rOrig = (r.original_url || '').toLowerCase().trim();
+        const rUrl = (r.url || '').toLowerCase().trim();
+
+        return (
+          rNorm === cleanNorm ||
+          rUrl === cleanNorm ||
+          rOrig === cleanRaw ||
+          rUrl === cleanRaw
+        );
+      }) || null
+    );
+  }
+
   static async getResourceById(id: string): Promise<ResourceModel | null> {
     const list = await this.getAllResources();
     return list.find((r) => r.id === id) || null;
@@ -580,18 +594,31 @@ export class ResourceService {
       id?: string;
     }
   ): Promise<ResourceModel> {
+    const norm = normalizeCanonicalUrl(data.url || data.original_url || '');
+    const canonicalUrl = norm.isValid ? norm.normalizedUrl : (data.url || '');
+    const originalUrl = data.original_url || data.url || '';
+
+    // Guard against duplicate resource creation: return existing canonical record
+    if (canonicalUrl) {
+      const existing = await this.checkDuplicate(canonicalUrl);
+      if (existing) {
+        return existing;
+      }
+    }
+
     const all = await this.getAllResources();
+    const uniqueSuffix = Math.random().toString(36).substring(2, 9);
     const newResource: ResourceModel = {
-      id: data.id || `res-${Date.now()}`,
+      id: data.id || `res-${Date.now()}-${uniqueSuffix}`,
       user_id: 'usr_local',
       title: data.title,
-      url: data.url,
-      domain: data.domain,
+      url: canonicalUrl,
+      domain: norm.domain || data.domain,
       description: data.description || '',
       resource_type: data.resource_type,
       source_type: data.source_type,
       thumbnail_url: data.thumbnail_url,
-      favicon_url: data.favicon_url || `https://www.google.com/s2/favicons?domain=${data.domain}&sz=64`,
+      favicon_url: data.favicon_url || `https://www.google.com/s2/favicons?domain=${norm.domain || data.domain}&sz=64`,
       content: data.content || '',
       personal_note: data.personal_note || '',
       is_favorite: data.is_favorite || false,
@@ -604,6 +631,9 @@ export class ResourceService {
       tag_sources: {},
       use_case_sources: {},
       document_id: data.document_id,
+      source_document_id: data.source_document_id,
+      original_url: originalUrl,
+      normalized_url: canonicalUrl,
       file_name: data.file_name,
       file_size: data.file_size,
       page_count: data.page_count,
@@ -625,6 +655,54 @@ export class ResourceService {
     }
 
     return newResource;
+  }
+
+  /**
+   * Returns all resources extracted from a specific parent document
+   */
+  static async getResourcesBySourceDocumentId(documentResourceId: string): Promise<ResourceModel[]> {
+    const all = await this.getAllResources();
+    return all.filter((r) => r.source_document_id === documentResourceId && !r.is_archived);
+  }
+
+  /**
+   * Synchronizes an existing resource model (e.g. from server API response or document upload)
+   * into the active store without regenerating IDs or timestamps.
+   */
+  static async syncResource(resource: ResourceModel): Promise<ResourceModel> {
+    const all = await this.getAllResources();
+    const existingIndex = all.findIndex((r) => r.id === resource.id);
+    let updated: ResourceModel[];
+
+    if (existingIndex >= 0) {
+      updated = [...all];
+      updated[existingIndex] = { ...all[existingIndex], ...resource };
+    } else {
+      updated = [resource, ...all];
+    }
+
+    setLocalItem(STORAGE_KEYS.RESOURCES, updated);
+    return resource;
+  }
+
+  /**
+   * Synchronizes multiple resource models in a single batch update.
+   */
+  static async syncResources(resources: ResourceModel[]): Promise<ResourceModel[]> {
+    if (!resources || resources.length === 0) return [];
+    const all = await this.getAllResources();
+    const map = new Map<string, ResourceModel>();
+    // First keep existing
+    for (const item of all) {
+      map.set(item.id, item);
+    }
+    // Upsert new ones
+    for (const item of resources) {
+      map.set(item.id, item);
+    }
+    const updated = Array.from(map.values());
+    setLocalItem(STORAGE_KEYS.RESOURCES, updated);
+    return resources;
   }
 
   static async updateResource(id: string, updates: Partial<ResourceModel>): Promise<ResourceModel | null> {
@@ -669,18 +747,49 @@ export class ResourceService {
 
   static async deleteResource(id: string): Promise<boolean> {
     const all = await this.getAllResources();
-    const next = all.filter((r) => r.id !== id);
+    const target = all.find((r) => r.id === id);
+    if (!target) return false;
+
+    // Identify all resource IDs to delete (the target resource itself + all extracted children)
+    const idsToDelete = new Set<string>([id]);
+    all.forEach((r) => {
+      if (r.source_document_id === id) {
+        idsToDelete.add(r.id);
+      }
+    });
+
+    const next = all.filter((r) => !idsToDelete.has(r.id));
     setLocalItem(STORAGE_KEYS.RESOURCES, next);
 
     // Also remove from intelligence store
     const intelMap = getLocalItem<Record<string, ResourceIntelligence>>(STORAGE_KEYS.INTELLIGENCE, SEED_INTELLIGENCE);
-    delete intelMap[id];
+    idsToDelete.forEach((delId) => {
+      delete intelMap[delId];
+    });
     setLocalItem(STORAGE_KEYS.INTELLIGENCE, intelMap);
 
     // Also delete document & page records
     const docs = getLocalItem<Record<string, DocumentModel>>(STORAGE_KEYS.DOCUMENTS, SEED_DOCUMENTS);
-    delete docs[id];
+    idsToDelete.forEach((delId) => {
+      delete docs[delId];
+    });
     setLocalItem(STORAGE_KEYS.DOCUMENTS, docs);
+
+    // Remove deleted resource IDs from projects
+    const projects = await this.getProjects();
+    const updatedProjects = projects.map((p) => ({
+      ...p,
+      resource_ids: p.resource_ids?.filter((rId) => !idsToDelete.has(rId)) || [],
+    }));
+    setLocalItem(STORAGE_KEYS.PROJECTS, updatedProjects);
+
+    // Remove deleted resource IDs from collections
+    const collections = await this.getCollections();
+    const updatedCollections = collections.map((c) => ({
+      ...c,
+      resource_ids: c.resource_ids?.filter((rId) => !idsToDelete.has(rId)) || [],
+    }));
+    setLocalItem(STORAGE_KEYS.COLLECTIONS, updatedCollections);
 
     return true;
   }
@@ -748,6 +857,23 @@ export class ResourceService {
     setLocalItem(STORAGE_KEYS.DOCUMENT_PAGES, allPages);
 
     return newDoc;
+  }
+
+  /**
+   * Synchronize a document record into local storage from an API response
+   */
+  static async syncDocumentRecord(doc: DocumentModel, pages?: DocumentPageModel[]): Promise<DocumentModel> {
+    this.initStore();
+    const docs = getLocalItem<Record<string, DocumentModel>>(STORAGE_KEYS.DOCUMENTS, SEED_DOCUMENTS);
+    docs[doc.resource_id] = doc;
+    setLocalItem(STORAGE_KEYS.DOCUMENTS, docs);
+
+    if (pages && pages.length > 0) {
+      const allPages = getLocalItem<Record<string, DocumentPageModel[]>>(STORAGE_KEYS.DOCUMENT_PAGES, {});
+      allPages[doc.id] = pages;
+      setLocalItem(STORAGE_KEYS.DOCUMENT_PAGES, allPages);
+    }
+    return doc;
   }
 
   static async getDocumentPages(documentId: string): Promise<DocumentPageModel[]> {

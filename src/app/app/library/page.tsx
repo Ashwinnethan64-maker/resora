@@ -22,6 +22,8 @@ import {
 const TYPE_FILTER_BUTTONS = [
   { id: 'all', label: 'ALL' },
   { id: 'ai_tool', label: 'AI TOOLS' },
+  { id: 'web_app', label: 'WEB APPS' },
+  { id: 'developer_tool', label: 'DEV TOOLS' },
   { id: 'github', label: 'GITHUB' },
   { id: 'pdf', label: 'PDFS' },
   { id: 'document', label: 'DOCS' },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ResourceService } from '@/lib/services/resource-service';
-import { normalizeUrl, detectSourceAndType } from '@/lib/url-helper';
+import { detectSourceAndType } from '@/lib/url-helper';
+import { normalizeCanonicalUrl } from '@/lib/resources/normalize-url';
 import { validateUrlForSsrf } from '@/lib/security/ssrf';
 
 /**
@@ -19,11 +20,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ code: 'INVALID_REQUEST', error: 'Valid URL is required' }, { status: 400 });
     }
 
-    const { url, domain, isValid } = normalizeUrl(rawUrl);
+    const norm = normalizeCanonicalUrl(rawUrl);
 
-    if (!isValid) {
+    if (!norm.isValid) {
       return NextResponse.json({ code: 'INVALID_REQUEST', error: 'Invalid URL structure' }, { status: 400 });
     }
+
+    const url = norm.normalizedUrl;
+    const domain = norm.domain;
 
     // SSRF verification
     const ssrfCheck = validateUrlForSsrf(url);
@@ -31,12 +35,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ code: 'FORBIDDEN', error: ssrfCheck.reason }, { status: 403 });
     }
 
-    // Duplicate check
+    // Duplicate check using central canonical engine
     const existing = await ResourceService.checkDuplicate(url);
     if (existing) {
       return NextResponse.json(
         {
+          status: 'duplicate',
           code: 'DUPLICATE',
+          resource_id: existing.id,
           message: 'Resource already exists in your library',
           resource: existing,
         },

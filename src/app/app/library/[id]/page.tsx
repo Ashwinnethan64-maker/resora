@@ -49,31 +49,109 @@ export default function ResourceDetailPage() {
   } = useResora();
 
   const resourceId = params.id as string;
-  const resource = resources.find((r) => r.id === resourceId);
+  const contextResource = resources.find((r) => r.id === resourceId);
+  const [remoteResource, setRemoteResource] = useState<ResourceModel | null>(null);
+  const [isFetchingResource, setIsFetchingResource] = useState(!contextResource);
+
+  const resource = contextResource || remoteResource;
 
   const [intelligence, setIntelligence] = useState<ResourceIntelligence | null>(null);
   const [relatedResources, setRelatedResources] = useState<ResourceModel[]>([]);
   const [connectedProjects, setConnectedProjects] = useState<ProjectModel[]>([]);
+  const [extractedSubResources, setExtractedSubResources] = useState<ResourceModel[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [documentMetadata, setDocumentMetadata] = useState<DocumentModel | null>(null);
 
   useEffect(() => {
-    if (resourceId) {
-      getIntelligence(resourceId).then(setIntelligence);
-      findRelatedResources(resourceId, 3).then(setRelatedResources);
-      getCrossProjectUsage(resourceId).then(setConnectedProjects);
+    if (!resourceId) return;
 
-      if (resource?.resource_type === 'pdf' || resource?.resource_type === 'document') {
-        fetch(`/api/documents/${resourceId}`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (data?.document) setDocumentMetadata(data.document);
-          })
-          .catch(() => {});
-      }
+    // 1. If not found in context yet, fetch from server or local service
+    if (!contextResource) {
+      setIsFetchingResource(true);
+      fetch(`/api/resources/${resourceId}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then(async (data) => {
+          if (data?.resource) {
+            setRemoteResource(data.resource);
+            if (data.intelligence) setIntelligence(data.intelligence);
+            if (data.document) setDocumentMetadata(data.document);
+            // Sync into client store
+            const { ResourceService } = await import('@/lib/services/resource-service');
+            await ResourceService.syncResource(data.resource);
+            if (data.document) {
+              await ResourceService.syncDocumentRecord(data.document);
+            }
+          } else {
+            // Also check client ResourceService directly in case storage wasn't hydrated
+            const { ResourceService } = await import('@/lib/services/resource-service');
+            const local = await ResourceService.getResourceById(resourceId);
+            if (local) setRemoteResource(local);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setIsFetchingResource(false));
     }
-  }, [resourceId, getIntelligence, findRelatedResources, resource?.resource_type]);
+
+    getIntelligence(resourceId).then((intel) => {
+      if (intel) setIntelligence(intel);
+    });
+    findRelatedResources(resourceId, 3).then(setRelatedResources);
+    getCrossProjectUsage(resourceId).then(setConnectedProjects);
+
+    // Fetch child resources extracted from this source document
+    fetch(`/api/resources?sourceDocumentId=${resourceId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then(async (data) => {
+        let items: ResourceModel[] = [];
+        if (data?.resources && data.resources.length > 0) {
+          items = data.resources;
+        } else {
+          // Fallback to local client store check
+          const { ResourceService } = await import('@/lib/services/resource-service');
+          items = await ResourceService.getResourcesBySourceDocumentId(resourceId);
+        }
+        // Deduplicate items by ID and normalized URL
+        const seenIds = new Set<string>();
+        const seenUrls = new Set<string>();
+        const uniqueItems = items.filter((item) => {
+          const urlKey = item.normalized_url || item.url;
+          if (seenIds.has(item.id) || seenUrls.has(urlKey)) return false;
+          seenIds.add(item.id);
+          seenUrls.add(urlKey);
+          return true;
+        });
+        setExtractedSubResources(uniqueItems);
+      })
+      .catch(async () => {
+        const { ResourceService } = await import('@/lib/services/resource-service');
+        const localChildren = await ResourceService.getResourcesBySourceDocumentId(resourceId);
+        const seenIds = new Set<string>();
+        const uniqueItems = localChildren.filter((item) => {
+          if (seenIds.has(item.id)) return false;
+          seenIds.add(item.id);
+          return true;
+        });
+        setExtractedSubResources(uniqueItems);
+      });
+
+    fetch(`/api/documents/${resourceId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.document) setDocumentMetadata(data.document);
+      })
+      .catch(() => {});
+  }, [resourceId, contextResource, getIntelligence, findRelatedResources, getCrossProjectUsage]);
+
+  if (isFetchingResource) {
+    return (
+      <div className="p-12 max-w-4xl mx-auto space-y-4 text-center">
+        <div className="inline-block animate-spin w-8 h-8 border-4 border-black border-t-[#FFD93D] rounded-none mb-2" />
+        <h2 className="text-xl font-black uppercase text-black">RETRIEVING DOSSIER...</h2>
+        <p className="text-xs font-mono font-bold text-black/60">ACCESSING RESEARCH INDEX</p>
+      </div>
+    );
+  }
 
   if (!resource) {
     return (
@@ -310,9 +388,9 @@ export default function ResourceDetailPage() {
           </h3>
           <div className="flex flex-wrap gap-2">
             {resource.tags && resource.tags.length > 0 ? (
-              resource.tags.map((tag) => (
+              Array.from(new Set(resource.tags)).map((tag, idx) => (
                 <span
-                  key={tag}
+                  key={`tag-${tag}-${idx}`}
                   className="px-3 py-1 bg-[#FFFDF5] text-black font-mono font-black text-xs border-2 border-black flex items-center gap-2 shadow-[2px_2px_0px_#000]"
                 >
                   <span>#{tag}</span>
@@ -334,9 +412,9 @@ export default function ResourceDetailPage() {
           </h3>
           <div className="flex flex-wrap gap-2">
             {resource.use_cases && resource.use_cases.length > 0 ? (
-              resource.use_cases.map((uc) => (
+              Array.from(new Set(resource.use_cases)).map((uc, idx) => (
                 <span
-                  key={uc}
+                  key={`uc-${uc}-${idx}`}
                   className="px-3 py-1 bg-[#C4B5FD] text-black text-xs font-black uppercase border-2 border-black flex items-center gap-2 shadow-[2px_2px_0px_#000]"
                 >
                   <span>{uc}</span>
@@ -372,6 +450,54 @@ export default function ResourceDetailPage() {
             : '"No personal note recorded yet."'}
         </div>
       </div>
+
+      {/* EXTRACTED RESOURCES (SOURCE DOCUMENT RELATIONSHIP) */}
+      {extractedSubResources.length > 0 && (
+        <div className="p-6 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b-4 border-black gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 bg-[#FFD93D] border-2 border-black" />
+                <h3 className="text-sm font-black uppercase tracking-wider text-black">
+                  EXTRACTED RESOURCES
+                </h3>
+                <span className="px-2 py-0.5 bg-[#C4B5FD] text-black border-2 border-black font-mono font-black text-xs">
+                  {extractedSubResources.length} LINKS FOUND
+                </span>
+              </div>
+              <p className="text-xs font-bold text-black/70 mt-1">
+                Parsed from source document &quot;{resource.file_name || resource.title}&quot; into individual categorized dossiers.
+              </p>
+            </div>
+
+            {/* Category counts overview */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {Object.entries(
+                extractedSubResources.reduce((acc, r) => {
+                  const cfg = RESOURCE_TYPE_CONFIGS[r.resource_type];
+                  const label = cfg ? cfg.label.toUpperCase() : r.resource_type.toUpperCase();
+                  acc[label] = (acc[label] || 0) + 1;
+                  return acc;
+                }, {} as Record<string, number>)
+              ).map(([label, count]) => (
+                <span
+                  key={label}
+                  className="px-2 py-0.5 bg-[#FFFDF5] text-black border-2 border-black text-[10px] font-mono font-black shadow-[1.5px_1.5px_0px_#000]"
+                >
+                  [{label}] {count}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+            {extractedSubResources.map((child, idx) => (
+              <ResourceCard key={`${child.id}-${idx}`} resource={child} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Connected Project Workspaces */}
       <div className="p-6 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] space-y-4">

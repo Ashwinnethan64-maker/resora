@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractDocumentContent, MAX_FILE_SIZE } from '@/lib/documents/document-extractor';
 import { ResourceService } from '@/lib/services/resource-service';
 import { getSupabaseServerClient } from '@/lib/supabase';
+import { findDuplicateDocument } from '@/lib/resources/deduplicate';
+import { importResourcesFromDocumentText } from '@/lib/resources/import-resources';
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,23 +37,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Check for duplicate content hash
+    // 2. Check for duplicate content hash using Central Deduplication Engine
     if (!forceUpload) {
-      const existingDoc = await ResourceService.getDocumentByHash(extraction.contentHash);
-      if (existingDoc) {
+      const dupDoc = await findDuplicateDocument(extraction.contentHash);
+      if (dupDoc.isDuplicate && dupDoc.document) {
+        const existingDoc = dupDoc.document;
+        // Check how many sub-resources were already indexed for this source document
+        const existingLinks = await ResourceService.getResourcesBySourceDocumentId(existingDoc.resource_id);
+
         return NextResponse.json(
           {
+            status: 'duplicate_document',
             duplicate: true,
+            document_id: existingDoc.id,
             existingResourceId: existingDoc.resource_id,
             existingFileName: existingDoc.file_name,
-            message: `This document already exists in your library as "${existingDoc.file_name}".`,
+            linkCount: existingLinks.length,
+            message: `This file is already in your research archive. ${existingLinks.length > 0 ? `${existingLinks.length} links already indexed.` : ''}`,
           },
           { status: 409 }
         );
       }
     }
 
-    // 3. Create Resource model
+    // 3. Create Resource model for parent document
     const isPdf = fileName.toLowerCase().endsWith('.pdf') || mimeType === 'application/pdf';
     const resourceType = isPdf ? 'pdf' : 'document';
     const cleanTitle = fileName.replace(/\.[^/.]+$/, '');
@@ -109,21 +118,48 @@ export async function POST(req: NextRequest) {
       pages: extraction.pages,
     });
 
-    // 5. Trigger asynchronous AI Intelligence analysis
+    // 6. Intelligent Sub-Resource Import (In-file deduplication + database skip + new-only creation)
+    const importSummary = await importResourcesFromDocumentText({
+      documentText: extraction.fullText,
+      sourceDocumentId: resource.id,
+      sourceFileName: fileName,
+      userId: resource.user_id,
+    });
+
+    // 7. Trigger asynchronous AI Intelligence analysis for parent doc
     if (extraction.fullText && extraction.fullText.length > 30) {
-      setTimeout(() => {
-        fetch('http://127.0.0.1:3000/api/ai/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resourceId: resource.id }),
-        }).catch((err) => console.warn('Background AI document analysis trigger failed:', err));
-      }, 50);
+      (async () => {
+        try {
+          const { AIService } = await import('@/lib/ai/ai-service');
+          AIService.analyzeResource({
+            resource,
+            rawContent: extraction.fullText,
+          })
+            .then((res) => ResourceService.saveIntelligence(res.intelligence))
+            .catch((err) => console.warn('[Upload] Background AI doc analysis notice:', err?.message));
+        } catch (aiErr) {
+          console.warn('[Upload] Background AI service notice:', aiErr);
+        }
+      })();
     }
 
     return NextResponse.json({
+      status: 'import_complete',
       success: true,
       resource,
       document: doc,
+      extractedResources: importSummary.newResources,
+      existingResources: importSummary.existingResources,
+      summary: {
+        detected: importSummary.detected,
+        created: importSummary.newResourcesCreated,
+        duplicates: importSummary.duplicatesSkipped,
+        sourceFileName: fileName,
+      },
+      message:
+        importSummary.detected > 0
+          ? `Indexed "${cleanTitle}": ${importSummary.newResourcesCreated} new resources created, ${importSummary.duplicatesSkipped} already in library.`
+          : `Indexed "${cleanTitle}".`,
     });
   } catch (err: any) {
     console.error('Error in /api/documents/upload:', err);

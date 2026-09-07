@@ -11,6 +11,10 @@ export class AIProvider {
     return NVIDIAClient.isConfigured();
   }
 
+  public static isRateLimited(): boolean {
+    return NVIDIAClient.isRateLimited();
+  }
+
   public static get model(): string {
     return process.env.NVIDIA_TEXT_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b';
   }

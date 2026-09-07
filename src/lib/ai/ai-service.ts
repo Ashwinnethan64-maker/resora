@@ -16,8 +16,8 @@ export interface AIAnalysisResult {
   cached: boolean;
 }
 
-// In-memory active locks to prevent concurrent duplicate analysis
-const activeLocks = new Set<string>();
+// In-memory active promises to prevent concurrent duplicate analysis and avoid lock collisions
+const activeAnalysisPromises = new Map<string, Promise<AIAnalysisResult>>();
 
 export class AIService {
   /**
@@ -27,15 +27,14 @@ export class AIService {
     const { resource, rawContent, forceReanalyze } = req;
     const resourceId = resource.id;
 
-    // Check lock
-    if (activeLocks.has(resourceId)) {
-      throw new Error(`Resource ${resourceId} is currently being analyzed.`);
+    // If an analysis is already in progress for this resource, await and return its result
+    if (activeAnalysisPromises.has(resourceId)) {
+      return await activeAnalysisPromises.get(resourceId)!;
     }
 
-    activeLocks.add(resourceId);
-    const startTime = Date.now();
-
-    try {
+    const runAnalysis = async (): Promise<AIAnalysisResult> => {
+      const startTime = Date.now();
+      try {
       // 1. Clean and truncate content (Prompt injection defense)
       const cleaned = cleanHtmlContent(rawContent || resource.content || '');
       const contentHash = cleaned.contentHash;
@@ -55,8 +54,8 @@ User Notes: ${resource.personal_note || 'None'}
         metaSummary
       );
 
-      // 3. Attempt NVIDIA Provider if configured
-      if (AIProvider.isConfigured()) {
+      // 3. Attempt NVIDIA Provider if configured and not rate-limited
+      if (AIProvider.isConfigured() && !AIProvider.isRateLimited()) {
         try {
           const rawResponse = await AIProvider.complete(
             [
@@ -105,23 +104,30 @@ User Notes: ${resource.personal_note || 'None'}
       // 4. Intelligent Heuristic Rule Engine (Fallback & Local Offline Resilience)
       const heuristicResult = this.generateHeuristicIntelligence(resource, cleaned.text);
 
-      return {
-        intelligence: {
-          resource_id: resource.id,
-          user_id: resource.user_id,
-          status: 'completed',
-          ...heuristicResult,
+        return {
+          intelligence: {
+            resource_id: resource.id,
+            user_id: resource.user_id,
+            status: 'completed',
+            ...heuristicResult,
+            model: 'resora-heuristic-v1',
+            content_hash: contentHash,
+          },
           model: 'resora-heuristic-v1',
-          content_hash: contentHash,
-        },
-        model: 'resora-heuristic-v1',
-        cached: false,
-      };
-    } finally {
-      activeLocks.delete(resourceId);
-      const duration = Date.now() - startTime;
-      console.log(`[AI Analysis] Completed for resource ${resourceId} in ${duration}ms`);
-    }
+          cached: false,
+        };
+      } finally {
+        const duration = Date.now() - startTime;
+        console.log(`[AI Analysis] Completed for resource ${resourceId} in ${duration}ms`);
+      }
+    };
+
+    const promise = runAnalysis().finally(() => {
+      activeAnalysisPromises.delete(resourceId);
+    });
+
+    activeAnalysisPromises.set(resourceId, promise);
+    return await promise;
   }
 
   /**
@@ -177,6 +183,30 @@ User Notes: ${resource.personal_note || 'None'}
       topics.push('AI', 'Developer Tools', 'Automation');
       suggested_tags.push('AI', 'Coding', 'Agents');
       suggested_use_cases.push('Build', 'Automate', 'Hackathon');
+    } else if (type === 'document' || domain.includes('drive.google.com') || domain.includes('docs.google.com') || domain.includes('notion')) {
+      what_it_is = `A cloud document and knowledge asset for ${title} on ${domain}.`;
+      summary = desc || `${title} provides structured documentation, project specifications, and knowledge reference.`;
+      best_for.push('Project reference', 'Collaborative knowledge sharing', 'Documentation index');
+      key_points.push('Cloud workspace document', 'Centralized reference material', 'Structured research context');
+      topics.push('Documentation', 'Knowledge Base', 'Research');
+      suggested_tags.push('Document', 'Knowledge', 'Research');
+      suggested_use_cases.push('Research', 'Learn', 'Reference');
+    } else if (type === 'developer_tool') {
+      what_it_is = `A developer utility and infrastructure tool designed for engineering workflows.`;
+      summary = desc || `${title} provides development infrastructure, APIs, or software utilities.`;
+      best_for.push('Developer workflow', 'System integration', 'Building software');
+      key_points.push('Developer infrastructure and API access', 'Build acceleration', 'Technical toolchain utility');
+      topics.push('Developer Tools', 'Infrastructure', 'Coding');
+      suggested_tags.push('Developer Tools', 'Dev', 'Coding');
+      suggested_use_cases.push('Build', 'Code', 'Deploy');
+    } else if (type === 'web_app') {
+      what_it_is = `A cloud web application and productivity software platform for ${title}.`;
+      summary = desc || `${title} offers web-based application tools and workflow execution.`;
+      best_for.push('Interactive workflow', 'Cloud productivity', 'Team collaboration');
+      key_points.push('Web application interface', 'Cloud synchronization', 'Productivity acceleration');
+      topics.push('Web App', 'Productivity', 'SaaS');
+      suggested_tags.push('App', 'Productivity', 'Cloud');
+      suggested_use_cases.push('Build', 'Design', 'Freelancing');
     } else {
       what_it_is = `A digital software resource for ${title} hosted on ${domain}.`;
       summary = desc || `${title} provides reference and operational utility on ${domain}.`;

@@ -4,6 +4,7 @@ import { AlertTriangle, Trash2, X } from 'lucide-react';
 interface DeleteResourceDialogProps {
   isOpen: boolean;
   resourceTitle: string;
+  childCount?: number;
   onConfirm: () => void;
   onCancel: () => void;
   isDeleting?: boolean;
@@ -12,6 +13,7 @@ interface DeleteResourceDialogProps {
 export function DeleteResourceDialog({
   isOpen,
   resourceTitle,
+  childCount = 0,
   onConfirm,
   onCancel,
   isDeleting = false,
@@ -45,6 +47,11 @@ export function DeleteResourceDialog({
             </span>
             ?
           </p>
+          {childCount > 0 && (
+            <div className="p-2.5 bg-[#FF6B6B]/15 border-2 border-[#FF6B6B] text-black font-bold">
+              ⚠️ This document contains <span className="underline">{childCount} extracted sub-resources</span>. Deleting it will also remove all {childCount} extracted link resources from your library in real time.
+            </div>
+          )}
           <p className="text-black/80 font-medium leading-relaxed">
             This resource will be permanently removed from your library, projects, and collections. This action cannot be undone.
           </p>

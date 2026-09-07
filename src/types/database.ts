@@ -48,8 +48,11 @@ export interface ResourceModel {
   use_cases?: string[];
   tag_sources?: Record<string, 'user' | 'ai'>;
   use_case_sources?: Record<string, 'user' | 'ai'>;
-  // Associated Document Metadata
+  // Associated Document Metadata & Extraction Lineage
   document_id?: string;
+  source_document_id?: string;
+  original_url?: string;
+  normalized_url?: string;
   file_name?: string;
   file_size?: number;
   page_count?: number;

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useResora } from '@/context/ResoraContext';
 import { ResoraLogo } from '@/components/brand/ResoraLogo';
 import { CommandPalette } from '@/components/navigation/CommandPalette';
@@ -34,6 +34,7 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const {
     openCommandPalette,
     openSaveModal,
@@ -44,10 +45,15 @@ export function AppShell({ children }: AppShellProps) {
     closeDeleteDialog,
     deleteResource,
     metrics,
+    resources,
     activeToast
   } = useResora();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const deletingChildCount = deletingResource
+    ? resources.filter((r) => r.source_document_id === deletingResource.id).length
+    : 0;
 
   const navItems = [
     { label: 'Home', href: '/app', icon: Home, exact: true },
@@ -94,10 +100,15 @@ export function AppShell({ children }: AppShellProps) {
       <DeleteResourceDialog
         isOpen={Boolean(deletingResource)}
         resourceTitle={deletingResource?.title || ''}
+        childCount={deletingChildCount}
         onConfirm={async () => {
           if (deletingResource) {
-            await deleteResource(deletingResource.id);
+            const targetId = deletingResource.id;
             closeDeleteDialog();
+            if (pathname.includes(targetId)) {
+              router.push('/app/library');
+            }
+            await deleteResource(targetId);
           }
         }}
         onCancel={closeDeleteDialog}

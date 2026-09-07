@@ -329,18 +329,18 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
 
         {/* Tags & Use Cases */}
         <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-black/10">
-          {resource.tags?.slice(0, 3).map((tag) => (
+          {Array.from(new Set(resource.tags || [])).slice(0, 3).map((tag, idx) => (
             <span
-              key={tag}
+              key={`tag-${tag}-${idx}`}
               className="text-[10px] font-mono px-2 py-0.5 border border-black bg-[#FFFDF5] text-black font-bold"
             >
               #{tag}
             </span>
           ))}
 
-          {resource.use_cases?.slice(0, 2).map((uc) => (
+          {Array.from(new Set(resource.use_cases || [])).slice(0, 2).map((uc, idx) => (
             <span
-              key={uc}
+              key={`uc-${uc}-${idx}`}
               className="text-[10px] font-mono px-2 py-0.5 border border-black bg-[#FFD93D] text-black font-bold"
             >
               {uc}

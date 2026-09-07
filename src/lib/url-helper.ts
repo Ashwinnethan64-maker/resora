@@ -1,4 +1,5 @@
 import { ResourceType, SourceType } from '@/types/database';
+import { normalizeCanonicalUrl } from './resources/normalize-url';
 
 export const TRACKING_PARAMS = [
   'utm_source',
@@ -17,46 +18,15 @@ export const TRACKING_PARAMS = [
 ];
 
 /**
- * Safely normalizes input URL:
- * - prepends https:// if missing
- * - strips tracking parameters (utm_*, fbclid, etc.)
- * - normalizes host casing
- * - preserves valid query parameters & anchors
+ * Safely normalizes input URL via Central Canonical URL Engine
  */
 export function normalizeUrl(rawUrl: string): { url: string; domain: string; isValid: boolean } {
-  let trimmed = rawUrl.trim();
-  if (!trimmed) {
-    return { url: '', domain: '', isValid: false };
-  }
-
-  // Prepend https:// if protocol is missing
-  if (!/^https?:\/\//i.test(trimmed)) {
-    trimmed = `https://${trimmed}`;
-  }
-
-  try {
-    const parsed = new URL(trimmed);
-    // Strip tracking parameters
-    for (const param of TRACKING_PARAMS) {
-      parsed.searchParams.delete(param);
-    }
-
-    // Clean domain (remove leading 'www.')
-    const domain = parsed.hostname.toLowerCase().replace(/^www\./, '');
-
-    // Return clean URL string
-    return {
-      url: parsed.toString(),
-      domain,
-      isValid: true,
-    };
-  } catch {
-    return {
-      url: trimmed,
-      domain: trimmed.split('/')[0].replace(/^www\./, ''),
-      isValid: false,
-    };
-  }
+  const result = normalizeCanonicalUrl(rawUrl);
+  return {
+    url: result.normalizedUrl,
+    domain: result.domain,
+    isValid: result.isValid,
+  };
 }
 
 /**

@@ -24,9 +24,15 @@ export class NVIDIAClient {
     return process.env.NVIDIA_TEXT_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b';
   }
 
+  private static circuitBreakerUntil = 0;
+
   public static isConfigured(): boolean {
     if (typeof window !== 'undefined') return false;
     return Boolean(process.env.NVIDIA_API_KEY && !process.env.NVIDIA_API_KEY.includes('your_'));
+  }
+
+  public static isRateLimited(): boolean {
+    return Date.now() < this.circuitBreakerUntil;
   }
 
   /**
@@ -39,6 +45,11 @@ export class NVIDIAClient {
     const key = this.apiKey;
     if (!key) {
       throw new Error('NVIDIA API key not configured on server.');
+    }
+
+    if (Date.now() < this.circuitBreakerUntil) {
+      const waitSec = Math.ceil((this.circuitBreakerUntil - Date.now()) / 1000);
+      throw new Error(`NVIDIA rate limit active. Circuit breaker engaged for ${waitSec}s.`);
     }
 
     const endpoint = `${this.baseURL}/chat/completions`;
@@ -54,29 +65,42 @@ export class NVIDIAClient {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout for large models
+    const timeout = setTimeout(() => controller.abort(), 12000); // 12s fast timeout
 
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${key}`,
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal,
-      });
+      let response: Response | null = null;
+      const maxRetries = 2;
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${key}`,
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        });
+
+        // If 503 (Overloaded) or 429 (Rate limited) and retry attempts left, wait briefly
+        if ((response.status === 503 || response.status === 429) && attempt < maxRetries) {
+          await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+          continue;
+        }
+        break;
+      }
 
       clearTimeout(timeout);
 
-      if (!response.ok) {
-        let errMessage = `NVIDIA API error: HTTP ${response.status}`;
+      if (!response || !response.ok) {
+        const status = response ? response.status : 500;
+        let errMessage = `NVIDIA API error: HTTP ${status}`;
         try {
-          const errData = await response.json();
+          const errData = await response?.json();
           if (errData?.error?.message) {
-            errMessage = `NVIDIA error (${response.status}): ${errData.error.message}`;
+            errMessage = `NVIDIA error (${status}): ${errData.error.message}`;
           } else if (errData?.message) {
-            errMessage = `NVIDIA error (${response.status}): ${errData.message}`;
+            errMessage = `NVIDIA error (${status}): ${errData.message}`;
           }
         } catch {
           // ignore non-json error body
@@ -85,8 +109,13 @@ export class NVIDIAClient {
         // Capture in Sentry safely without leaking key
         Sentry.captureException(new Error(errMessage), {
           tags: { provider: 'nvidia', model: this.model },
-          extra: { status: response.status },
+          extra: { status },
         });
+
+        if (status === 429) {
+          // Back off NVIDIA calls for 45 seconds to let quota recover
+          NVIDIAClient.circuitBreakerUntil = Date.now() + 45000;
+        }
 
         throw new Error(errMessage);
       }
@@ -111,7 +140,7 @@ export class NVIDIAClient {
       clearTimeout(timeout);
 
       if (err.name === 'AbortError') {
-        const timeoutErr = new Error('NVIDIA request timed out after 25 seconds.');
+        const timeoutErr = new Error('NVIDIA request timed out after 12 seconds.');
         Sentry.captureException(timeoutErr, { tags: { provider: 'nvidia', timeout: true } });
         throw timeoutErr;
       }

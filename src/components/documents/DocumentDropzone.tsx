@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useResora } from '@/context/ResoraContext';
+import { ResourceService } from '@/lib/services/resource-service';
 import {
   UploadCloud,
   FileText,
@@ -10,11 +11,16 @@ import {
   Loader2,
   X
 } from 'lucide-react';
+import { DuplicateDocumentModal } from './DuplicateDocumentModal';
+import { ImportSummaryModal, ImportSummaryData } from './ImportSummaryModal';
 
 interface UploadQueueItem {
   id: string;
   file: File;
   status: 'pending' | 'uploading' | 'extracting' | 'completed' | 'failed' | 'duplicate';
+  stage?: 'EXTRACTING LINKS' | 'ANALYZING' | 'CATEGORIZING' | 'COMPLETE';
+  linkCount?: number;
+  analyzedCount?: number;
   error?: string;
   resourceId?: string;
 }
@@ -29,6 +35,16 @@ export function DocumentDropzone({ onUploadSuccess, onUploadComplete, className 
   const { showToast, refreshData } = useResora();
   const [isDragOver, setIsDragOver] = useState(false);
   const [queue, setQueue] = useState<UploadQueueItem[]>([]);
+  const [duplicateModalData, setDuplicateModalData] = useState<{
+    isOpen: boolean;
+    fileName: string;
+    resourceId?: string;
+    linkCount?: number;
+  }>({
+    isOpen: false,
+    fileName: '',
+  });
+  const [importSummaryData, setImportSummaryData] = useState<ImportSummaryData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -77,7 +93,11 @@ export function DocumentDropzone({ onUploadSuccess, onUploadComplete, className 
 
     try {
       setQueue((prev) =>
-        prev.map((q) => (q.id === item.id ? { ...q, status: 'extracting' } : q))
+        prev.map((q) =>
+          q.id === item.id
+            ? { ...q, status: 'extracting', stage: 'EXTRACTING LINKS' }
+            : q
+        )
       );
 
       const res = await fetch('/api/documents/upload', {
@@ -99,6 +119,14 @@ export function DocumentDropzone({ onUploadSuccess, onUploadComplete, className 
               : q
           )
         );
+
+        // Open dedicated Neo-Brutalist Duplicate Document Modal
+        setDuplicateModalData({
+          isOpen: true,
+          fileName: data.existingFileName || item.file.name,
+          resourceId: data.existingResourceId,
+          linkCount: data.linkCount || 0,
+        });
         return;
       }
 
@@ -108,17 +136,67 @@ export function DocumentDropzone({ onUploadSuccess, onUploadComplete, className 
       }
 
       const result = await res.json();
+      const extractedCount = result.extractedResources?.length || 0;
+
+      // Transition visual stages if links were extracted
+      if (extractedCount > 0) {
+        setQueue((prev) =>
+          prev.map((q) =>
+            q.id === item.id
+              ? {
+                  ...q,
+                  stage: 'CATEGORIZING',
+                  linkCount: extractedCount,
+                  analyzedCount: extractedCount,
+                }
+              : q
+          )
+        );
+      }
+
+      // Ensure created resource and any extracted links are synced into the client store
+      if (result.resource) {
+        await ResourceService.syncResource(result.resource);
+      }
+      if (result.document) {
+        await ResourceService.syncDocumentRecord(result.document, result.document.pages);
+      }
+      if (result.extractedResources && Array.isArray(result.extractedResources) && result.extractedResources.length > 0) {
+        await ResourceService.syncResources(result.extractedResources);
+      }
 
       setQueue((prev) =>
         prev.map((q) =>
           q.id === item.id
-            ? { ...q, status: 'completed', resourceId: result.resource.id }
+            ? {
+                ...q,
+                status: 'completed',
+                stage: 'COMPLETE',
+                linkCount: extractedCount,
+                resourceId: result.resource.id,
+              }
             : q
         )
       );
 
       await refreshData();
-      showToast(`Extracted & indexed "${item.file.name}"`);
+
+      // Show Import Summary Modal if multi-link extraction occurred
+      if (result.summary && result.summary.detected > 0) {
+        setImportSummaryData({
+          sourceFileName: item.file.name,
+          sourceDocumentId: result.resource.id,
+          detected: result.summary.detected,
+          newResourcesCreated: result.summary.created,
+          duplicatesSkipped: result.summary.duplicates,
+        });
+      }
+
+      if (extractedCount > 0) {
+        showToast(`Indexed "${item.file.name}": ${result.summary?.created || extractedCount} new resources created`);
+      } else {
+        showToast(`Extracted & indexed "${item.file.name}"`);
+      }
       if (onUploadSuccess) onUploadSuccess();
       if (onUploadComplete && result.resource) onUploadComplete(result.resource);
     } catch (err: any) {
@@ -219,12 +297,15 @@ export function DocumentDropzone({ onUploadSuccess, onUploadComplete, className 
                   )}
                   {item.status === 'extracting' && (
                     <span className="flex items-center gap-1 font-mono font-black text-[10px] bg-[#C4B5FD] px-2 py-0.5 border border-black text-black uppercase">
-                      <Loader2 className="w-3 h-3 animate-spin stroke-[3px]" /> Extracting
+                      <Loader2 className="w-3 h-3 animate-spin stroke-[3px]" /> {item.stage || 'Extracting Links'}
                     </span>
                   )}
                   {item.status === 'completed' && (
                     <span className="flex items-center gap-1 font-mono font-black text-[10px] bg-[#FFD93D] px-2 py-0.5 border border-black text-black uppercase">
-                      <CheckCircle2 className="w-3 h-3 stroke-[3px]" /> Indexed
+                      <CheckCircle2 className="w-3 h-3 stroke-[3px]" />
+                      {item.linkCount && item.linkCount > 0
+                        ? `COMPLETE · ${item.linkCount} RESOURCES`
+                        : 'INDEXED'}
                     </span>
                   )}
                   {item.status === 'duplicate' && (
@@ -255,6 +336,22 @@ export function DocumentDropzone({ onUploadSuccess, onUploadComplete, className 
           </div>
         </div>
       )}
+
+      {/* Exact Duplicate Document Modal */}
+      <DuplicateDocumentModal
+        isOpen={duplicateModalData.isOpen}
+        fileName={duplicateModalData.fileName}
+        resourceId={duplicateModalData.resourceId}
+        linkCount={duplicateModalData.linkCount}
+        onClose={() => setDuplicateModalData((prev) => ({ ...prev, isOpen: false }))}
+      />
+
+      {/* Multi-Link Import Summary Modal */}
+      <ImportSummaryModal
+        isOpen={Boolean(importSummaryData)}
+        summary={importSummaryData}
+        onClose={() => setImportSummaryData(null)}
+      />
     </div>
   );
 }
