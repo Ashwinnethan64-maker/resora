@@ -79,13 +79,8 @@ export function DocumentViewerModal({
   };
 
   const handleDownloadOriginal = () => {
-    const element = document.createElement('a');
-    const file = new Blob([resource.content || activePage?.content || ''], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = resource.file_name || `${resource.title}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    element.remove();
+    // Direct endpoint download from Supabase storage or server buffer
+    window.open(`/api/documents/${resource.id}/download`, '_blank');
   };
 
   return (

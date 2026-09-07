@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractDocumentContent, MAX_FILE_SIZE } from '@/lib/documents/document-extractor';
 import { ResourceService } from '@/lib/services/resource-service';
+import { getSupabaseServerClient } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
   try {
@@ -74,14 +75,33 @@ export async function POST(req: NextRequest) {
       use_cases: ['Research', 'Learn'],
     });
 
-    // 4. Save Document & Document Pages
+    // 4. Upload raw file buffer to Supabase private storage bucket if configured
+    const storagePath = `${resource.user_id}/${resource.id}/${fileName}`;
+    try {
+      const supabaseServer = getSupabaseServerClient();
+      if (supabaseServer) {
+        const { error: uploadError } = await supabaseServer.storage
+          .from('documents')
+          .upload(storagePath, buffer, {
+            contentType: mimeType,
+            upsert: true,
+          });
+        if (uploadError) {
+          console.warn('[Storage] Supabase bucket upload notice:', uploadError.message);
+        }
+      }
+    } catch (storageErr) {
+      console.warn('[Storage] Supabase storage upload exception:', storageErr);
+    }
+
+    // 5. Save Document & Document Pages record
     const doc = await ResourceService.saveDocumentRecord({
       resource_id: resource.id,
       user_id: resource.user_id,
       file_name: fileName,
       file_size: file.size,
       mime_type: mimeType,
-      storage_path: `documents/${resource.user_id}/${resource.id}/${fileName}`,
+      storage_path: `documents/${storagePath}`,
       page_count: extraction.pageCount,
       extraction_status: extraction.status,
       extracted_text: extraction.fullText,

@@ -54,7 +54,7 @@ export class NVIDIAClient {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000); // 25s timeout
+    const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout for large models
 
     try {
       const response = await fetch(endpoint, {
