@@ -107,7 +107,7 @@ export function validateEnvironment(): {
 export const config: AppConfig = {
   env,
   isProd,
-  appUrl: process.env.NEXT_PUBLIC_APP_URL || (isProd ? 'https://resora.app' : 'http://localhost:3000'),
+  appUrl: process.env.NEXT_PUBLIC_APP_URL || (isProd ? 'https://resora-eight.vercel.app' : 'http://localhost:3000'),
   supabase: {
     url: supabaseUrl,
     publishableKey: supabasePublishableKey,
