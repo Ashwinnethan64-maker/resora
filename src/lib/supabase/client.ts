@@ -15,7 +15,8 @@ const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.placeholder';
 export function createClient(): SupabaseClient {
   if (client) return client;
 
-  const validUrl = supabaseUrl && !supabaseUrl.includes('placeholder') ? supabaseUrl : FALLBACK_URL;
+  const rawUrl = supabaseUrl && !supabaseUrl.includes('placeholder') ? supabaseUrl : FALLBACK_URL;
+  const validUrl = rawUrl.replace(/\/+$/, '');
   const validKey = supabaseAnonKey && !supabaseAnonKey.includes('placeholder') ? supabaseAnonKey : FALLBACK_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {

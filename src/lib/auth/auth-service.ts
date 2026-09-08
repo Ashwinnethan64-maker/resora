@@ -96,9 +96,10 @@ export const AuthService = {
         process.env.NEXT_PUBLIC_APP_URL ||
         window.location.origin;
 
-      const callbackUrl = `${origin}/auth/callback?from=${encodeURIComponent(redirectToPath)}`;
+      const cleanOrigin = origin.replace(/\/+$/, '');
+      const callbackUrl = `${cleanOrigin}/auth/callback?from=${encodeURIComponent(redirectToPath)}`;
 
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: callbackUrl,
@@ -111,6 +112,10 @@ export const AuthService = {
 
       if (error) {
         return { error: error.message };
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
       }
 
       return {};
