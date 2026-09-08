@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
             resource,
             rawContent: extraction.fullText,
           })
-            .then((res) => ResourceService.saveIntelligence(res.intelligence))
+            .then((res) => ResourceService.saveIntelligence(res.intelligence, authenticatedUserId))
             .catch((err) => console.warn('[Upload] Background AI doc analysis notice:', err?.message));
         } catch (aiErr) {
           console.warn('[Upload] Background AI service notice:', aiErr);

@@ -15,12 +15,12 @@ export async function GET(
       return NextResponse.json({ error: 'Missing resource id' }, { status: 400 });
     }
 
-    const resource = await ResourceService.getResourceById(id);
+    const resource = await ResourceService.getResourceById(id, userId);
     if (!resource || resource.user_id !== userId) {
       return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
     }
 
-    const intel = await ResourceService.getIntelligence(id);
+    const intel = await ResourceService.getIntelligence(id, userId);
     const doc = await ResourceService.getDocumentByResourceId(id);
 
     return NextResponse.json({
@@ -49,7 +49,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Missing resource id' }, { status: 400 });
     }
 
-    const resource = await ResourceService.getResourceById(id);
+    const resource = await ResourceService.getResourceById(id, userId);
     if (!resource || resource.user_id !== userId) {
       return NextResponse.json({ error: 'Resource not found or unauthorized' }, { status: 404 });
     }
@@ -77,7 +77,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Missing resource id' }, { status: 400 });
     }
 
-    const resource = await ResourceService.getResourceById(id);
+    const resource = await ResourceService.getResourceById(id, userId);
     if (!resource || resource.user_id !== userId) {
       return NextResponse.json({ error: 'Resource not found or unauthorized' }, { status: 404 });
     }

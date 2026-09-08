@@ -391,8 +391,8 @@ export class ResourceService {
     );
   }
 
-  static async getResourceById(id: string): Promise<ResourceModel | null> {
-    const list = await this.getAllResources();
+  static async getResourceById(id: string, userId?: string): Promise<ResourceModel | null> {
+    const list = await this.getAllResources(userId);
     return list.find((r) => r.id === id) || null;
   }
 
@@ -759,31 +759,35 @@ export class ResourceService {
   // AI RESOURCE INTELLIGENCE
   // -----------------------------------------------------------
 
-  static async getIntelligence(resourceId: string): Promise<ResourceIntelligence | null> {
-    this.initStore();
-    const map = getLocalItem<Record<string, ResourceIntelligence>>(STORAGE_KEYS.INTELLIGENCE, SEED_INTELLIGENCE);
+  static async getIntelligence(resourceId: string, userId?: string): Promise<ResourceIntelligence | null> {
+    const uid = userId || getActiveUserId();
+    this.initStore(uid);
+    const map = getLocalItem<Record<string, ResourceIntelligence>>(STORAGE_KEYS.INTELLIGENCE, SEED_INTELLIGENCE, uid);
     return map[resourceId] || null;
   }
 
   static async getAllIntelligence(userId?: string): Promise<ResourceIntelligence[]> {
-    this.initStore();
-    const map = getLocalItem<Record<string, ResourceIntelligence>>(STORAGE_KEYS.INTELLIGENCE, SEED_INTELLIGENCE);
+    const uid = userId || getActiveUserId();
+    this.initStore(uid);
+    const map = getLocalItem<Record<string, ResourceIntelligence>>(STORAGE_KEYS.INTELLIGENCE, SEED_INTELLIGENCE, uid);
     const all = Object.values(map);
     if (!userId) return all;
     return all.filter((i) => !i.user_id || i.user_id === userId);
   }
 
   static async saveIntelligence(
-    intel: Omit<ResourceIntelligence, 'id' | 'created_at' | 'updated_at'> & { id?: string }
+    intel: Omit<ResourceIntelligence, 'id' | 'created_at' | 'updated_at'> & { id?: string },
+    userId?: string
   ): Promise<ResourceIntelligence> {
-    this.initStore();
-    const map = getLocalItem<Record<string, ResourceIntelligence>>(STORAGE_KEYS.INTELLIGENCE, SEED_INTELLIGENCE);
+    const uid = userId || intel.user_id || getActiveUserId();
+    this.initStore(uid);
+    const map = getLocalItem<Record<string, ResourceIntelligence>>(STORAGE_KEYS.INTELLIGENCE, SEED_INTELLIGENCE, uid);
     const existing = map[intel.resource_id];
 
     const saved: ResourceIntelligence = {
       id: intel.id || existing?.id || `intel-${Date.now()}`,
       resource_id: intel.resource_id,
-      user_id: intel.user_id,
+      user_id: intel.user_id || uid,
       status: intel.status,
       summary: intel.summary,
       what_it_is: intel.what_it_is,
@@ -801,13 +805,14 @@ export class ResourceService {
     };
 
     map[intel.resource_id] = saved;
-    setLocalItem(STORAGE_KEYS.INTELLIGENCE, map);
+    setLocalItem(STORAGE_KEYS.INTELLIGENCE, map, uid);
     return saved;
   }
 
-  static async acceptSuggestedTag(resourceId: string, tag: string): Promise<void> {
-    const res = await this.getResourceById(resourceId);
-    const intel = await this.getIntelligence(resourceId);
+  static async acceptSuggestedTag(resourceId: string, tag: string, userId?: string): Promise<void> {
+    const uid = userId || getActiveUserId();
+    const res = await this.getResourceById(resourceId, uid);
+    const intel = await this.getIntelligence(resourceId, uid);
     if (!res) return;
 
     const currentTags = res.tags || [];
@@ -815,30 +820,32 @@ export class ResourceService {
       await this.updateResource(resourceId, {
         tags: [...currentTags, tag],
         tag_sources: { ...(res.tag_sources || {}), [tag]: 'ai' },
-      });
+      }, uid);
     }
 
     if (intel) {
       await this.saveIntelligence({
         ...intel,
         suggested_tags: (intel.suggested_tags || []).filter((t) => t !== tag),
-      });
+      }, uid);
     }
   }
 
-  static async dismissSuggestedTag(resourceId: string, tag: string): Promise<void> {
-    const intel = await this.getIntelligence(resourceId);
+  static async dismissSuggestedTag(resourceId: string, tag: string, userId?: string): Promise<void> {
+    const uid = userId || getActiveUserId();
+    const intel = await this.getIntelligence(resourceId, uid);
     if (!intel) return;
 
     await this.saveIntelligence({
       ...intel,
       suggested_tags: (intel.suggested_tags || []).filter((t) => t !== tag),
-    });
+    }, uid);
   }
 
-  static async acceptSuggestedUseCase(resourceId: string, useCase: string): Promise<void> {
-    const res = await this.getResourceById(resourceId);
-    const intel = await this.getIntelligence(resourceId);
+  static async acceptSuggestedUseCase(resourceId: string, useCase: string, userId?: string): Promise<void> {
+    const uid = userId || getActiveUserId();
+    const res = await this.getResourceById(resourceId, uid);
+    const intel = await this.getIntelligence(resourceId, uid);
     if (!res) return;
 
     const currentUcs = res.use_cases || [];
@@ -846,25 +853,26 @@ export class ResourceService {
       await this.updateResource(resourceId, {
         use_cases: [...currentUcs, useCase],
         use_case_sources: { ...(res.use_case_sources || {}), [useCase]: 'ai' },
-      });
+      }, uid);
     }
 
     if (intel) {
       await this.saveIntelligence({
         ...intel,
         suggested_use_cases: (intel.suggested_use_cases || []).filter((u) => u !== useCase),
-      });
+      }, uid);
     }
   }
 
-  static async dismissSuggestedUseCase(resourceId: string, useCase: string): Promise<void> {
-    const intel = await this.getIntelligence(resourceId);
+  static async dismissSuggestedUseCase(resourceId: string, useCase: string, userId?: string): Promise<void> {
+    const uid = userId || getActiveUserId();
+    const intel = await this.getIntelligence(resourceId, uid);
     if (!intel) return;
 
     await this.saveIntelligence({
       ...intel,
       suggested_use_cases: (intel.suggested_use_cases || []).filter((u) => u !== useCase),
-    });
+    }, uid);
   }
 
   static async findRelatedResources(resourceId: string, limit = 4): Promise<ResourceModel[]> {

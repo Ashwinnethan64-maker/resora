@@ -134,7 +134,7 @@ export async function importResourcesFromDocumentText({
               resource: item,
               rawContent: item.description,
             });
-            await ResourceService.saveIntelligence(res.intelligence);
+            await ResourceService.saveIntelligence(res.intelligence, userId);
           } catch (err: any) {
             console.warn(`[ImportEngine] AI analysis child notice (${item.id}):`, err?.message);
           }

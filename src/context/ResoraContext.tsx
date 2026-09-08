@@ -525,48 +525,78 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
 
   // AI Intelligence Handlers
   const getIntelligence = async (resourceId: string) => {
-    return ResourceService.getIntelligence(resourceId);
+    const uid = user?.id || 'usr_local';
+    return ResourceService.getIntelligence(resourceId, uid);
   };
 
   const analyzeResource = async (resourceId: string, force = false): Promise<ResourceIntelligence | null> => {
     try {
+      const uid = user?.id || 'usr_local';
+      // Find the local resource model in state to pass as fallback for serverless cold-starts
+      const localResource = resources.find((r) => r.id === resourceId) ||
+        (await ResourceService.getResourceById(resourceId, uid));
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (user?.id) {
+        headers['Authorization'] = `Bearer ${user.id}`;
+      }
+
       const res = await fetch('/api/ai/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resourceId, force }),
+        headers,
+        body: JSON.stringify({
+          resourceId,
+          force,
+          resource: localResource || undefined,
+        }),
       });
+
       if (res.ok) {
         const data = await res.json();
+        if (data?.intelligence) {
+          // Immediately persist intelligence into client-side store
+          await ResourceService.saveIntelligence(data.intelligence, uid);
+        }
         await refreshData();
         showToast('Resora Intelligence updated');
         return data.intelligence;
+      } else {
+        const errData = await res.json().catch(() => null);
+        console.error('Failed to run AI analysis:', errData?.error || res.statusText);
+        showToast(errData?.error || 'AI analysis failed');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to run AI analysis:', e);
-      showToast('AI analysis error');
+      showToast(e?.message || 'AI analysis error');
     }
     return null;
   };
 
   const acceptSuggestedTag = async (resourceId: string, tag: string) => {
-    await ResourceService.acceptSuggestedTag(resourceId, tag);
+    const uid = user?.id || 'usr_local';
+    await ResourceService.acceptSuggestedTag(resourceId, tag, uid);
     await refreshData();
     showToast(`Added #${tag} to resource tags`);
   };
 
   const dismissSuggestedTag = async (resourceId: string, tag: string) => {
-    await ResourceService.dismissSuggestedTag(resourceId, tag);
+    const uid = user?.id || 'usr_local';
+    await ResourceService.dismissSuggestedTag(resourceId, tag, uid);
     await refreshData();
   };
 
   const acceptSuggestedUseCase = async (resourceId: string, useCase: string) => {
-    await ResourceService.acceptSuggestedUseCase(resourceId, useCase);
+    const uid = user?.id || 'usr_local';
+    await ResourceService.acceptSuggestedUseCase(resourceId, useCase, uid);
     await refreshData();
     showToast(`Added "${useCase}" to resource use cases`);
   };
 
   const dismissSuggestedUseCase = async (resourceId: string, useCase: string) => {
-    await ResourceService.dismissSuggestedUseCase(resourceId, useCase);
+    const uid = user?.id || 'usr_local';
+    await ResourceService.dismissSuggestedUseCase(resourceId, useCase, uid);
     await refreshData();
   };
 
