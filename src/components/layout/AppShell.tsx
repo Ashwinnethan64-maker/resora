@@ -66,13 +66,29 @@ export function AppShell({ children }: AppShellProps) {
     ? resources.filter((r) => r.source_document_id === deletingResource.id).length
     : 0;
 
-  const navItems = [
+  interface NavItem {
+    label: string;
+    href: string;
+    icon: any;
+    exact?: boolean;
+    accent?: string;
+    badge?: number;
+    badgeColor?: string;
+  }
+
+  const researchNavItems: NavItem[] = [
     { label: 'Home', href: '/app', icon: Home, exact: true },
     { label: 'Ask Resora', href: '/app/assistant', icon: Sparkles, accent: 'bg-[#FFD93D]' },
     { label: 'Inbox', href: '/app/inbox', icon: Inbox, badge: metrics.inbox, badgeColor: 'bg-[#FF6B6B]' },
     { label: 'Library', href: '/app/library', icon: Library },
+  ];
+
+  const workspaceNavItems: NavItem[] = [
     { label: 'Projects', href: '/app/projects', icon: FolderKanban, badge: metrics.projects, badgeColor: 'bg-[#FFD93D]' },
     { label: 'Collections', href: '/app/collections', icon: Bookmark, badge: metrics.collections, badgeColor: 'bg-[#C4B5FD]' },
+  ];
+
+  const knowledgeNavItems: NavItem[] = [
     { label: 'Documents', href: '/app/documents', icon: FileText, badge: metrics.documents, badgeColor: 'bg-[#C4B5FD]' },
     { label: 'Tools', href: '/app/tools', icon: Wrench },
     { label: 'Favorites', href: '/app/favorites', icon: Heart, badge: metrics.favorites, badgeColor: 'bg-[#FF6B6B]' },
@@ -340,42 +356,124 @@ export function AppShell({ children }: AppShellProps) {
               </Link>
             </div>
 
-            <div className="px-2 text-[10px] font-mono font-black uppercase tracking-widest text-black/50 flex items-center gap-2">
-              <span className="w-2 h-2 bg-[#FF6B6B] border border-black"></span>
-              RESEARCH INDEX
-            </div>
-
-            <nav className="space-y-1">
-              {navItems.map((item) => {
-                const active = isActive(item.href, item.exact);
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className={`flex items-center justify-between px-3 py-2 text-xs font-bold transition-all border-2 ${
-                      active
-                        ? 'bg-[#FF6B6B] text-black border-black shadow-[3px_3px_0px_0px_#000] font-black'
-                        : 'bg-white text-black border-transparent hover:border-black hover:bg-[#FFFDF5] hover:shadow-[2px_2px_0px_0px_#000]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className={`w-4 h-4 stroke-[2.5] ${active ? 'text-black' : 'text-black/80'}`} />
-                      <span className="text-[13px]">{item.label}</span>
-                    </div>
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span
-                        className={`px-1.5 py-0.2 text-[10px] font-mono font-black border border-black ${
-                          item.badgeColor || (active ? 'bg-[#FFD93D] text-black' : 'bg-[#FFFDF5] text-black')
+            <div className="space-y-4">
+              {/* RESEARCH */}
+              <div>
+                <div className="px-2 pb-1 text-[9px] font-mono font-black uppercase tracking-widest text-black/40 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#FF6B6B] border border-black inline-block"></span>
+                  RESEARCH
+                </div>
+                <div className="space-y-1">
+                  {researchNavItems.map((item) => {
+                    const active = isActive(item.href, item.exact);
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        className={`flex items-center justify-between px-3 py-2 text-xs font-bold transition-all border-2 ${
+                          active
+                            ? 'bg-[#FF6B6B] text-black border-black shadow-[3px_3px_0px_0px_#000] font-black'
+                            : 'bg-white text-black border-transparent hover:border-black hover:bg-[#FFFDF5] hover:shadow-[2px_2px_0px_0px_#000]'
                         }`}
                       >
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
+                        <div className="flex items-center gap-2.5">
+                          <Icon className={`w-4 h-4 stroke-[2.5] ${active ? 'text-black' : 'text-black/80'}`} />
+                          <span className="text-[13px]">{item.label}</span>
+                        </div>
+                        {item.badge !== undefined && item.badge > 0 && (
+                          <span
+                            className={`px-1.5 py-0.2 text-[10px] font-mono font-black border border-black ${
+                              item.badgeColor || (active ? 'bg-[#FFD93D] text-black' : 'bg-[#FFFDF5] text-black')
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* WORKSPACE */}
+              <div>
+                <div className="px-2 pb-1 text-[9px] font-mono font-black uppercase tracking-widest text-black/40 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#FFD93D] border border-black inline-block"></span>
+                  WORKSPACE
+                </div>
+                <div className="space-y-1">
+                  {workspaceNavItems.map((item) => {
+                    const active = isActive(item.href);
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        className={`flex items-center justify-between px-3 py-2 text-xs font-bold transition-all border-2 ${
+                          active
+                            ? 'bg-[#FFD93D] text-black border-black shadow-[3px_3px_0px_0px_#000] font-black'
+                            : 'bg-white text-black border-transparent hover:border-black hover:bg-[#FFFDF5] hover:shadow-[2px_2px_0px_0px_#000]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Icon className={`w-4 h-4 stroke-[2.5] ${active ? 'text-black' : 'text-black/80'}`} />
+                          <span className="text-[13px]">{item.label}</span>
+                        </div>
+                        {item.badge !== undefined && item.badge > 0 && (
+                          <span
+                            className={`px-1.5 py-0.2 text-[10px] font-mono font-black border border-black ${
+                              item.badgeColor || (active ? 'bg-[#FFD93D] text-black' : 'bg-[#FFFDF5] text-black')
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* KNOWLEDGE */}
+              <div>
+                <div className="px-2 pb-1 text-[9px] font-mono font-black uppercase tracking-widest text-black/40 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#C4B5FD] border border-black inline-block"></span>
+                  KNOWLEDGE
+                </div>
+                <div className="space-y-1">
+                  {knowledgeNavItems.map((item) => {
+                    const active = isActive(item.href);
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        className={`flex items-center justify-between px-3 py-2 text-xs font-bold transition-all border-2 ${
+                          active
+                            ? 'bg-[#C4B5FD] text-black border-black shadow-[3px_3px_0px_0px_#000] font-black'
+                            : 'bg-white text-black border-transparent hover:border-black hover:bg-[#FFFDF5] hover:shadow-[2px_2px_0px_0px_#000]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Icon className={`w-4 h-4 stroke-[2.5] ${active ? 'text-black' : 'text-black/80'}`} />
+                          <span className="text-[13px]">{item.label}</span>
+                        </div>
+                        {item.badge !== undefined && item.badge > 0 && (
+                          <span
+                            className={`px-1.5 py-0.2 text-[10px] font-mono font-black border border-black ${
+                              item.badgeColor || (active ? 'bg-[#FFD93D] text-black' : 'bg-[#FFFDF5] text-black')
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Sidebar Footer */}
@@ -450,7 +548,7 @@ export function AppShell({ children }: AppShellProps) {
               </div>
 
               <nav className="space-y-1.5">
-                {navItems.map((item) => {
+                {[...researchNavItems, ...workspaceNavItems, ...knowledgeNavItems].map((item) => {
                   const active = isActive(item.href, item.exact);
                   const Icon = item.icon;
                   return (

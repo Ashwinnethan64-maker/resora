@@ -14,6 +14,7 @@ import {
   User as FirebaseUser,
 } from 'firebase/auth';
 import { auth, googleProvider, isFirebaseConfigured } from '@/lib/firebase/client';
+import { supabase } from '@/lib/supabase';
 
 export interface AuthUser {
   id: string;
@@ -32,6 +33,28 @@ const LOCAL_STORAGE_USER_KEY = 'resora_auth_user_v1';
 const LOCAL_STORAGE_SESSION_KEY = 'resora_auth_session_v1';
 
 export const AuthService = {
+  /**
+   * Upsert user profile to Supabase database for persistent identity
+   */
+  async syncProfileToDatabase(user: AuthUser): Promise<void> {
+    if (!supabase || !user.id || user.id === 'usr_local') return;
+    try {
+      await supabase.from('profiles').upsert(
+        {
+          id: user.id,
+          firebase_uid: user.id,
+          email: user.email,
+          display_name: user.name,
+          avatar_url: user.avatar_url,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'firebase_uid' }
+      );
+    } catch (e) {
+      // Non-blocking in case table is not yet migrated or offline
+    }
+  },
+
   /**
    * Helper to map Firebase User to AuthUser
    */

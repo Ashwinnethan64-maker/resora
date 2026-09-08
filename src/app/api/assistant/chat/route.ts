@@ -4,6 +4,7 @@ import { ASSISTANT_SYSTEM_PROMPT } from '@/lib/assistant/assistant-prompts';
 import { AssistantScopeType, AssistantMessageModel, AssistantCitation } from '@/types/database';
 import { AIProvider } from '@/lib/ai/provider';
 import { ConversationService } from '@/lib/services/conversation-service';
+import { getAuthenticatedUser } from '@/lib/auth/server-auth';
 import * as Sentry from '@sentry/nextjs';
 
 /**
@@ -15,11 +16,13 @@ export async function executeResearchQuery({
   scopeType = 'library',
   scopeId,
   messages = [],
+  userId,
 }: {
   query: string;
   scopeType?: AssistantScopeType;
   scopeId?: string;
   messages?: { role: 'user' | 'assistant'; content: string }[];
+  userId?: string;
 }): Promise<{
   answer: string;
   citations: AssistantCitation[];
@@ -30,7 +33,7 @@ export async function executeResearchQuery({
 
   // 1. Run Hybrid Retrieval Pipeline across user library
   const { resources, citations, contextSnippet, scopeLabel } =
-    await RetrievalService.retrieveContext(trimmedQuery, scopeType, scopeId);
+    await RetrievalService.retrieveContext(trimmedQuery, scopeType, scopeId, userId);
 
   // 2. If no resources found in scope
   if (resources.length === 0) {
@@ -164,17 +167,16 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
+    const authUser = getAuthenticatedUser(req);
     const body = await req.json();
-    // Authenticate user via session cookie or provided payload
-    const sessionCookie = req.cookies.get('resora_session')?.value;
-    const authUserId = sessionCookie || body.userId || 'usr_local';
+    const verifiedUserId = authUser?.id || body.userId || 'usr_local';
 
     const {
       query,
       scopeType = 'library',
       scopeId,
       conversationId,
-      userId = authUserId,
+      userId = verifiedUserId,
       asyncMode = false,
       messages = [],
     }: {

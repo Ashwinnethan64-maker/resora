@@ -44,10 +44,11 @@ export class RetrievalService {
   static async retrieveContext(
     query: string,
     scopeType: AssistantScopeType = 'library',
-    scopeId?: string
+    scopeId?: string,
+    userId?: string
   ): Promise<RetrievalResult> {
     const q = query.toLowerCase().trim();
-    const allResources = await ResourceService.getAllResources();
+    const allResources = await ResourceService.getAllResources(userId);
 
     // 1. Resolve Scope
     let candidateResources: ResourceModel[] = allResources.filter((r) => !r.is_archived);
@@ -60,7 +61,7 @@ export class RetrievalService {
         candidateResources = candidateResources.filter((r) => project.resource_ids?.includes(r.id));
       }
     } else if (scopeType === 'collection' && scopeId) {
-      const collections = await ResourceService.getCollections();
+      const collections = await ResourceService.getCollections(userId);
       const col = collections.find((c) => c.id === scopeId);
       if (col) {
         scopeLabel = `Collection: ${col.name}`;

@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ResourceService } from '@/lib/services/resource-service';
+import { getAuthenticatedUser } from '@/lib/auth/server-auth';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authUser = getAuthenticatedUser(req);
+    const userId = authUser?.id || 'usr_local';
+
     const { id } = await params;
     if (!id) {
       return NextResponse.json({ error: 'Missing resource id' }, { status: 400 });
     }
 
     const resource = await ResourceService.getResourceById(id);
-    if (!resource) {
+    if (!resource || resource.user_id !== userId) {
       return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
     }
 
@@ -37,12 +41,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authUser = getAuthenticatedUser(req);
+    const userId = authUser?.id || 'usr_local';
+
     const { id } = await params;
     if (!id) {
       return NextResponse.json({ error: 'Missing resource id' }, { status: 400 });
     }
 
-    const success = await ResourceService.deleteResource(id);
+    const resource = await ResourceService.getResourceById(id);
+    if (!resource || resource.user_id !== userId) {
+      return NextResponse.json({ error: 'Resource not found or unauthorized' }, { status: 404 });
+    }
+
+    const success = await ResourceService.deleteResource(id, userId);
     return NextResponse.json({ success, id });
   } catch (err: any) {
     return NextResponse.json(
@@ -57,13 +69,21 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authUser = getAuthenticatedUser(req);
+    const userId = authUser?.id || 'usr_local';
+
     const { id } = await params;
     if (!id) {
       return NextResponse.json({ error: 'Missing resource id' }, { status: 400 });
     }
 
+    const resource = await ResourceService.getResourceById(id);
+    if (!resource || resource.user_id !== userId) {
+      return NextResponse.json({ error: 'Resource not found or unauthorized' }, { status: 404 });
+    }
+
     const body = await req.json();
-    const updated = await ResourceService.updateResource(id, body);
+    const updated = await ResourceService.updateResource(id, body, userId);
     return NextResponse.json({ success: true, resource: updated });
   } catch (err: any) {
     return NextResponse.json(

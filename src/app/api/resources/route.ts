@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ResourceService } from '@/lib/services/resource-service';
+import { getAuthenticatedUser } from '@/lib/auth/server-auth';
 
 export async function GET(req: NextRequest) {
   try {
+    const authUser = getAuthenticatedUser(req);
+    const userId = authUser?.id || 'usr_local';
+
     const { searchParams } = new URL(req.url);
     const isArchived = searchParams.has('isArchived') ? searchParams.get('isArchived') === 'true' : undefined;
     const isInbox = searchParams.has('isInbox') ? searchParams.get('isInbox') === 'true' : undefined;
@@ -19,6 +23,9 @@ export async function GET(req: NextRequest) {
       query,
     });
 
+    // Enforce strict tenant isolation
+    resources = resources.filter((r) => r.user_id === userId);
+
     if (sourceDocumentId) {
       resources = resources.filter((r) => r.source_document_id === sourceDocumentId);
     }
@@ -34,6 +41,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const authUser = getAuthenticatedUser(req);
+    const userId = authUser?.id || 'usr_local';
+
     const body = await req.json();
     if (!body.url && !body.original_url) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
@@ -45,9 +55,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid URL structure' }, { status: 400 });
     }
 
-    // Check duplicate
+    // Check duplicate within user's library
     const existing = await ResourceService.checkDuplicate(norm.normalizedUrl);
-    if (existing) {
+    if (existing && existing.user_id === userId) {
       return NextResponse.json(
         {
           status: 'duplicate',
@@ -60,6 +70,7 @@ export async function POST(req: NextRequest) {
     }
 
     const resource = await ResourceService.createResource({
+      user_id: userId,
       title: body.title || norm.domain,
       url: norm.normalizedUrl,
       original_url: body.original_url || body.url,

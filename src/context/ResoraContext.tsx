@@ -187,11 +187,28 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('resora_auth_user_v1', JSON.stringify(mapped));
         document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = 'resora_logged_out=; path=/; max-age=0';
+        // Trigger profile persistence in Supabase if configured
+        AuthService.syncProfileToDatabase(mapped).catch(() => {});
       } else {
         setUser(null);
         localStorage.removeItem('resora_auth_user_v1');
         document.cookie = 'resora_session=; path=/; max-age=0';
         document.cookie = 'resora_logged_out=true; path=/; max-age=604800; SameSite=Lax';
+        // Clear active UI state so previous user data never flashes
+        setResources([]);
+        setInboxResources([]);
+        setProjects([]);
+        setCollections([]);
+        setMetrics({
+          total: 0,
+          inbox: 0,
+          favorites: 0,
+          documents: 0,
+          projects: 0,
+          collections: 0,
+          analyzed: 0,
+          discoveredTopics: [],
+        });
       }
       setAuthLoading(false);
     });
@@ -240,20 +257,21 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
   }, [activeAiJob, showToast]);
 
   const refreshData = useCallback(async () => {
+    const activeUid = user?.id || 'usr_local';
     setIsLoading(true);
     try {
-      // Automatically keep the library 100% duplicate-free
+      // Automatically keep the library 100% duplicate-free for the current user
       await ResourceService.cleanDuplicates();
 
-      const all = await ResourceService.getAllResources();
+      const all = await ResourceService.getAllResources(activeUid);
       const nonArchived = all.filter((r) => !r.is_archived);
       setResources(nonArchived.filter((r) => !r.is_inbox));
       setInboxResources(nonArchived.filter((r) => r.is_inbox));
 
       const [projs, cols, m] = await Promise.all([
-        ResourceService.getProjects(),
-        ResourceService.getCollections(),
-        ResourceService.getMetrics(),
+        ResourceService.getProjects(activeUid),
+        ResourceService.getCollections(activeUid),
+        ResourceService.getMetrics(activeUid),
       ]);
 
       setProjects(projs);
@@ -265,7 +283,11 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [showToast]);
+  }, [user?.id, showToast]);
+
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
 
   const cleanAllDuplicates = useCallback(async () => {
     const res = await ResourceService.cleanDuplicates();

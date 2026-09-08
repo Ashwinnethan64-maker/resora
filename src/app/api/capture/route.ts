@@ -3,6 +3,7 @@ import { ResourceService } from '@/lib/services/resource-service';
 import { detectSourceAndType } from '@/lib/url-helper';
 import { normalizeCanonicalUrl } from '@/lib/resources/normalize-url';
 import { validateUrlForSsrf } from '@/lib/security/ssrf';
+import { getAuthenticatedUser } from '@/lib/auth/server-auth';
 
 /**
  * RESORA Quick Capture REST API
@@ -10,9 +11,9 @@ import { validateUrlForSsrf } from '@/lib/security/ssrf';
  */
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get('authorization');
-    // For local resilience and production bearer token validation:
-    // In production, verify authHeader with Supabase auth token
+    const authUser = getAuthenticatedUser(req);
+    const userId = authUser?.id || 'usr_local';
+
     const body = await req.json();
     const { url: rawUrl, title: userTitle, note, tags = [], use_cases = [] } = body;
 
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
     const { detectedType, detectedSource } = detectSourceAndType(url, domain);
 
     const resource = await ResourceService.createResource({
+      user_id: userId,
       title: userTitle || domain.replace(/\.[a-z]+$/i, ''),
       url,
       domain,

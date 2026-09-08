@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ResourceService } from '@/lib/services/resource-service';
 import { getSupabaseServerClient } from '@/lib/supabase';
+import { getAuthenticatedUser } from '@/lib/auth/server-auth';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authUser = getAuthenticatedUser(req);
+    const userId = authUser?.id || 'usr_local';
+
     const { id } = await params;
     if (!id) {
       return NextResponse.json({ error: 'Missing resource id' }, { status: 400 });
     }
 
     const doc = await ResourceService.getDocumentByResourceId(id);
-    if (!doc) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+    if (!doc || doc.user_id !== userId) {
+      return NextResponse.json({ error: 'Document not found or access denied' }, { status: 404 });
     }
 
     // Try reading directly from Supabase private storage if configured

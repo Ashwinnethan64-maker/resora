@@ -4,12 +4,13 @@ import { ResourceService } from '@/lib/services/resource-service';
 import { getSupabaseServerClient } from '@/lib/supabase';
 import { findDuplicateDocument } from '@/lib/resources/deduplicate';
 import { importResourcesFromDocumentText } from '@/lib/resources/import-resources';
+import { getAuthenticatedUser } from '@/lib/auth/server-auth';
 
 export async function POST(req: NextRequest) {
   try {
-    // Authenticate user from session cookie
-    const sessionCookie = req.cookies.get('resora_session')?.value;
-    const authenticatedUserId = sessionCookie || 'usr_local';
+    // Authenticate user with server-side token/session verification
+    const authUser = getAuthenticatedUser(req);
+    const authenticatedUserId = authUser?.id || 'usr_local';
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;

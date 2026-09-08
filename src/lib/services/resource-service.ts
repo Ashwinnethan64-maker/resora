@@ -190,7 +190,26 @@ const SEED_COLLECTIONS: CollectionModel[] = [];
 // In-memory store fallback for server-side environments (Node.js/Next.js Route Handlers)
 const SERVER_CACHE: Record<string, any> = {};
 
-function getLocalItem<T>(key: string, fallback: T): T {
+export function getActiveUserId(): string {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('resora_auth_user_v1');
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u?.id) return u.id;
+      }
+    } catch {}
+  }
+  return 'usr_local';
+}
+
+function getUserKey(baseKey: string, userId?: string): string {
+  const uid = userId || getActiveUserId();
+  return `${baseKey}_${uid}`;
+}
+
+function getLocalItem<T>(baseKey: string, fallback: T, userId?: string): T {
+  const key = getUserKey(baseKey, userId);
   if (typeof window === 'undefined') {
     if (SERVER_CACHE[key] !== undefined) return SERVER_CACHE[key];
     return fallback;
@@ -203,7 +222,8 @@ function getLocalItem<T>(key: string, fallback: T): T {
   }
 }
 
-function setLocalItem<T>(key: string, value: T): void {
+function setLocalItem<T>(baseKey: string, value: T, userId?: string): void {
+  const key = getUserKey(baseKey, userId);
   if (typeof window === 'undefined') {
     SERVER_CACHE[key] = value;
     return;
@@ -217,92 +237,66 @@ function setLocalItem<T>(key: string, value: T): void {
 
 const PURGE_MOCK_IDS = new Set<string>(['proj-1', 'proj-2', 'col-1', 'col-2', 'res-5', 'res-doc-2']);
 
-function getActiveUserId(): string {
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem('resora_auth_user_v1');
-      if (stored) {
-        const u = JSON.parse(stored);
-        if (u?.id) return u.id;
-      }
-    } catch {}
-  }
-  return 'usr_local';
-}
-
 export class ResourceService {
-  static initStore() {
+  static initStore(userId?: string) {
     if (typeof window === 'undefined') return;
-    if (!localStorage.getItem(STORAGE_KEYS.RESOURCES)) {
-      setLocalItem(STORAGE_KEYS.RESOURCES, SEED_RESOURCES);
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.INTELLIGENCE)) {
-      setLocalItem(STORAGE_KEYS.INTELLIGENCE, SEED_INTELLIGENCE);
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.DOCUMENTS)) {
-      setLocalItem(STORAGE_KEYS.DOCUMENTS, SEED_DOCUMENTS);
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.PROJECTS)) {
-      setLocalItem(STORAGE_KEYS.PROJECTS, SEED_PROJECTS);
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.COLLECTIONS)) {
-      setLocalItem(STORAGE_KEYS.COLLECTIONS, SEED_COLLECTIONS);
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.TAGS)) {
+    const uid = userId || getActiveUserId();
+    const userInitializedKey = `resora_initialized_${uid}`;
+
+    if (!localStorage.getItem(userInitializedKey)) {
+      // For initial default guest or starter experience
+      const initialResources: ResourceModel[] = uid === 'usr_local'
+        ? SEED_RESOURCES
+        : [
+            {
+              id: `res-welcome-${uid.slice(0, 6)}`,
+              user_id: uid,
+              title: 'Welcome to RESORA — Personal Research Intelligence',
+              url: 'https://resora-eight.vercel.app',
+              domain: 'resora.app',
+              description: 'Save it. Understand it. Use it. Your personal knowledge index is isolated, private, and ready for research synthesis.',
+              resource_type: 'website',
+              source_type: 'manual',
+              is_favorite: true,
+              is_archived: false,
+              is_inbox: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              tags: ['Getting Started', 'Research', 'Intelligence'],
+              use_cases: ['Learn', 'Research'],
+            },
+          ];
+
+      setLocalItem(STORAGE_KEYS.RESOURCES, initialResources, uid);
+      setLocalItem(STORAGE_KEYS.INTELLIGENCE, {}, uid);
+      setLocalItem(STORAGE_KEYS.DOCUMENTS, {}, uid);
+      setLocalItem(STORAGE_KEYS.PROJECTS, [], uid);
+      setLocalItem(STORAGE_KEYS.COLLECTIONS, [], uid);
+      
       const tags: TagModel[] = INITIAL_SUGGESTED_TAGS.map((name, i) => ({
-        id: `tag-${i}`,
-        user_id: 'usr_local',
+        id: `tag-${uid}-${i}`,
+        user_id: uid,
         name,
         created_at: new Date().toISOString(),
       }));
-      setLocalItem(STORAGE_KEYS.TAGS, tags);
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.USE_CASES)) {
+      setLocalItem(STORAGE_KEYS.TAGS, tags, uid);
+
       const ucs: UseCaseModel[] = INITIAL_SUGGESTED_USE_CASES.map((name, i) => ({
-        id: `uc-${i}`,
-        user_id: 'usr_local',
+        id: `uc-${uid}-${i}`,
+        user_id: uid,
         name,
         created_at: new Date().toISOString(),
       }));
-      setLocalItem(STORAGE_KEYS.USE_CASES, ucs);
-    }
+      setLocalItem(STORAGE_KEYS.USE_CASES, ucs, uid);
 
-    // Auto-purge any stale mock cards ('proj-1', 'proj-2', 'col-1', 'col-2', 'res-5', 'res-doc-2')
-    try {
-      const storedProjs = getLocalItem<ProjectModel[]>(STORAGE_KEYS.PROJECTS, []);
-      if (storedProjs.some((p) => PURGE_MOCK_IDS.has(p.id))) {
-        setLocalItem(STORAGE_KEYS.PROJECTS, storedProjs.filter((p) => !PURGE_MOCK_IDS.has(p.id)));
-      }
-
-      const storedCols = getLocalItem<CollectionModel[]>(STORAGE_KEYS.COLLECTIONS, []);
-      if (storedCols.some((c) => PURGE_MOCK_IDS.has(c.id))) {
-        setLocalItem(STORAGE_KEYS.COLLECTIONS, storedCols.filter((c) => !PURGE_MOCK_IDS.has(c.id)));
-      }
-
-      const storedRes = getLocalItem<ResourceModel[]>(STORAGE_KEYS.RESOURCES, []);
-      if (storedRes.some((r) => PURGE_MOCK_IDS.has(r.id))) {
-        setLocalItem(STORAGE_KEYS.RESOURCES, storedRes.filter((r) => !PURGE_MOCK_IDS.has(r.id)));
-      }
-
-      const storedDocs = getLocalItem<Record<string, DocumentModel>>(STORAGE_KEYS.DOCUMENTS, {});
-      let docsChanged = false;
-      for (const k of Object.keys(storedDocs)) {
-        if (PURGE_MOCK_IDS.has(k)) {
-          delete storedDocs[k];
-          docsChanged = true;
-        }
-      }
-      if (docsChanged) {
-        setLocalItem(STORAGE_KEYS.DOCUMENTS, storedDocs);
-      }
-    } catch (e) {
-      console.error('Failed to purge mock seed data:', e);
+      localStorage.setItem(userInitializedKey, 'true');
     }
   }
 
-  static async getAllResources(): Promise<ResourceModel[]> {
-    this.initStore();
-    const list = getLocalItem<ResourceModel[]>(STORAGE_KEYS.RESOURCES, SEED_RESOURCES);
+  static async getAllResources(userId?: string): Promise<ResourceModel[]> {
+    const uid = userId || getActiveUserId();
+    this.initStore(uid);
+    const list = getLocalItem<ResourceModel[]>(STORAGE_KEYS.RESOURCES, [], uid);
     return list.filter((r) => !PURGE_MOCK_IDS.has(r.id));
   }
 
@@ -420,11 +414,12 @@ export class ResourceService {
       }
     }
 
-    const all = await this.getAllResources();
+    const uid = (data as any).user_id || getActiveUserId();
+    const all = await this.getAllResources(uid);
     const uniqueSuffix = Math.random().toString(36).substring(2, 9);
     const newResource: ResourceModel = {
       id: data.id || `res-${Date.now()}-${uniqueSuffix}`,
-      user_id: (data as any).user_id || getActiveUserId(),
+      user_id: uid,
       title: data.title,
       url: canonicalUrl,
       domain: norm.domain || data.domain,
@@ -455,7 +450,7 @@ export class ResourceService {
     };
 
     const updated = [newResource, ...all];
-    setLocalItem(STORAGE_KEYS.RESOURCES, updated);
+    setLocalItem(STORAGE_KEYS.RESOURCES, updated, uid);
 
     // Trigger asynchronous AI analysis for web/doc resource
     if (typeof window !== 'undefined' && data.source_type !== 'upload') {
@@ -519,8 +514,9 @@ export class ResourceService {
     return resources;
   }
 
-  static async updateResource(id: string, updates: Partial<ResourceModel>): Promise<ResourceModel | null> {
-    const all = await this.getAllResources();
+  static async updateResource(id: string, updates: Partial<ResourceModel>, userId?: string): Promise<ResourceModel | null> {
+    const uid = userId || getActiveUserId();
+    const all = await this.getAllResources(uid);
     let updatedResource: ResourceModel | null = null;
 
     const next = all.map((r) => {
@@ -536,7 +532,7 @@ export class ResourceService {
     });
 
     if (updatedResource) {
-      setLocalItem(STORAGE_KEYS.RESOURCES, next);
+      setLocalItem(STORAGE_KEYS.RESOURCES, next, uid);
     }
     return updatedResource;
   }
@@ -559,8 +555,9 @@ export class ResourceService {
     await this.updateResource(id, { is_archived });
   }
 
-  static async deleteResource(id: string): Promise<boolean> {
-    const all = await this.getAllResources();
+  static async deleteResource(id: string, userId?: string): Promise<boolean> {
+    const uid = userId || getActiveUserId();
+    const all = await this.getAllResources(uid);
     const target = all.find((r) => r.id === id);
     if (!target) return false;
 
@@ -573,37 +570,37 @@ export class ResourceService {
     });
 
     const next = all.filter((r) => !idsToDelete.has(r.id));
-    setLocalItem(STORAGE_KEYS.RESOURCES, next);
+    setLocalItem(STORAGE_KEYS.RESOURCES, next, uid);
 
     // Also remove from intelligence store
-    const intelMap = getLocalItem<Record<string, ResourceIntelligence>>(STORAGE_KEYS.INTELLIGENCE, SEED_INTELLIGENCE);
+    const intelMap = getLocalItem<Record<string, ResourceIntelligence>>(STORAGE_KEYS.INTELLIGENCE, {}, uid);
     idsToDelete.forEach((delId) => {
       delete intelMap[delId];
     });
-    setLocalItem(STORAGE_KEYS.INTELLIGENCE, intelMap);
+    setLocalItem(STORAGE_KEYS.INTELLIGENCE, intelMap, uid);
 
     // Also delete document & page records
-    const docs = getLocalItem<Record<string, DocumentModel>>(STORAGE_KEYS.DOCUMENTS, SEED_DOCUMENTS);
+    const docs = getLocalItem<Record<string, DocumentModel>>(STORAGE_KEYS.DOCUMENTS, {}, uid);
     idsToDelete.forEach((delId) => {
       delete docs[delId];
     });
-    setLocalItem(STORAGE_KEYS.DOCUMENTS, docs);
+    setLocalItem(STORAGE_KEYS.DOCUMENTS, docs, uid);
 
     // Remove deleted resource IDs from projects
-    const projects = await this.getProjects();
+    const projects = await this.getProjects(uid);
     const updatedProjects = projects.map((p) => ({
       ...p,
       resource_ids: p.resource_ids?.filter((rId) => !idsToDelete.has(rId)) || [],
     }));
-    setLocalItem(STORAGE_KEYS.PROJECTS, updatedProjects);
+    setLocalItem(STORAGE_KEYS.PROJECTS, updatedProjects, uid);
 
     // Remove deleted resource IDs from collections
-    const collections = await this.getCollections();
+    const collections = await this.getCollections(uid);
     const updatedCollections = collections.map((c) => ({
       ...c,
       resource_ids: c.resource_ids?.filter((rId) => !idsToDelete.has(rId)) || [],
     }));
-    setLocalItem(STORAGE_KEYS.COLLECTIONS, updatedCollections);
+    setLocalItem(STORAGE_KEYS.COLLECTIONS, updatedCollections, uid);
 
     return true;
   }
@@ -768,10 +765,12 @@ export class ResourceService {
     return map[resourceId] || null;
   }
 
-  static async getAllIntelligence(): Promise<ResourceIntelligence[]> {
+  static async getAllIntelligence(userId?: string): Promise<ResourceIntelligence[]> {
     this.initStore();
     const map = getLocalItem<Record<string, ResourceIntelligence>>(STORAGE_KEYS.INTELLIGENCE, SEED_INTELLIGENCE);
-    return Object.values(map);
+    const all = Object.values(map);
+    if (!userId) return all;
+    return all.filter((i) => !i.user_id || i.user_id === userId);
   }
 
   static async saveIntelligence(
@@ -918,17 +917,19 @@ export class ResourceService {
   // COLLECTIONS & PROJECTS
   // -----------------------------------------------------------
 
-  static async getCollections(): Promise<CollectionModel[]> {
-    this.initStore();
-    const list = getLocalItem<CollectionModel[]>(STORAGE_KEYS.COLLECTIONS, SEED_COLLECTIONS);
+  static async getCollections(userId?: string): Promise<CollectionModel[]> {
+    const uid = userId || getActiveUserId();
+    this.initStore(uid);
+    const list = getLocalItem<CollectionModel[]>(STORAGE_KEYS.COLLECTIONS, [], uid);
     return list.filter((c) => !PURGE_MOCK_IDS.has(c.id));
   }
 
-  static async createCollection(name: string, description: string, topic?: string): Promise<CollectionModel> {
-    const all = await this.getCollections();
+  static async createCollection(name: string, description: string, topic?: string, userId?: string): Promise<CollectionModel> {
+    const uid = userId || getActiveUserId();
+    const all = await this.getCollections(uid);
     const newCol: CollectionModel = {
       id: `col-${Date.now()}`,
-      user_id: getActiveUserId(),
+      user_id: uid,
       name,
       description,
       topic: topic || 'Custom Stack',
@@ -936,20 +937,22 @@ export class ResourceService {
       updated_at: new Date().toISOString(),
       resource_ids: [],
     };
-    setLocalItem(STORAGE_KEYS.COLLECTIONS, [newCol, ...all]);
+    setLocalItem(STORAGE_KEYS.COLLECTIONS, [newCol, ...all], uid);
     return newCol;
   }
 
-  static async deleteCollection(id: string): Promise<boolean> {
-    const all = await this.getCollections();
+  static async deleteCollection(id: string, userId?: string): Promise<boolean> {
+    const uid = userId || getActiveUserId();
+    const all = await this.getCollections(uid);
     const next = all.filter((c) => c.id !== id);
-    setLocalItem(STORAGE_KEYS.COLLECTIONS, next);
+    setLocalItem(STORAGE_KEYS.COLLECTIONS, next, uid);
     return true;
   }
 
-  static async getProjects(): Promise<ProjectModel[]> {
-    this.initStore();
-    const list = getLocalItem<ProjectModel[]>(STORAGE_KEYS.PROJECTS, SEED_PROJECTS);
+  static async getProjects(userId?: string): Promise<ProjectModel[]> {
+    const uid = userId || getActiveUserId();
+    this.initStore(uid);
+    const list = getLocalItem<ProjectModel[]>(STORAGE_KEYS.PROJECTS, [], uid);
     return list.filter((p) => !PURGE_MOCK_IDS.has(p.id));
   }
 
@@ -971,11 +974,12 @@ export class ResourceService {
     keywords?: string[];
     groups?: string[];
     color?: string;
-  }): Promise<ProjectModel> {
-    const all = await this.getProjects();
+  }, userId?: string): Promise<ProjectModel> {
+    const uid = userId || getActiveUserId();
+    const all = await this.getProjects(uid);
     const newProj: ProjectModel = {
       id: `proj-${Date.now()}`,
-      user_id: getActiveUserId(),
+      user_id: uid,
       name: data.name,
       description: data.description,
       objective: data.objective || '',
@@ -993,12 +997,13 @@ export class ResourceService {
       last_opened_at: new Date().toISOString(),
       resource_ids: [],
     };
-    setLocalItem(STORAGE_KEYS.PROJECTS, [newProj, ...all]);
+    setLocalItem(STORAGE_KEYS.PROJECTS, [newProj, ...all], uid);
     return newProj;
   }
 
-  static async updateProject(id: string, updates: Partial<ProjectModel>): Promise<ProjectModel | null> {
-    const all = await this.getProjects();
+  static async updateProject(id: string, updates: Partial<ProjectModel>, userId?: string): Promise<ProjectModel | null> {
+    const uid = userId || getActiveUserId();
+    const all = await this.getProjects(uid);
     let updated: ProjectModel | null = null;
     const next = all.map((p) => {
       if (p.id === id) {
@@ -1008,24 +1013,25 @@ export class ResourceService {
       return p;
     });
     if (updated) {
-      setLocalItem(STORAGE_KEYS.PROJECTS, next);
+      setLocalItem(STORAGE_KEYS.PROJECTS, next, uid);
     }
     return updated;
   }
 
-  static async deleteProject(id: string): Promise<boolean> {
-    const all = await this.getProjects();
+  static async deleteProject(id: string, userId?: string): Promise<boolean> {
+    const uid = userId || getActiveUserId();
+    const all = await this.getProjects(uid);
     const next = all.filter((p) => p.id !== id);
-    setLocalItem(STORAGE_KEYS.PROJECTS, next);
+    setLocalItem(STORAGE_KEYS.PROJECTS, next, uid);
 
     // Clean up project notes and decisions
-    const notesMap = getLocalItem<Record<string, ProjectNoteModel[]>>(STORAGE_KEYS.PROJECT_NOTES, SEED_PROJECT_NOTES);
+    const notesMap = getLocalItem<Record<string, ProjectNoteModel[]>>(STORAGE_KEYS.PROJECT_NOTES, SEED_PROJECT_NOTES, uid);
     delete notesMap[id];
-    setLocalItem(STORAGE_KEYS.PROJECT_NOTES, notesMap);
+    setLocalItem(STORAGE_KEYS.PROJECT_NOTES, notesMap, uid);
 
-    const decMap = getLocalItem<Record<string, ProjectDecisionModel[]>>(STORAGE_KEYS.PROJECT_DECISIONS, SEED_PROJECT_DECISIONS);
+    const decMap = getLocalItem<Record<string, ProjectDecisionModel[]>>(STORAGE_KEYS.PROJECT_DECISIONS, SEED_PROJECT_DECISIONS, uid);
     delete decMap[id];
-    setLocalItem(STORAGE_KEYS.PROJECT_DECISIONS, decMap);
+    setLocalItem(STORAGE_KEYS.PROJECT_DECISIONS, decMap, uid);
 
     return true;
   }
@@ -1239,16 +1245,18 @@ export class ResourceService {
 
   // --- Cross-Project Resource Usage ---
 
-  static async getCrossProjectUsage(resourceId: string): Promise<ProjectModel[]> {
-    const all = await this.getProjects();
+  static async getCrossProjectUsage(resourceId: string, userId?: string): Promise<ProjectModel[]> {
+    const uid = userId || getActiveUserId();
+    const all = await this.getProjects(uid);
     return all.filter((p) => p.resource_ids?.includes(resourceId));
   }
 
-  static async getMetrics() {
-    const resources = await this.getAllResources();
-    const projects = await this.getProjects();
-    const collections = await this.getCollections();
-    const intelList = await this.getAllIntelligence();
+  static async getMetrics(userId?: string) {
+    const uid = userId || getActiveUserId();
+    const resources = await this.getAllResources(uid);
+    const projects = await this.getProjects(uid);
+    const collections = await this.getCollections(uid);
+    const intelList = await this.getAllIntelligence(uid);
 
     const activeResources = resources.filter((r) => !r.is_archived);
     const inbox = activeResources.filter((r) => r.is_inbox);

@@ -76,18 +76,18 @@ function AppHomeContent() {
       {/* Metric Cards Row */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: 'TOTAL RESOURCES', count: metrics.total, color: 'bg-white', href: '/app/library' },
-          { label: 'UNPROCESSED INBOX', count: metrics.inbox, color: 'bg-[#FF6B6B]', href: '/app/inbox' },
-          { label: 'ACTIVE PROJECTS', count: metrics.projects, color: 'bg-[#FFD93D]', href: '/app/projects' },
-          { label: 'DOCUMENTS / PDFS', count: metrics.documents, color: 'bg-[#C4B5FD]', href: '/app/documents' },
-          { label: 'FAVORITES PINNED', count: metrics.favorites, color: 'bg-white', href: '/app/favorites' },
+          { label: 'TOTAL RESOURCES', count: metrics.total, accent: 'border-l-4 border-l-black', href: '/app/library' },
+          { label: 'UNPROCESSED INBOX', count: metrics.inbox, accent: 'border-l-4 border-l-[#FF6B6B]', href: '/app/inbox' },
+          { label: 'ACTIVE PROJECTS', count: metrics.projects, accent: 'border-l-4 border-l-[#FFD93D]', href: '/app/projects' },
+          { label: 'DOCUMENTS / PDFS', count: metrics.documents, accent: 'border-l-4 border-l-[#C4B5FD]', href: '/app/documents' },
+          { label: 'FAVORITES PINNED', count: metrics.favorites, accent: 'border-l-4 border-l-[#FF6B6B]', href: '/app/favorites' },
         ].map((m) => (
           <Link
             key={m.label}
             href={m.href}
-            className={`p-3.5 ${m.color} border-2 border-black shadow-[3px_3px_0px_#000] hover:-translate-y-0.5 transition-transform flex flex-col justify-between`}
+            className={`p-3.5 bg-white border-2 border-black ${m.accent} shadow-[3px_3px_0px_#000] hover:-translate-y-0.5 transition-transform flex flex-col justify-between`}
           >
-            <div className="text-[10px] font-mono font-bold text-black/70 leading-tight">{m.label}</div>
+            <div className="text-[10px] font-mono font-bold text-black/60 leading-tight">{m.label}</div>
             <div className="text-2xl font-black text-black mt-2">{m.count}</div>
           </Link>
         ))}
