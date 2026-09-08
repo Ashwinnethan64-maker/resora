@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { RetrievalService } from '@/lib/assistant/retrieval-service';
+import { IntentGuard } from '@/lib/assistant/intent-guard';
 import { ASSISTANT_SYSTEM_PROMPT } from '@/lib/assistant/assistant-prompts';
 import { AssistantScopeType, AssistantMessageModel } from '@/types/database';
 import { AIProvider } from '@/lib/ai/provider';
@@ -62,12 +63,62 @@ export async function POST(req: NextRequest) {
         };
 
         try {
+          // 0. Domain Guard & Deterministic Intent Evaluation
+          const guard = await IntentGuard.evaluate(trimmedQuery, userId);
+          if (!guard.isDomainRelevant && guard.deterministicResponse) {
+            sendEvent('status', 'complete');
+            sendEvent('token', guard.deterministicResponse);
+
+            const assistantMessage: AssistantMessageModel = {
+              id: `msg_${Date.now()}_a`,
+              conversation_id: effectiveConvId,
+              user_id: userId,
+              role: 'assistant',
+              content: guard.deterministicResponse,
+              citations: [],
+              used_resource_ids: [],
+              created_at: new Date().toISOString(),
+            };
+            await ConversationService.addMessage(assistantMessage);
+            sendEvent('done', { messageId: assistantMessage.id, fullAnswer: guard.deterministicResponse });
+            controller.close();
+            return;
+          }
+
+          if ((guard.intent === 'COUNT' || guard.intent === 'FAVORITES' || guard.intent === 'RECENT') && guard.deterministicResponse) {
+            sendEvent('status', 'complete');
+            if (guard.citations && guard.citations.length > 0) {
+              sendEvent('meta', {
+                citations: guard.citations,
+                usedResourceIds: guard.usedResourceIds || [],
+                scopeLabel: guard.intent === 'FAVORITES' ? 'Favorites' : 'Recent Items',
+                conversationId: effectiveConvId,
+              });
+            }
+            sendEvent('token', guard.deterministicResponse);
+
+            const assistantMessage: AssistantMessageModel = {
+              id: `msg_${Date.now()}_a`,
+              conversation_id: effectiveConvId,
+              user_id: userId,
+              role: 'assistant',
+              content: guard.deterministicResponse,
+              citations: guard.citations || [],
+              used_resource_ids: guard.usedResourceIds || [],
+              created_at: new Date().toISOString(),
+            };
+            await ConversationService.addMessage(assistantMessage);
+            sendEvent('done', { messageId: assistantMessage.id, fullAnswer: guard.deterministicResponse });
+            controller.close();
+            return;
+          }
+
           // 1. Initial status
           sendEvent('status', 'retrieving');
 
           // 2. Retrieval
           const { resources, citations, contextSnippet, scopeLabel } =
-            await RetrievalService.retrieveContext(trimmedQuery, scopeType, scopeId);
+            await RetrievalService.retrieveContext(trimmedQuery, scopeType, scopeId, userId);
 
           // Emit metadata early so citations and UI cards render immediately
           sendEvent('meta', {

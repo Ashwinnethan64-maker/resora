@@ -32,15 +32,27 @@ export default function LandingPage() {
           </Link>
 
           <div className="flex items-center gap-3">
+            {/* Desktop Sign In link */}
             <Link
               href="/auth"
               className="text-xs md:text-sm font-bold uppercase tracking-wider text-black px-4 py-2 border-2 border-black bg-white hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000] hidden sm:inline-block"
             >
               Sign In
             </Link>
+
+            {/* Mobile Header CTA: SIGN IN -> (compact, 44px touch target, non-competing) */}
+            <Link
+              href="/auth"
+              className="sm:hidden btn-neo flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[44px] bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs tracking-wider border-2 border-black shadow-[2px_2px_0px_0px_#000] whitespace-nowrap"
+            >
+              <span>SIGN IN</span>
+              <ArrowRight className="w-3.5 h-3.5 stroke-[3]" />
+            </Link>
+
+            {/* Desktop Header CTA: ENTER RESORA -> */}
             <Link
               href="/app"
-              className="btn-neo flex items-center gap-2 px-5 py-2.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-2 border-black shadow-[3px_3px_0px_0px_#000]"
+              className="hidden sm:flex btn-neo items-center gap-2 px-5 py-2.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-2 border-black shadow-[3px_3px_0px_0px_#000] whitespace-nowrap"
             >
               <span>ENTER RESORA</span>
               <ArrowRight className="w-4 h-4 stroke-[3]" />

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RetrievalService } from '@/lib/assistant/retrieval-service';
+import { IntentGuard } from '@/lib/assistant/intent-guard';
 import { ASSISTANT_SYSTEM_PROMPT } from '@/lib/assistant/assistant-prompts';
 import { AssistantScopeType, AssistantMessageModel, AssistantCitation } from '@/types/database';
 import { AIProvider } from '@/lib/ai/provider';
@@ -30,6 +31,26 @@ export async function executeResearchQuery({
   scopeLabel: string;
 }> {
   const trimmedQuery = query.trim();
+
+  // 0. Domain Guard & Deterministic Intent Evaluation
+  const guard = await IntentGuard.evaluate(trimmedQuery, userId);
+  if (!guard.isDomainRelevant && guard.deterministicResponse) {
+    return {
+      answer: guard.deterministicResponse,
+      citations: [],
+      usedResourceIds: [],
+      scopeLabel: 'Research Assistant',
+    };
+  }
+
+  if ((guard.intent === 'COUNT' || guard.intent === 'FAVORITES' || guard.intent === 'RECENT') && guard.deterministicResponse) {
+    return {
+      answer: guard.deterministicResponse,
+      citations: guard.citations || [],
+      usedResourceIds: guard.usedResourceIds || [],
+      scopeLabel: guard.intent === 'COUNT' ? 'Library Metrics' : guard.intent === 'FAVORITES' ? 'Favorites' : 'Recent Items',
+    };
+  }
 
   // 1. Run Hybrid Retrieval Pipeline across user library
   const { resources, citations, contextSnippet, scopeLabel } =

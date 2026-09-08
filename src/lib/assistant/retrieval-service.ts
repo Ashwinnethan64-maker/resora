@@ -89,9 +89,8 @@ export class RetrievalService {
       .split(/[\s,.;:?!]+/)
       .filter((w) => w.length > 2 && !['what', 'have', 'saved', 'about', 'from', 'this', 'that', 'with', 'your'].includes(w));
 
-    const scored: { resource: ResourceModel; score: number; matchedPages: DocumentPageModel[]; matchSnippet: string }[] = [];
-
-    for (const res of candidateResources) {
+    // 2. Parallel Multi-Signal Scoring Engine across candidate resources
+    const scoringPromises = candidateResources.map(async (res) => {
       let score = 0;
       const matchedPages: DocumentPageModel[] = [];
       let matchSnippet = res.description || '';
@@ -115,32 +114,37 @@ export class RetrievalService {
         score += 25;
       }
 
-      // Check document pages if document type
+      // Check document pages if document type (Parallel async fetch)
       if (res.resource_type === 'pdf' || res.resource_type === 'document') {
-        const docRecord = await ResourceService.getDocumentByResourceId(res.id);
-        if (docRecord) {
-          const pages = await ResourceService.getDocumentPages(docRecord.id);
-          for (const page of pages) {
-            const pageText = page.content.toLowerCase();
-            let pageHits = 0;
-            for (const token of queryTokens) {
-              if (pageText.includes(token)) pageHits++;
-            }
-            if (pageHits > 0) {
-              score += pageHits * 10;
-              matchedPages.push(page);
-              if (!matchSnippet || matchSnippet === res.description) {
-                matchSnippet = `Page ${page.page_number}: ${page.content.slice(0, 180)}...`;
+        try {
+          const docRecord = await ResourceService.getDocumentByResourceId(res.id);
+          if (docRecord) {
+            const pages = await ResourceService.getDocumentPages(docRecord.id);
+            for (const page of pages) {
+              const pageText = page.content.toLowerCase();
+              let pageHits = 0;
+              for (const token of queryTokens) {
+                if (pageText.includes(token)) pageHits++;
+              }
+              if (pageHits > 0) {
+                score += pageHits * 10;
+                matchedPages.push(page);
+                if (!matchSnippet || matchSnippet === res.description) {
+                  matchSnippet = `Page ${page.page_number}: ${page.content.slice(0, 180)}...`;
+                }
               }
             }
           }
+        } catch {
+          // Graceful ignore
         }
       }
 
-      if (score > 0) {
-        scored.push({ resource: res, score, matchedPages, matchSnippet });
-      }
-    }
+      return score > 0 ? { resource: res, score, matchedPages, matchSnippet } : null;
+    });
+
+    const evaluated = await Promise.all(scoringPromises);
+    const scored = evaluated.filter((item): item is NonNullable<typeof item> => item !== null);
 
     // Rank descending
     const ranked = scored.sort((a, b) => b.score - a.score).slice(0, 6);

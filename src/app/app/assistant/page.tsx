@@ -17,6 +17,7 @@ import {
 } from '@/types/database';
 import { ConversationService } from '@/lib/services/conversation-service';
 import { PageHeader } from '@/components/ui/SectionLabel';
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import {
   Send,
   Loader2,
@@ -53,10 +54,21 @@ function AssistantContent() {
   const [selectedViewerDoc, setSelectedViewerDoc] = useState<ResourceModel | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const feedContainerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const [userScrolledUp, setUserScrolledUp] = useState(false);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (force = false) => {
+    if (force || !userScrolledUp) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleFeedScroll = () => {
+    if (!feedContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = feedContainerRef.current;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setUserScrolledUp(!isNearBottom);
   };
 
   useEffect(() => {
@@ -172,30 +184,6 @@ function AssistantContent() {
 
     const activeController = new AbortController();
     abortControllerRef.current = activeController;
-
-    fetch('/api/assistant/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: text,
-        scopeType,
-        scopeId,
-        conversationId,
-        asyncMode: true,
-        messages: messages.map((m) => ({ role: m.role, content: m.content })),
-      }),
-    }).then(async (res) => {
-      if (res.ok) {
-        const d = await res.json();
-        if (d.jobId) {
-          trackAiJob({
-            jobId: d.jobId,
-            query: text,
-            scopeLabel: getActiveScopeLabel(),
-          });
-        }
-      }
-    }).catch(() => {});
 
     try {
       const response = await fetch('/api/assistant/chat/stream', {
@@ -370,7 +358,11 @@ function AssistantContent() {
       </div>
 
       {/* Message Feed / Grounded Conversation */}
-      <div className="flex-1 space-y-6 overflow-y-auto py-2">
+      <div
+        ref={feedContainerRef}
+        onScroll={handleFeedScroll}
+        className="flex-1 space-y-6 overflow-y-auto py-2 relative"
+      >
         {messages.length === 0 ? (
           <div className="p-8 sm:p-12 bg-white border-3 border-black shadow-[6px_6px_0px_#000] text-center space-y-5">
             <div className="w-12 h-12 bg-[#FFD93D] border-2 border-black flex items-center justify-center mx-auto shadow-[3px_3px_0px_#000]">
@@ -431,10 +423,14 @@ function AssistantContent() {
                   className={`p-4 sm:p-5 border-2 border-black text-xs sm:text-sm leading-relaxed max-w-2xl ${
                     isUser
                       ? 'bg-[#FFD93D] text-black font-bold shadow-[3px_3px_0px_#000]'
-                      : 'bg-white text-black font-normal shadow-[4px_4px_0px_#000] whitespace-pre-wrap'
+                      : 'bg-white text-black font-normal shadow-[4px_4px_0px_#000]'
                   }`}
                 >
-                  {m.content}
+                  {isUser ? (
+                    <span className="whitespace-pre-wrap">{m.content}</span>
+                  ) : (
+                    <MarkdownRenderer content={m.content} />
+                  )}
                 </div>
 
                 {/* Citations & Source Cards (Assistant Only) */}
@@ -477,8 +473,8 @@ function AssistantContent() {
             </div>
 
             {streamingContent ? (
-              <div className="p-4 sm:p-5 border-2 border-black text-xs sm:text-sm leading-relaxed max-w-2xl bg-white text-black font-normal shadow-[4px_4px_0px_#000] whitespace-pre-wrap">
-                {streamingContent}
+              <div className="p-4 sm:p-5 border-2 border-black text-xs sm:text-sm leading-relaxed max-w-2xl bg-white text-black font-normal shadow-[4px_4px_0px_#000]">
+                <MarkdownRenderer content={streamingContent} />
                 <span className="inline-block w-2 h-4 ml-1 bg-black animate-pulse align-middle" />
               </div>
             ) : (
@@ -509,6 +505,20 @@ function AssistantContent() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {userScrolledUp && (
+          <div className="sticky bottom-2 flex justify-center z-20 pointer-events-none">
+            <button
+              onClick={() => {
+                setUserScrolledUp(false);
+                scrollToBottom(true);
+              }}
+              className="pointer-events-auto btn-neo px-3 py-1.5 bg-[#FFD93D] hover:bg-[#ffe169] text-black border-2 border-black text-[11px] font-black uppercase shadow-[2px_2px_0px_#000] transition-transform active:translate-y-0.5"
+            >
+              ↓ Jump to latest
+            </button>
           </div>
         )}
 

@@ -6,6 +6,7 @@ import { useResora } from '@/context/ResoraContext';
 import { ResourceModel } from '@/types/database';
 import { RESOURCE_TYPE_CONFIGS } from '@/lib/resource-types';
 import { NeoBadge, NeoSticker } from '@/components/brand/NeoSticker';
+import { resolveResourceTarget } from '@/lib/resources/resolve-target';
 import {
   ExternalLink,
   Heart,
@@ -45,6 +46,7 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
   const [copied, setCopied] = useState(false);
 
   const typeConfig = RESOURCE_TYPE_CONFIGS[resource.resource_type] || RESOURCE_TYPE_CONFIGS.website;
+  const target = resolveResourceTarget(resource);
 
   const handleCopyLink = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -150,12 +152,12 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
               <Heart className={`w-3.5 h-3.5 ${resource.is_favorite ? 'fill-black' : ''}`} />
             </button>
             <a
-              href={resource.url}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={target.href}
+              target={target.isExternal ? '_blank' : undefined}
+              rel={target.isExternal ? 'noopener noreferrer' : undefined}
               onClick={handleOpenLink}
               className="p-1.5 border-2 border-black bg-white text-black hover:bg-[#C4B5FD] transition-colors"
-              title="Open external link"
+              title={target.label}
             >
               <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </a>
@@ -369,14 +371,14 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
             Dossier
           </Link>
           <a
-            href={resource.url}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={target.href}
+            target={target.isExternal ? '_blank' : undefined}
+            rel={target.isExternal ? 'noopener noreferrer' : undefined}
             onClick={handleOpenLink}
             className="btn-neo flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-[#FFD93D] border-2 border-black text-black font-black uppercase text-[10px] tracking-wider shadow-[2px_2px_0px_#000]"
           >
-            <span>Visit</span>
-            <ArrowUpRight className="w-3 h-3 stroke-[2.5]" />
+            <span>{target.type === 'internal_document' ? 'Read' : 'Visit'}</span>
+            <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
           </a>
         </div>
       </div>

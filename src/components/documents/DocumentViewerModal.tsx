@@ -15,6 +15,7 @@ import {
   ZoomIn,
   ZoomOut
 } from 'lucide-react';
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 
 interface DocumentViewerModalProps {
   isOpen: boolean;
@@ -262,10 +263,24 @@ export function DocumentViewerModal({
             {/* Document Text Rendering Pane */}
             <div className="flex-1 overflow-y-auto p-6 sm:p-10 flex justify-center bg-[#FFFDF5] bg-grid-paper">
               <div
-                className="w-full max-w-3xl rounded-none bg-white border-4 border-black p-6 sm:p-8 shadow-[8px_8px_0px_0px_#000] text-black font-mono leading-relaxed whitespace-pre-wrap select-text"
+                className="w-full max-w-3xl rounded-none bg-white border-4 border-black p-6 sm:p-8 shadow-[8px_8px_0px_0px_#000] text-black select-text"
                 style={{ fontSize: `${(zoomLevel / 100) * 14}px` }}
               >
-                {activePage?.content || 'No text extracted for this page.'}
+                {activePage?.content ? (
+                  resource.file_name?.toLowerCase().endsWith('.md') ||
+                  resource.file_name?.toLowerCase().endsWith('.markdown') ||
+                  resource.url?.toLowerCase().endsWith('.md') ? (
+                    <MarkdownRenderer content={activePage.content} />
+                  ) : (
+                    <div className="font-mono leading-relaxed whitespace-pre-wrap">
+                      {activePage.content}
+                    </div>
+                  )
+                ) : (
+                  <div className="font-mono text-xs text-black/60 italic">
+                    No text extracted for this page.
+                  </div>
+                )}
               </div>
             </div>
 

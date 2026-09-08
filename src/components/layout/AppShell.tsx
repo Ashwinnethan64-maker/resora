@@ -173,11 +173,13 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-[#FFFDF5] text-black flex flex-col antialiased selection:bg-[#FFD93D] selection:text-black">
-      {/* Toast Notification */}
+      {/* Toast Notification - Compact & Responsive */}
       {activeToast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 bg-[#FFD93D] border-3 border-black text-black shadow-[4px_4px_0px_0px_#000] animate-in slide-in-from-bottom-3 duration-100 text-xs font-black uppercase">
-          <CheckCircle2 className="w-4 h-4 text-black shrink-0 stroke-[3]" />
-          <span>{activeToast}</span>
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center justify-between gap-2.5 px-3 py-2 bg-[#FFD93D] border-2 border-black text-black shadow-[3px_3px_0px_0px_#000] animate-in slide-in-from-bottom-2 duration-150 text-xs font-bold max-w-[90vw] sm:max-w-sm">
+          <div className="flex items-center gap-2 min-w-0">
+            <CheckCircle2 className="w-3.5 h-3.5 text-black shrink-0 stroke-[3]" />
+            <span className="truncate font-mono uppercase text-[11px]">{activeToast}</span>
+          </div>
         </div>
       )}
 

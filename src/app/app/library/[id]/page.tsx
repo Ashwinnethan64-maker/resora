@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import { ResourceCard } from '@/components/resources/ResourceCard';
 import { ResourceIntelligencePanel } from '@/components/resources/ResourceIntelligencePanel';
 import { RESOURCE_TYPE_CONFIGS } from '@/lib/resource-types';
+import { resolveResourceTarget } from '@/lib/resources/resolve-target';
 
 const DocumentViewerModal = dynamic(
   () => import('@/components/documents/DocumentViewerModal').then((mod) => mod.DocumentViewerModal),
@@ -297,25 +298,45 @@ export default function ResourceDetailPage() {
             )}
 
             {/* Primary Action Button */}
-            <a
-              href={resource.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={handleOpenResource}
-              className="btn-neo flex items-center gap-2 px-6 py-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-black border-4 border-black font-black text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
-            >
-              {resource.storage_path ? (
-                <>
-                  <Download className="w-4 h-4 stroke-[3]" />
-                  <span>DOWNLOAD</span>
-                </>
-              ) : (
-                <>
-                  <span>SOURCE LINK</span>
-                  <ExternalLink className="w-4 h-4 stroke-[3]" />
-                </>
-              )}
-            </a>
+            {(() => {
+              const target = resolveResourceTarget(resource);
+              if (target.type === 'internal_document') {
+                return (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsViewerOpen(true)}
+                      className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#FFD93D] hover:bg-[#ffe366] text-black border-4 border-black font-black text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
+                    >
+                      <Eye className="w-4 h-4 stroke-[3]" />
+                      <span>READ DOCUMENT</span>
+                    </button>
+                    {target.downloadUrl && (
+                      <a
+                        href={target.downloadUrl}
+                        download={resource.file_name || 'document'}
+                        className="btn-neo flex items-center gap-2 px-4 py-3 bg-white hover:bg-[#C4B5FD] text-black border-4 border-black font-black text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
+                        title="Download Original"
+                      >
+                        <Download className="w-4 h-4 stroke-[3]" />
+                        <span className="hidden sm:inline">DOWNLOAD</span>
+                      </a>
+                    )}
+                  </div>
+                );
+              }
+              return (
+                <a
+                  href={target.href}
+                  target={target.isExternal ? '_blank' : undefined}
+                  rel={target.isExternal ? 'noopener noreferrer' : undefined}
+                  onClick={handleOpenResource}
+                  className="btn-neo flex items-center gap-2 px-6 py-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-black border-4 border-black font-black text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
+                >
+                  <span>{target.label}</span>
+                  {target.isExternal && <ExternalLink className="w-4 h-4 stroke-[3]" />}
+                </a>
+              );
+            })()}
           </div>
         </div>
       </div>

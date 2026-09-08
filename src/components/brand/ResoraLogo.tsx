@@ -72,7 +72,7 @@ export function ResoraLogo({
           )}
         </div>
         {showTagline && (
-          <span className="text-[11px] font-mono text-black font-bold tracking-tight mt-1">
+          <span className="text-[11px] font-mono text-black font-bold tracking-tight mt-1 hidden sm:inline-block">
             Save it. Understand it. Use it.
           </span>
         )}

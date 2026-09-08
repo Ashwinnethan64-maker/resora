@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ResourceService } from '@/lib/services/resource-service';
 import { AIService } from '@/lib/ai/ai-service';
+import { WebFetcher } from '@/lib/ai/web-fetcher';
 import { getAuthenticatedUser } from '@/lib/auth/server-auth';
 
 export async function POST(req: NextRequest) {
@@ -45,12 +46,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ intelligence: existing, cached: true });
     }
 
-    // 3. Resolve raw content (from resource, document model, or body)
+    // 3. Resolve raw content (from resource, document model, web extraction, or body)
     let contentToAnalyze = resource.content || body.rawContent || '';
     if (!contentToAnalyze || contentToAnalyze.length < 50) {
       const doc = await ResourceService.getDocumentByResourceId(resourceId);
       if (doc?.extracted_text) {
         contentToAnalyze = doc.extracted_text;
+      }
+    }
+
+    // If still empty and valid URL exists, run server-side safe WebFetcher
+    if ((!contentToAnalyze || contentToAnalyze.length < 50) && resource.url && (resource.url.startsWith('http://') || resource.url.startsWith('https://'))) {
+      try {
+        const webData = await WebFetcher.extractFromUrl(resource.url);
+        if (webData.success && webData.readableText) {
+          contentToAnalyze = webData.readableText;
+          // Enrich resource metadata if description was missing
+          if (!resource.description && webData.description) {
+            resource.description = webData.description;
+            await ResourceService.updateResource(resource.id, { description: webData.description }, userId);
+          }
+        }
+      } catch (fetchErr) {
+        console.warn('WebFetcher extraction failed for resource URL:', fetchErr);
       }
     }
 
