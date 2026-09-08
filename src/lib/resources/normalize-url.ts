@@ -81,7 +81,7 @@ export function normalizeCanonicalUrl(inputUrl: string): NormalizedUrlResult {
     }
 
     // 3. Remove leading www. from domain
-    let domain = parsed.hostname.replace(/^www\./, '');
+    const domain = parsed.hostname.replace(/^www\./, '');
 
     // 4. Strip known marketing/tracking parameters only
     const keysToRemove: string[] = [];

@@ -15,8 +15,22 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+function getMetadataBase(): URL {
+  const customUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (customUrl) {
+    try {
+      return new URL(customUrl.startsWith('http') ? customUrl : `https://${customUrl}`);
+    } catch {}
+  }
+  const vercelUrl = process.env.VERCEL_URL;
+  if (vercelUrl) {
+    return new URL(`https://${vercelUrl}`);
+  }
+  return new URL('https://resora-eight.vercel.app');
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: getMetadataBase(),
   title: {
     default: "RESORA — Personal Research Intelligence",
     template: "%s — RESORA",

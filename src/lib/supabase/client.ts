@@ -9,13 +9,19 @@ const supabaseAnonKey =
 
 let client: SupabaseClient | null = null;
 
+const FALLBACK_URL = 'https://placeholder-resora.supabase.co';
+const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.placeholder';
+
 export function createClient(): SupabaseClient {
   if (client) return client;
 
+  const validUrl = supabaseUrl && !supabaseUrl.includes('placeholder') ? supabaseUrl : FALLBACK_URL;
+  const validKey = supabaseAnonKey && !supabaseAnonKey.includes('placeholder') ? supabaseAnonKey : FALLBACK_KEY;
+
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('[Supabase] Missing NEXT_PUBLIC_SUPABASE_URL or publishable key');
+    console.warn('[Supabase] Missing NEXT_PUBLIC_SUPABASE_URL or publishable key. Initializing fallback client.');
   }
 
-  client = createBrowserClient(supabaseUrl, supabaseAnonKey);
+  client = createBrowserClient(validUrl, validKey);
   return client;
 }

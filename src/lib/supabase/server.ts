@@ -8,10 +8,15 @@ const supabaseAnonKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   '';
 
+const FALLBACK_URL = 'https://placeholder-resora.supabase.co';
+const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.placeholder';
+
 export async function createClient(): Promise<SupabaseClient> {
   const cookieStore = await cookies();
+  const validUrl = supabaseUrl && !supabaseUrl.includes('placeholder') ? supabaseUrl : FALLBACK_URL;
+  const validKey = supabaseAnonKey && !supabaseAnonKey.includes('placeholder') ? supabaseAnonKey : FALLBACK_KEY;
 
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient(validUrl, validKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

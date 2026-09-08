@@ -11,6 +11,8 @@ import {
   ResourceFilterOptions,
 } from '@/types/database';
 import { ResourceService } from '@/lib/services/resource-service';
+import { getSupabaseBrowserClient } from '@/lib/supabase';
+import { AuthService } from '@/lib/auth/auth-service';
 
 interface Metrics {
   total: number;
@@ -161,8 +163,6 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
   // Supabase Auth State Synchronization
   useEffect(() => {
     let isMounted = true;
-    const { getSupabaseBrowserClient } = require('@/lib/supabase');
-    const { AuthService } = require('@/lib/auth/auth-service');
     const supabase = getSupabaseBrowserClient();
 
     // Fetch initial user
@@ -241,17 +241,6 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [activeAiJob, showToast]);
 
-  const cleanAllDuplicates = useCallback(async () => {
-    const res = await ResourceService.cleanDuplicates();
-    await refreshData();
-    if (res.removedCount > 0) {
-      showToast(`Removed ${res.removedCount} duplicate resources`);
-    } else {
-      showToast('No duplicates found — your library is 100% deduplicated');
-    }
-    return res;
-  }, [showToast]);
-
   const refreshData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -279,6 +268,17 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
   }, [showToast]);
+
+  const cleanAllDuplicates = useCallback(async () => {
+    const res = await ResourceService.cleanDuplicates();
+    await refreshData();
+    if (res.removedCount > 0) {
+      showToast(`Removed ${res.removedCount} duplicate resources`);
+    } else {
+      showToast('No duplicates found — your library is 100% deduplicated');
+    }
+    return res;
+  }, [showToast, refreshData]);
 
   useEffect(() => {
     refreshData();

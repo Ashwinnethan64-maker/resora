@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { createClient as createBrowserSupabaseClient } from './supabase/client';
 
 const supabaseUrl =
@@ -53,7 +53,6 @@ export function getSupabaseServerClient(): SupabaseClient | null {
   }
 
   // Use raw createClient for backend service-role operations
-  const { createClient } = require('@supabase/supabase-js');
   return createClient(supabaseUrl, serverSecret, {
     auth: {
       persistSession: false,
