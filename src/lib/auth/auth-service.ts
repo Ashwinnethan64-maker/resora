@@ -1,7 +1,10 @@
 /**
  * RESORA Authentication Service
- * Manages Supabase Auth credentials when configured, with seamless persistent local session fallback.
+ * Production Supabase Auth with Google OAuth and resilient local session fallback.
  */
+
+import { getSupabaseBrowserClient } from '@/lib/supabase';
+import type { User, Session } from '@supabase/supabase-js';
 
 export interface AuthUser {
   id: string;
@@ -21,7 +24,28 @@ const LOCAL_STORAGE_SESSION_KEY = 'resora_auth_session_v1';
 
 export const AuthService = {
   /**
-   * Get current authenticated user
+   * Helper to map Supabase User to AuthUser
+   */
+  mapSupabaseUser(user: User): AuthUser {
+    const meta = user.user_metadata || {};
+    const fullName =
+      meta.full_name ||
+      meta.name ||
+      (meta.first_name ? `${meta.first_name} ${meta.last_name || ''}`.trim() : '') ||
+      user.email?.split('@')[0] ||
+      'Researcher';
+
+    return {
+      id: user.id,
+      email: user.email || '',
+      name: fullName,
+      avatar_url: meta.avatar_url || meta.picture || '',
+      created_at: user.created_at,
+    };
+  },
+
+  /**
+   * Get current authenticated user (synchronous cached read)
    */
   getCurrentUser(): AuthUser | null {
     if (typeof window === 'undefined') return null;
@@ -33,15 +57,66 @@ export const AuthService = {
         // invalid JSON
       }
     }
-    // Default workspace user if not logged out
-    const defaultUser: AuthUser = {
-      id: 'usr_local',
-      email: 'ashwin@developer.local',
-      name: 'Ashwin',
-      created_at: '2026-09-01T00:00:00.000Z',
-    };
-    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(defaultUser));
-    return defaultUser;
+    return null;
+  },
+
+  /**
+   * Asynchronously get authenticated user from Supabase with local cache update
+   */
+  async fetchUser(): Promise<AuthUser | null> {
+    if (typeof window === 'undefined') return null;
+
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      if (!error && user) {
+        const mapped = this.mapSupabaseUser(user);
+        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
+        // Remove logged out cookie
+        document.cookie = 'resora_logged_out=; path=/; max-age=0';
+        return mapped;
+      }
+    } catch (err) {
+      console.warn('[AuthService] Fetching Supabase user notice:', err);
+    }
+
+    return this.getCurrentUser();
+  },
+
+  /**
+   * Trigger Google OAuth Sign-In
+   */
+  async signInWithGoogle(redirectToPath = '/app'): Promise<{ error?: string }> {
+    if (typeof window === 'undefined') return { error: 'Window not defined' };
+
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const origin =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        window.location.origin;
+
+      const callbackUrl = `${origin}/auth/callback?from=${encodeURIComponent(redirectToPath)}`;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: callbackUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (err: any) {
+      return { error: err?.message || 'Failed to initialize Google authentication.' };
+    }
   },
 
   /**
@@ -52,22 +127,31 @@ export const AuthService = {
       throw new Error('Email and password are required');
     }
 
-    // In a live Supabase environment, supabase.auth.signInWithPassword will be used.
-    // For local resilience and instant testing:
-    const user: AuthUser = {
-      id: 'usr_' + Math.abs(email.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0)).toString(16),
-      email: email.trim().toLowerCase(),
-      name: email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      created_at: new Date().toISOString(),
-    };
+    const supabase = getSupabaseBrowserClient();
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
-      // Set a browser session cookie for Edge middleware route protection
-      document.cookie = `resora_session=${user.id}; path=/; max-age=604800; SameSite=Lax`;
+      if (error) {
+        // If Supabase authentication fails, check error
+        throw error;
+      }
+
+      if (data.user) {
+        const mapped = this.mapSupabaseUser(data.user);
+        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
+        document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = 'resora_logged_out=; path=/; max-age=0';
+        return { user: mapped };
+      }
+    } catch (authErr: any) {
+      // Re-throw genuine credentials errors
+      throw authErr;
     }
 
-    return { user };
+    throw new Error('Sign in failed. Please verify credentials.');
   },
 
   /**
@@ -78,32 +162,54 @@ export const AuthService = {
       throw new Error('Email and password are required');
     }
 
-    const user: AuthUser = {
-      id: 'usr_' + Date.now().toString(36),
+    const supabase = getSupabaseBrowserClient();
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
-      name: name.trim() || email.split('@')[0],
-      created_at: new Date().toISOString(),
-    };
+      password,
+      options: {
+        data: {
+          full_name: name.trim(),
+        },
+      },
+    });
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
-      document.cookie = `resora_session=${user.id}; path=/; max-age=604800; SameSite=Lax`;
+    if (error) {
+      throw error;
     }
 
-    return { user };
+    if (data.user) {
+      const mapped = this.mapSupabaseUser(data.user);
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
+      document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
+      document.cookie = 'resora_logged_out=; path=/; max-age=0';
+      return { user: mapped };
+    }
+
+    throw new Error('Sign up failed.');
   },
 
   /**
    * Update current user profile
    */
   async updateProfile(updates: Partial<AuthUser>): Promise<AuthUser> {
+    const supabase = getSupabaseBrowserClient();
+    try {
+      if (updates.name) {
+        await supabase.auth.updateUser({
+          data: { full_name: updates.name },
+        });
+      }
+    } catch (e) {
+      console.warn('[AuthService] Supabase updateUser notice:', e);
+    }
+
     const current = this.getCurrentUser();
     const updated: AuthUser = {
       ...current,
       ...updates,
       id: current?.id || 'usr_local',
-      email: updates.email || current?.email || 'ashwin@developer.local',
-      name: updates.name || current?.name || 'Ashwin',
+      email: updates.email || current?.email || '',
+      name: updates.name || current?.name || 'Researcher',
       created_at: current?.created_at || new Date().toISOString(),
     };
 
@@ -114,13 +220,27 @@ export const AuthService = {
   },
 
   /**
-   * Sign Out
+   * Complete Sign Out Everywhere
    */
   async signOut(): Promise<void> {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
-      localStorage.removeItem(LOCAL_STORAGE_SESSION_KEY);
-      document.cookie = 'resora_session=; path=/; max-age=0';
+    if (typeof window === 'undefined') return;
+
+    try {
+      const supabase = getSupabaseBrowserClient();
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('[AuthService] Supabase signOut notice:', err);
     }
+
+    // Clear client-side user and conversation caches
+    localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+    localStorage.removeItem(LOCAL_STORAGE_SESSION_KEY);
+    localStorage.removeItem('resora_ai_conversations_v1');
+    localStorage.removeItem('resora_ai_messages_v1');
+    localStorage.removeItem('resora_ai_jobs_v1');
+
+    // Set cookie markers
+    document.cookie = 'resora_session=; path=/; max-age=0';
+    document.cookie = 'resora_logged_out=true; path=/; max-age=604800; SameSite=Lax';
   },
 };

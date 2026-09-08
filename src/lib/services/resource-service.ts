@@ -215,7 +215,20 @@ function setLocalItem<T>(key: string, value: T): void {
   }
 }
 
-const PURGE_MOCK_IDS = new Set(['proj-1', 'proj-2', 'col-1', 'col-2', 'res-5', 'res-doc-2']);
+const PURGE_MOCK_IDS = new Set<string>(['proj-1', 'proj-2', 'col-1', 'col-2', 'res-5', 'res-doc-2']);
+
+function getActiveUserId(): string {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('resora_auth_user_v1');
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u?.id) return u.id;
+      }
+    } catch {}
+  }
+  return 'usr_local';
+}
 
 export class ResourceService {
   static initStore() {
@@ -392,6 +405,7 @@ export class ResourceService {
   static async createResource(
     data: Omit<ResourceModel, 'id' | 'user_id' | 'created_at' | 'updated_at'> & {
       id?: string;
+      user_id?: string;
     }
   ): Promise<ResourceModel> {
     const norm = normalizeCanonicalUrl(data.url || data.original_url || '');
@@ -410,7 +424,7 @@ export class ResourceService {
     const uniqueSuffix = Math.random().toString(36).substring(2, 9);
     const newResource: ResourceModel = {
       id: data.id || `res-${Date.now()}-${uniqueSuffix}`,
-      user_id: 'usr_local',
+      user_id: (data as any).user_id || getActiveUserId(),
       title: data.title,
       url: canonicalUrl,
       domain: norm.domain || data.domain,
@@ -914,7 +928,7 @@ export class ResourceService {
     const all = await this.getCollections();
     const newCol: CollectionModel = {
       id: `col-${Date.now()}`,
-      user_id: 'usr_local',
+      user_id: getActiveUserId(),
       name,
       description,
       topic: topic || 'Custom Stack',
@@ -961,7 +975,7 @@ export class ResourceService {
     const all = await this.getProjects();
     const newProj: ProjectModel = {
       id: `proj-${Date.now()}`,
-      user_id: 'usr_local',
+      user_id: getActiveUserId(),
       name: data.name,
       description: data.description,
       objective: data.objective || '',

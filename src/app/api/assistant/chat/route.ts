@@ -164,12 +164,24 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
+    const body = await req.json();
+    let authUserId = body.userId || 'usr_local';
+
+    try {
+      const { createClient: createServerSupabaseClient } = await import('@/lib/supabase/server');
+      const supabase = await createServerSupabaseClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        authUserId = user.id;
+      }
+    } catch {}
+
     const {
       query,
       scopeType = 'library',
       scopeId,
       conversationId,
-      userId = 'usr_local',
+      userId = authUserId,
       asyncMode = false,
       messages = [],
     }: {
@@ -180,7 +192,7 @@ export async function POST(req: NextRequest) {
       userId?: string;
       asyncMode?: boolean;
       messages?: { role: 'user' | 'assistant'; content: string }[];
-    } = await req.json();
+    } = body;
 
     if (!query || !query.trim()) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 });

@@ -78,6 +78,9 @@ interface ResoraContextType {
   findRelatedResources: (resourceId: string, limit?: number) => Promise<ResourceModel[]>;
   activeToast: string | null;
   showToast: (msg: string) => void;
+  user: import('@/lib/auth/auth-service').AuthUser | null;
+  isAuthenticated: boolean;
+  authLoading: boolean;
   activeAiJob: {
     jobId: string;
     query: string;
@@ -93,6 +96,17 @@ interface ResoraContextType {
 const ResoraContext = createContext<ResoraContextType | undefined>(undefined);
 
 export function ResoraProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<import('@/lib/auth/auth-service').AuthUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('resora_auth_user_v1');
+      if (stored) {
+        try { return JSON.parse(stored); } catch {}
+      }
+    }
+    return null;
+  });
+  const [authLoading, setAuthLoading] = useState(true);
+
   const [resources, setResources] = useState<ResourceModel[]>([]);
   const [inboxResources, setInboxResources] = useState<ResourceModel[]>([]);
   const [projects, setProjects] = useState<ProjectModel[]>([]);
@@ -142,6 +156,52 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => {
       setActiveToast((curr) => (curr === msg ? null : curr));
     }, 3500);
+  }, []);
+
+  // Supabase Auth State Synchronization
+  useEffect(() => {
+    let isMounted = true;
+    const { getSupabaseBrowserClient } = require('@/lib/supabase');
+    const { AuthService } = require('@/lib/auth/auth-service');
+    const supabase = getSupabaseBrowserClient();
+
+    // Fetch initial user
+    AuthService.fetchUser()
+      .then((u: any) => {
+        if (isMounted) {
+          setUser(u);
+          setAuthLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setAuthLoading(false);
+      });
+
+    // Listen to Supabase auth state changes (SIGN_IN, SIGN_OUT, TOKEN_REFRESHED)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+      if (!isMounted) return;
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        if (session?.user) {
+          const mapped = AuthService.mapSupabaseUser(session.user);
+          setUser(mapped);
+          localStorage.setItem('resora_auth_user_v1', JSON.stringify(mapped));
+          document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = 'resora_logged_out=; path=/; max-age=0';
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        localStorage.removeItem('resora_auth_user_v1');
+        document.cookie = 'resora_session=; path=/; max-age=0';
+        document.cookie = 'resora_logged_out=true; path=/; max-age=604800; SameSite=Lax';
+      }
+      setAuthLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Global background poller for active AI job across routes
@@ -551,6 +611,9 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
         findRelatedResources,
         activeToast,
         showToast,
+        user,
+        isAuthenticated: Boolean(user),
+        authLoading,
         activeAiJob,
         trackAiJob,
         clearAiJob,

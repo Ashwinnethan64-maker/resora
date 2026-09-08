@@ -162,24 +162,32 @@ Configure your `.env.local` settings:
 # Application URL
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# Optional: Supabase (falls back to resilient local storage if omitted)
+# Supabase Auth & Database (Official SSR Architecture)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# Optional: OpenAI API Key (falls back to deterministic grounded synthesis if omitted)
-OPENAI_API_KEY=sk-...
-OPENAI_BASE_URL=https://api.openai.com/v1
-AI_MODEL_NAME=gpt-4o-mini
+# NVIDIA AI Intelligence Provider
+NVIDIA_API_KEY=your-nvidia-key
+NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+NVIDIA_TEXT_MODEL=nvidia/nemotron-3-ultra-550b-a55b
 ```
 
-### 4. Run Development Server
+### 4. Supabase & Google OAuth Configuration
+1. Go to your **Supabase Dashboard** -> **Authentication** -> **Providers** -> **Google**.
+2. Enable Google provider and paste your Google Cloud **Client ID** and **Client Secret**.
+3. In your **Google Cloud Console** (OAuth 2.0 Client Credentials), add the Authorized Redirect URI:
+   `https://<your-project-id>.supabase.co/auth/v1/callback`
+4. Apply database migrations:
+   Run `supabase/migrations/20260908_auth_profiles.sql` in the Supabase SQL Editor.
+
+### 5. Run Development Server
 ```bash
 npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-### 5. Production Build Verification
+### 6. Production Build Verification
 ```bash
 npm run build
 npm run start

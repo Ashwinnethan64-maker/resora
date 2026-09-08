@@ -18,14 +18,21 @@ import {
 } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { showToast, resources, projects, collections, cleanAllDuplicates } = useResora();
-  const currentUser = AuthService.getCurrentUser();
+  const { showToast, resources, projects, collections, cleanAllDuplicates, user } = useResora();
 
   const [activeTab, setActiveTab] = useState<'profile' | 'workspace' | 'data'>('profile');
-  const [name, setName] = useState(currentUser?.name || 'Ashwin');
-  const [email, setEmail] = useState(currentUser?.email || 'ashwin@developer.local');
+  const [name, setName] = useState(user?.name || 'Researcher');
+  const [email, setEmail] = useState(user?.email || '');
   const [defaultView, setDefaultView] = useState('grid');
   const [defaultScope, setDefaultScope] = useState('library');
+
+  // Update when user loads
+  React.useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+    }
+  }, [user]);
 
   // Deletion modal state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -212,13 +219,25 @@ export default function SettingsPage() {
               />
             </div>
 
-            <div className="pt-2">
+            <div className="pt-4 flex flex-wrap items-center gap-3 border-t-2 border-black/10">
               <button
                 type="submit"
-                className="btn-neo flex items-center gap-2 px-6 py-3.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
+                className="btn-neo flex items-center gap-2 px-6 py-3.5 bg-[#FFD93D] hover:bg-[#ffe169] text-black font-black uppercase text-xs md:text-sm tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
               >
                 <Save className="w-4 h-4 stroke-[3px]" />
                 <span>SAVE PROFILE</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await AuthService.signOut();
+                  window.location.href = '/auth';
+                }}
+                className="btn-neo flex items-center gap-2 px-6 py-3.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs md:text-sm tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
+              >
+                <LogOut className="w-4 h-4 stroke-[3px]" />
+                <span>SIGN OUT OF RESORA</span>
               </button>
             </div>
           </div>

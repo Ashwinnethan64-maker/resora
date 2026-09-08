@@ -25,8 +25,12 @@ import {
   X,
   CheckCircle2,
   Sparkles,
-  Compass
+  Compass,
+  LogOut,
+  User as UserIcon,
+  ChevronDown
 } from 'lucide-react';
+import { AuthService } from '@/lib/auth/auth-service';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -52,9 +56,11 @@ export function AppShell({ children }: AppShellProps) {
     resources,
     activeToast,
     activeAiJob,
+    user,
   } = useResora();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const deletingChildCount = deletingResource
     ? resources.filter((r) => r.source_document_id === deletingResource.id).length
@@ -241,17 +247,79 @@ export function AppShell({ children }: AppShellProps) {
           </button>
 
           {/* Quick Capture Resource CTA */}
-          <button
-            onClick={openSaveModal}
-            className="btn-neo flex items-center gap-1.5 px-3.5 py-2 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs tracking-wider border-2 border-black shadow-[3px_3px_0px_0px_#000]"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span className="hidden sm:inline">CAPTURE</span>
-          </button>
+          {/* User Profile Badge & Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setProfileDropdownOpen((prev) => !prev)}
+              aria-label="User profile menu"
+              className="flex items-center gap-1 p-0.5 border-2 border-black bg-white hover:bg-[#FFD93D] shadow-[2px_2px_0px_0px_#000] transition-colors"
+            >
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.name}
+                  className="w-7 h-7 object-cover border border-black"
+                />
+              ) : (
+                <div className="w-7 h-7 bg-[#FFD93D] border border-black flex items-center justify-center text-black text-xs font-black select-none uppercase">
+                  {(user?.name || 'A')[0]}
+                </div>
+              )}
+              <ChevronDown className="w-3 h-3 text-black stroke-[3px] mr-0.5" />
+            </button>
 
-          {/* User Profile Badge */}
-          <div className="w-8 h-8 bg-[#FFD93D] border-2 border-black shadow-[2px_2px_0px_0px_#000] flex items-center justify-center text-black text-xs font-black select-none">
-            A
+            {/* Profile Dropdown Menu */}
+            {profileDropdownOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setProfileDropdownOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-1.5 w-60 bg-white border-4 border-black shadow-[6px_6px_0px_0px_#000] p-3 z-50 animate-in fade-in duration-100 space-y-2.5">
+                  <div className="pb-2 border-b-2 border-black">
+                    <div className="text-xs font-black uppercase text-black truncate">
+                      {user?.name || 'Researcher'}
+                    </div>
+                    <div className="text-[10px] font-mono font-bold text-black/70 truncate">
+                      {user?.email || 'authenticated'}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Link
+                      href="/app/settings"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-bold text-black hover:bg-[#FFFDF5] border border-transparent hover:border-black transition-all"
+                    >
+                      <UserIcon className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>PROFILE</span>
+                    </Link>
+                    <Link
+                      href="/app/settings"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-bold text-black hover:bg-[#FFFDF5] border border-transparent hover:border-black transition-all"
+                    >
+                      <Settings className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>SETTINGS</span>
+                    </Link>
+                  </div>
+
+                  <div className="pt-2 border-t-2 border-black">
+                    <button
+                      onClick={async () => {
+                        setProfileDropdownOpen(false);
+                        await AuthService.signOut();
+                        window.location.href = '/auth';
+                      }}
+                      className="btn-neo w-full flex items-center justify-center gap-2 py-2 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs tracking-wider border-2 border-black shadow-[2px_2px_0px_0px_#000]"
+                    >
+                      <LogOut className="w-3.5 h-3.5 stroke-[3px]" />
+                      <span>SIGN OUT</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -340,11 +408,28 @@ export function AppShell({ children }: AppShellProps) {
             {/* User workspace summary badge */}
             <div className="pt-2">
               <div className="p-2.5 bg-[#FFFDF5] border-2 border-black text-[11px] flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-black truncate max-w-[120px]">Ashwin</div>
-                  <div className="text-[9px] font-mono text-black/60 uppercase">Personal Tier</div>
+                <div className="flex items-center gap-2 min-w-0">
+                  {user?.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt={user.name}
+                      className="w-6 h-6 object-cover border border-black shrink-0"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 bg-[#FFD93D] border border-black flex items-center justify-center text-[10px] font-black shrink-0 uppercase">
+                      {(user?.name || 'A')[0]}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="font-bold text-black truncate max-w-[110px]">
+                      {user?.name || 'Researcher'}
+                    </div>
+                    <div className="text-[9px] font-mono text-black/60 uppercase truncate">
+                      {user?.email ? 'Authenticated' : 'Workspace'}
+                    </div>
+                  </div>
                 </div>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 border border-black"></span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 border border-black shrink-0"></span>
               </div>
             </div>
           </div>

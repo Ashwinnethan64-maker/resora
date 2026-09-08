@@ -33,7 +33,7 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-3">
             <Link
-              href="/app"
+              href="/auth"
               className="text-xs md:text-sm font-bold uppercase tracking-wider text-black px-4 py-2 border-2 border-black bg-white hover:bg-[#FFFDF5] shadow-[2px_2px_0px_0px_#000] hidden sm:inline-block"
             >
               Sign In

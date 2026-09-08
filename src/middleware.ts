@@ -1,29 +1,19 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server';
+import { updateSession } from '@/lib/supabase/middleware';
 
-/**
- * Edge Middleware protecting private /app/* routes
- */
-export function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
-
-  // Only protect authenticated application routes
-  if (pathname.startsWith('/app')) {
-    const sessionCookie = request.cookies.get('resora_session');
-
-    // In local development or testing, allow the request if the session cookie is present
-    // or let client-side ResoraContext handle session initialization without hard redirect loops.
-    // If explicitly accessing /app without session, we can redirect to /auth
-    if (!sessionCookie && request.cookies.get('resora_logged_out')) {
-      const authUrl = new URL('/auth', request.url);
-      authUrl.searchParams.set('from', pathname);
-      return NextResponse.redirect(authUrl);
-    }
-  }
-
-  return NextResponse.next();
+export async function middleware(request: NextRequest) {
+  return await updateSession(request);
 }
 
 export const config = {
-  matcher: ['/app/:path*'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public assets like .svg, .png, .ico, .jpg, .json
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json)$).*)',
+  ],
 };
