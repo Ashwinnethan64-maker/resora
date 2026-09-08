@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { validateEnvironment } from '@/lib/config';
 import { NVIDIAClient } from '@/lib/ai/nvidia';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { isFirebaseConfigured } from '@/lib/firebase/client';
 
 /**
  * Health Check API Endpoint
@@ -19,6 +20,7 @@ export async function GET() {
       version: '1.0.0',
       timestamp: new Date().toISOString(),
       services: {
+        firebase: isFirebaseConfigured ? 'configured' : 'fallback',
         supabase: isSupabaseConfigured ? 'configured' : 'fallback',
         nvidia: nvidiaConfigured ? 'configured' : 'fallback',
         sentry: sentryConfigured ? 'configured' : 'unconfigured',

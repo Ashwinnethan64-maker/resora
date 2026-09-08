@@ -57,12 +57,13 @@ function AuthContent() {
     setIsGoogleLoading(true);
 
     try {
-      const res = await AuthService.signInWithGoogle(redirectTo);
+      const res = await AuthService.signInWithGoogle();
       if (res.error) {
         setErrorMessage(res.error);
         setIsGoogleLoading(false);
+      } else if (res.user) {
+        router.push(redirectTo);
       }
-      // Browser redirects to Google OAuth consent page
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to initialize Google Sign In.');
       setIsGoogleLoading(false);
@@ -83,6 +84,7 @@ function AuthContent() {
         await AuthService.signUp(name, email, password);
         router.push('/app?onboarding=true');
       } else {
+        await AuthService.sendPasswordReset(email);
         setSuccessMessage('Password reset instructions have been sent to your email.');
       }
     } catch (err: any) {

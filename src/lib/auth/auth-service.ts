@@ -1,10 +1,19 @@
 /**
  * RESORA Authentication Service
- * Production Supabase Auth with Google OAuth and resilient local session fallback.
+ * Production Firebase Authentication with Google Sign-In and resilient session synchronization.
  */
 
-import { getSupabaseBrowserClient } from '@/lib/supabase';
-import type { User, Session } from '@supabase/supabase-js';
+import {
+  signInWithPopup,
+  signInWithRedirect,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  updateProfile as firebaseUpdateProfile,
+  sendPasswordResetEmail,
+  User as FirebaseUser,
+} from 'firebase/auth';
+import { auth, googleProvider, isFirebaseConfigured } from '@/lib/firebase/client';
 
 export interface AuthUser {
   id: string;
@@ -24,23 +33,20 @@ const LOCAL_STORAGE_SESSION_KEY = 'resora_auth_session_v1';
 
 export const AuthService = {
   /**
-   * Helper to map Supabase User to AuthUser
+   * Helper to map Firebase User to AuthUser
    */
-  mapSupabaseUser(user: User): AuthUser {
-    const meta = user.user_metadata || {};
+  mapFirebaseUser(user: FirebaseUser): AuthUser {
     const fullName =
-      meta.full_name ||
-      meta.name ||
-      (meta.first_name ? `${meta.first_name} ${meta.last_name || ''}`.trim() : '') ||
+      user.displayName ||
       user.email?.split('@')[0] ||
       'Researcher';
 
     return {
-      id: user.id,
+      id: user.uid,
       email: user.email || '',
       name: fullName,
-      avatar_url: meta.avatar_url || meta.picture || '',
-      created_at: user.created_at,
+      avatar_url: user.photoURL || '',
+      created_at: user.metadata.creationTime || new Date().toISOString(),
     };
   },
 
@@ -61,66 +67,64 @@ export const AuthService = {
   },
 
   /**
-   * Asynchronously get authenticated user from Supabase with local cache update
+   * Fetch current user and sync session markers
    */
   async fetchUser(): Promise<AuthUser | null> {
     if (typeof window === 'undefined') return null;
 
-    try {
-      const supabase = getSupabaseBrowserClient();
-      const { data: { user }, error } = await supabase.auth.getUser();
-
-      if (!error && user) {
-        const mapped = this.mapSupabaseUser(user);
-        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
-        // Remove logged out cookie
-        document.cookie = 'resora_logged_out=; path=/; max-age=0';
-        return mapped;
-      }
-    } catch (err) {
-      console.warn('[AuthService] Fetching Supabase user notice:', err);
+    if (auth.currentUser) {
+      const mapped = this.mapFirebaseUser(auth.currentUser);
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
+      document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
+      document.cookie = 'resora_logged_out=; path=/; max-age=0';
+      return mapped;
     }
 
     return this.getCurrentUser();
   },
 
   /**
-   * Trigger Google OAuth Sign-In
+   * Trigger Google Sign-In via Firebase
    */
-  async signInWithGoogle(redirectToPath = '/app'): Promise<{ error?: string }> {
+  async signInWithGoogle(): Promise<{ user?: AuthUser; error?: string; code?: string }> {
     if (typeof window === 'undefined') return { error: 'Window not defined' };
 
     try {
-      const supabase = getSupabaseBrowserClient();
-      const origin =
-        process.env.NEXT_PUBLIC_APP_URL ||
-        window.location.origin;
+      // Check if mobile device
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-      const cleanOrigin = origin.replace(/\/+$/, '');
-      const callbackUrl = `${cleanOrigin}/auth/callback?from=${encodeURIComponent(redirectToPath)}`;
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: callbackUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
-      });
-
-      if (error) {
-        return { error: error.message };
+      if (isMobile) {
+        await signInWithRedirect(auth, googleProvider);
+        return {};
       }
 
-      if (data?.url) {
-        window.location.href = data.url;
-      }
+      const result = await signInWithPopup(auth, googleProvider);
+      const mapped = this.mapFirebaseUser(result.user);
 
-      return {};
+      // Store in cache & cookie
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
+      document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
+      document.cookie = 'resora_logged_out=; path=/; max-age=0';
+
+      return { user: mapped };
     } catch (err: any) {
-      return { error: err?.message || 'Failed to initialize Google authentication.' };
+      console.error('[AuthService] Firebase Google Sign-In error:', err);
+      const code = err?.code || '';
+      let message = 'Failed to complete Google Sign In. Please try again.';
+
+      if (code === 'auth/popup-closed-by-user') {
+        message = 'Sign-in cancelled. The authentication window was closed.';
+      } else if (code === 'auth/popup-blocked') {
+        message = 'Popup was blocked by your browser. Please allow popups for this site.';
+      } else if (code === 'auth/unauthorized-domain') {
+        message = 'Domain not authorized in Firebase Console. Please add your domain to Authorized Domains.';
+      } else if (code === 'auth/network-request-failed') {
+        message = 'Network error during sign-in. Please check your internet connection.';
+      } else if (err?.message) {
+        message = err.message;
+      }
+
+      return { error: message, code };
     }
   },
 
@@ -132,31 +136,24 @@ export const AuthService = {
       throw new Error('Email and password are required');
     }
 
-    const supabase = getSupabaseBrowserClient();
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password,
-      });
+      const result = await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      const mapped = this.mapFirebaseUser(result.user);
 
-      if (error) {
-        // If Supabase authentication fails, check error
-        throw error;
-      }
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
+      document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
+      document.cookie = 'resora_logged_out=; path=/; max-age=0';
 
-      if (data.user) {
-        const mapped = this.mapSupabaseUser(data.user);
-        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
-        document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
-        document.cookie = 'resora_logged_out=; path=/; max-age=0';
-        return { user: mapped };
-      }
+      return { user: mapped };
     } catch (authErr: any) {
-      // Re-throw genuine credentials errors
+      const code = authErr?.code;
+      if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') {
+        throw new Error('Invalid email or password. Please verify credentials.');
+      } else if (code === 'auth/too-many-requests') {
+        throw new Error('Too many failed attempts. Please try again later or reset password.');
+      }
       throw authErr;
     }
-
-    throw new Error('Sign in failed. Please verify credentials.');
   },
 
   /**
@@ -167,54 +164,50 @@ export const AuthService = {
       throw new Error('Email and password are required');
     }
 
-    const supabase = getSupabaseBrowserClient();
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password,
-      options: {
-        data: {
-          full_name: name.trim(),
-        },
-      },
-    });
-
-    if (error) {
-      throw error;
+    const result = await createUserWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+    if (name.trim()) {
+      try {
+        await firebaseUpdateProfile(result.user, { displayName: name.trim() });
+      } catch {}
     }
 
-    if (data.user) {
-      const mapped = this.mapSupabaseUser(data.user);
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
-      document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
-      document.cookie = 'resora_logged_out=; path=/; max-age=0';
-      return { user: mapped };
-    }
+    const mapped = this.mapFirebaseUser(result.user);
+    mapped.name = name.trim() || mapped.name;
 
-    throw new Error('Sign up failed.');
+    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
+    document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
+    document.cookie = 'resora_logged_out=; path=/; max-age=0';
+
+    return { user: mapped };
+  },
+
+  /**
+   * Send Password Reset Email
+   */
+  async sendPasswordReset(email: string): Promise<void> {
+    if (!email) throw new Error('Email is required');
+    await sendPasswordResetEmail(auth, email.trim().toLowerCase());
   },
 
   /**
    * Update current user profile
    */
   async updateProfile(updates: Partial<AuthUser>): Promise<AuthUser> {
-    const supabase = getSupabaseBrowserClient();
-    try {
-      if (updates.name) {
-        await supabase.auth.updateUser({
-          data: { full_name: updates.name },
-        });
+    if (auth.currentUser && updates.name) {
+      try {
+        await firebaseUpdateProfile(auth.currentUser, { displayName: updates.name });
+      } catch (e) {
+        console.warn('[AuthService] Firebase updateProfile notice:', e);
       }
-    } catch (e) {
-      console.warn('[AuthService] Supabase updateUser notice:', e);
     }
 
     const current = this.getCurrentUser();
     const updated: AuthUser = {
       ...current,
       ...updates,
-      id: current?.id || 'usr_local',
-      email: updates.email || current?.email || '',
-      name: updates.name || current?.name || 'Researcher',
+      id: current?.id || auth.currentUser?.uid || 'usr_local',
+      email: updates.email || current?.email || auth.currentUser?.email || '',
+      name: updates.name || current?.name || auth.currentUser?.displayName || 'Researcher',
       created_at: current?.created_at || new Date().toISOString(),
     };
 
@@ -231,10 +224,9 @@ export const AuthService = {
     if (typeof window === 'undefined') return;
 
     try {
-      const supabase = getSupabaseBrowserClient();
-      await supabase.auth.signOut();
+      await firebaseSignOut(auth);
     } catch (err) {
-      console.warn('[AuthService] Supabase signOut notice:', err);
+      console.warn('[AuthService] Firebase signOut notice:', err);
     }
 
     // Clear client-side user and conversation caches

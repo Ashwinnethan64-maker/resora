@@ -2,21 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractDocumentContent, MAX_FILE_SIZE } from '@/lib/documents/document-extractor';
 import { ResourceService } from '@/lib/services/resource-service';
 import { getSupabaseServerClient } from '@/lib/supabase';
-import { createClient as createServerSupabaseClient } from '@/lib/supabase/server';
 import { findDuplicateDocument } from '@/lib/resources/deduplicate';
 import { importResourcesFromDocumentText } from '@/lib/resources/import-resources';
 
 export async function POST(req: NextRequest) {
   try {
-    // Authenticate user
-    let authenticatedUserId = 'usr_local';
-    try {
-      const supabase = await createServerSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.id) {
-        authenticatedUserId = user.id;
-      }
-    } catch {}
+    // Authenticate user from session cookie
+    const sessionCookie = req.cookies.get('resora_session')?.value;
+    const authenticatedUserId = sessionCookie || 'usr_local';
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;

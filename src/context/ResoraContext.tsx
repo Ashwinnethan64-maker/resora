@@ -11,8 +11,9 @@ import {
   ResourceFilterOptions,
 } from '@/types/database';
 import { ResourceService } from '@/lib/services/resource-service';
-import { getSupabaseBrowserClient } from '@/lib/supabase';
 import { AuthService } from '@/lib/auth/auth-service';
+import { auth } from '@/lib/firebase/client';
+import { onAuthStateChanged } from 'firebase/auth';
 
 interface Metrics {
   total: number;
@@ -160,12 +161,11 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
     }, 3500);
   }, []);
 
-  // Supabase Auth State Synchronization
+  // Firebase Auth State Synchronization
   useEffect(() => {
     let isMounted = true;
-    const supabase = getSupabaseBrowserClient();
 
-    // Fetch initial user
+    // Fetch initial cached or currentUser
     AuthService.fetchUser()
       .then((u: any) => {
         if (isMounted) {
@@ -177,19 +177,17 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
         if (isMounted) setAuthLoading(false);
       });
 
-    // Listen to Supabase auth state changes (SIGN_IN, SIGN_OUT, TOKEN_REFRESHED)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+    // Listen to Firebase auth state changes (sign-in, sign-out, token refresh)
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (!isMounted) return;
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-        if (session?.user) {
-          const mapped = AuthService.mapSupabaseUser(session.user);
-          setUser(mapped);
-          localStorage.setItem('resora_auth_user_v1', JSON.stringify(mapped));
-          document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
-          document.cookie = 'resora_logged_out=; path=/; max-age=0';
-        }
-      } else if (event === 'SIGNED_OUT') {
+      if (firebaseUser) {
+        const mapped = AuthService.mapFirebaseUser(firebaseUser);
+        setUser(mapped);
+        localStorage.setItem('resora_auth_user_v1', JSON.stringify(mapped));
+        document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = 'resora_logged_out=; path=/; max-age=0';
+      } else {
         setUser(null);
         localStorage.removeItem('resora_auth_user_v1');
         document.cookie = 'resora_session=; path=/; max-age=0';
@@ -200,7 +198,7 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, []);
 

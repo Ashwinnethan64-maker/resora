@@ -12,6 +12,11 @@ export interface AppConfig {
     secretKey: string | null;
     isConfigured: boolean;
   };
+  firebase: {
+    apiKey: string | null;
+    projectId: string | null;
+    isConfigured: boolean;
+  };
   nvidia: {
     apiKey: string | null;
     baseURL: string;
@@ -71,12 +76,20 @@ export function validateEnvironment(): {
   errors: string[];
   publicStatus: {
     supabase: boolean;
+    firebase: boolean;
     nvidia: boolean;
     sentry: boolean;
   };
 } {
   const warnings: string[] = [];
   const errors: string[] = [];
+
+  const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || null;
+  const firebaseProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || null;
+
+  if (!firebaseApiKey || !firebaseProjectId) {
+    warnings.push('Firebase credentials missing. Auth will initialize with fallback.');
+  }
 
   if (!supabaseUrl || !supabasePublishableKey) {
     warnings.push('Supabase public credentials missing. Local fallback active.');
@@ -98,6 +111,7 @@ export function validateEnvironment(): {
     errors,
     publicStatus: {
       supabase: Boolean(supabaseUrl && supabasePublishableKey),
+      firebase: Boolean(firebaseApiKey && firebaseProjectId),
       nvidia: Boolean(nvidiaApiKey),
       sentry: Boolean(sentryDsn),
     },
@@ -113,6 +127,11 @@ export const config: AppConfig = {
     publishableKey: supabasePublishableKey,
     secretKey: supabaseSecretKey,
     isConfigured: Boolean(supabaseUrl && supabasePublishableKey),
+  },
+  firebase: {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || null,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || null,
+    isConfigured: Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID),
   },
   nvidia: {
     apiKey: nvidiaApiKey,

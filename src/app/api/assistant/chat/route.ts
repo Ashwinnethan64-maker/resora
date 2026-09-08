@@ -165,16 +165,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    let authUserId = body.userId || 'usr_local';
-
-    try {
-      const { createClient: createServerSupabaseClient } = await import('@/lib/supabase/server');
-      const supabase = await createServerSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.id) {
-        authUserId = user.id;
-      }
-    } catch {}
+    // Authenticate user via session cookie or provided payload
+    const sessionCookie = req.cookies.get('resora_session')?.value;
+    const authUserId = sessionCookie || body.userId || 'usr_local';
 
     const {
       query,
