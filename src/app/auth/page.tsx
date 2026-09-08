@@ -51,6 +51,14 @@ function AuthContent() {
     }
   }, [urlError]);
 
+  // If already authenticated or just completed authentication via Firebase listener, forward immediately
+  useEffect(() => {
+    const cachedUser = AuthService.getCurrentUser();
+    if (cachedUser) {
+      window.location.replace(redirectTo);
+    }
+  }, [redirectTo]);
+
   const handleGoogleSignIn = async () => {
     if (isGoogleLoading) return;
     setErrorMessage('');
@@ -62,7 +70,8 @@ function AuthContent() {
         setErrorMessage(res.error);
         setIsGoogleLoading(false);
       } else if (res.user) {
-        router.push(redirectTo);
+        // Fast synchronous navigation directly to destination
+        window.location.href = redirectTo;
       }
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to initialize Google Sign In.');
