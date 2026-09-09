@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, Auth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
@@ -31,6 +31,13 @@ const effectiveConfig = isFirebaseConfigured
 
 const app: FirebaseApp = getApps().length > 0 ? getApp() : initializeApp(effectiveConfig);
 export const auth: Auth = getAuth(app);
+
+// Explicitly ensure browser local persistence for mobile OAuth redirect & refresh continuity
+if (typeof window !== 'undefined') {
+  setPersistence(auth, browserLocalPersistence).catch((err) => {
+    console.warn('[Firebase Auth] Persistence initialization notice:', err);
+  });
+}
 
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({

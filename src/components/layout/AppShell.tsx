@@ -74,24 +74,25 @@ export function AppShell({ children }: AppShellProps) {
     accent?: string;
     badge?: number;
     badgeColor?: string;
+    domId?: string;
   }
 
   const researchNavItems: NavItem[] = [
-    { label: 'Home', href: '/app', icon: Home, exact: true },
-    { label: 'Ask Resora', href: '/app/assistant', icon: Sparkles, accent: 'bg-[#FFD93D]' },
-    { label: 'Inbox', href: '/app/inbox', icon: Inbox, badge: metrics.inbox, badgeColor: 'bg-[#FF6B6B]' },
-    { label: 'Library', href: '/app/library', icon: Library },
+    { label: 'Home', href: '/app', icon: Home, exact: true, domId: 'nav-home' },
+    { label: 'Ask Resora', href: '/app/assistant', icon: Sparkles, accent: 'bg-[#FFD93D]', domId: 'nav-assistant' },
+    { label: 'Inbox', href: '/app/inbox', icon: Inbox, badge: metrics.inbox, badgeColor: 'bg-[#FF6B6B]', domId: 'nav-inbox' },
+    { label: 'Library', href: '/app/library', icon: Library, domId: 'nav-library' },
   ];
 
   const workspaceNavItems: NavItem[] = [
-    { label: 'Projects', href: '/app/projects', icon: FolderKanban, badge: metrics.projects, badgeColor: 'bg-[#FFD93D]' },
-    { label: 'Collections', href: '/app/collections', icon: Bookmark, badge: metrics.collections, badgeColor: 'bg-[#C4B5FD]' },
+    { label: 'Projects', href: '/app/projects', icon: FolderKanban, badge: metrics.projects, badgeColor: 'bg-[#FFD93D]', domId: 'nav-projects' },
+    { label: 'Collections', href: '/app/collections', icon: Bookmark, badge: metrics.collections, badgeColor: 'bg-[#C4B5FD]', domId: 'nav-collections' },
   ];
 
   const knowledgeNavItems: NavItem[] = [
-    { label: 'Documents', href: '/app/documents', icon: FileText, badge: metrics.documents, badgeColor: 'bg-[#C4B5FD]' },
-    { label: 'Tools', href: '/app/tools', icon: Wrench },
-    { label: 'Favorites', href: '/app/favorites', icon: Heart, badge: metrics.favorites, badgeColor: 'bg-[#FF6B6B]' },
+    { label: 'Documents', href: '/app/documents', icon: FileText, badge: metrics.documents, badgeColor: 'bg-[#C4B5FD]', domId: 'nav-documents' },
+    { label: 'Tools', href: '/app/tools', icon: Wrench, domId: 'nav-tools' },
+    { label: 'Favorites', href: '/app/favorites', icon: Heart, badge: metrics.favorites, badgeColor: 'bg-[#FF6B6B]', domId: 'nav-favorites' },
   ];
 
   const bottomNavItems = [
@@ -252,6 +253,7 @@ export function AppShell({ children }: AppShellProps) {
 
           {/* Command Palette Search Trigger */}
           <button
+            id="global-search-trigger"
             onClick={openCommandPalette}
             className="flex items-center gap-2.5 px-3.5 py-2 bg-[#FFFDF5] hover:bg-[#FFD93D] border-2 border-black shadow-[3px_3px_0px_0px_#000] text-xs font-bold text-black w-36 sm:w-60 md:w-72 justify-between transition-all active:translate-x-0.5 active:translate-y-0.5"
           >
@@ -268,6 +270,7 @@ export function AppShell({ children }: AppShellProps) {
           {/* User Profile Badge & Dropdown */}
           <div className="relative">
             <button
+              id="global-profile-menu"
               onClick={() => setProfileDropdownOpen((prev) => !prev)}
               aria-label="User profile menu"
               className="flex items-center gap-1 p-0.5 border-2 border-black bg-white hover:bg-[#FFD93D] shadow-[2px_2px_0px_0px_#000] transition-colors"
@@ -372,6 +375,7 @@ export function AppShell({ children }: AppShellProps) {
                     return (
                       <Link
                         key={item.label}
+                        id={item.domId}
                         href={item.href}
                         className={`flex items-center justify-between px-3 py-2 text-xs font-bold transition-all border-2 ${
                           active
@@ -411,6 +415,7 @@ export function AppShell({ children }: AppShellProps) {
                     return (
                       <Link
                         key={item.label}
+                        id={item.domId}
                         href={item.href}
                         className={`flex items-center justify-between px-3 py-2 text-xs font-bold transition-all border-2 ${
                           active
@@ -450,6 +455,7 @@ export function AppShell({ children }: AppShellProps) {
                     return (
                       <Link
                         key={item.label}
+                        id={item.domId}
                         href={item.href}
                         className={`flex items-center justify-between px-3 py-2 text-xs font-bold transition-all border-2 ${
                           active
@@ -631,6 +637,7 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Center Prominent Capture Button */}
         <button
+          id="global-capture-btn-mobile"
           onClick={openSaveModal}
           className="w-10 h-10 -mt-4 bg-[#FF6B6B] border-2 border-black shadow-[2px_2px_0px_#000] flex items-center justify-center text-black font-black active:translate-x-0.5 active:translate-y-0.5"
           aria-label="Capture Resource"

@@ -42,6 +42,7 @@ function AuthContent() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [errorMessage, setErrorMessage] = useState(urlError || '');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -51,12 +52,50 @@ function AuthContent() {
     }
   }, [urlError]);
 
-  // If already authenticated or just completed authentication via Firebase listener, forward immediately
+  // Handle mobile redirect return and check existing session
   useEffect(() => {
-    const cachedUser = AuthService.getCurrentUser();
-    if (cachedUser) {
-      window.location.replace(redirectTo);
-    }
+    let isMounted = true;
+
+    // 1. Process getRedirectResult (critical for mobile OAuth return)
+    AuthService.handleRedirectResult()
+      .then((res) => {
+        if (!isMounted) return;
+        if (res?.error) {
+          setErrorMessage(res.error);
+          setIsInitializing(false);
+          return;
+        }
+
+        if (res?.user) {
+          const pendingReturn = sessionStorage.getItem('resora_auth_pending_redirect') || redirectTo;
+          sessionStorage.removeItem('resora_auth_pending_redirect');
+          window.location.replace(pendingReturn);
+          return;
+        }
+
+        // 2. If no redirect result, check if user is already authenticated
+        const currentUser = AuthService.getCurrentUser();
+        if (currentUser) {
+          window.location.replace(redirectTo);
+          return;
+        }
+
+        setIsInitializing(false);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.warn('[AuthPage] Redirect check notice:', err);
+        const currentUser = AuthService.getCurrentUser();
+        if (currentUser) {
+          window.location.replace(redirectTo);
+          return;
+        }
+        setIsInitializing(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [redirectTo]);
 
   const handleGoogleSignIn = async () => {
@@ -65,14 +104,15 @@ function AuthContent() {
     setIsGoogleLoading(true);
 
     try {
-      const res = await AuthService.signInWithGoogle();
+      const res = await AuthService.signInWithGoogle(redirectTo);
       if (res.error) {
         setErrorMessage(res.error);
         setIsGoogleLoading(false);
       } else if (res.user) {
-        // Fast synchronous navigation directly to destination
+        // Fast synchronous navigation directly to destination (desktop popup flow)
         window.location.href = redirectTo;
       }
+      // On mobile, signInWithRedirect takes over and redirects the browser window
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to initialize Google Sign In.');
       setIsGoogleLoading(false);
@@ -102,6 +142,24 @@ function AuthContent() {
       setIsLoading(false);
     }
   };
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-[#FFFDF5] text-black flex flex-col justify-center items-center px-4 py-12">
+        <div className="w-full max-w-sm p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] text-center space-y-4">
+          <div className="inline-block p-3 bg-[#FFD93D] border-2 border-black">
+            <Loader2 className="w-6 h-6 animate-spin text-black" />
+          </div>
+          <div className="font-mono text-xs font-black uppercase tracking-widest text-black">
+            VERIFYING SESSION...
+          </div>
+          <p className="text-[11px] font-mono text-black/60 font-bold">
+            Connecting to your secure research workspace
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFDF5] text-black flex flex-col justify-center items-center px-4 py-12 selection:bg-[#FFD93D] selection:text-black">

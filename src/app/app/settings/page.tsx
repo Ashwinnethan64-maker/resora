@@ -283,6 +283,33 @@ export default function SettingsPage() {
               <option value="favorites">FAVORITES ONLY</option>
             </select>
           </div>
+
+          {/* Interactive Onboarding Tour Replay */}
+          <div className="p-6 md:p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] space-y-3">
+            <div>
+              <div className="font-black uppercase text-sm md:text-base text-black bg-[#FFD93D] px-2 py-0.5 border border-black w-max">
+                PRODUCT TOUR & ONBOARDING
+              </div>
+              <p className="text-black text-xs font-bold mt-2">
+                Need a quick refresher on how RESORA works? Replay the 14-step interactive walkthrough anytime.
+              </p>
+            </div>
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (user?.id) {
+                    await AuthService.resetOnboarding(user.id);
+                  }
+                  window.location.href = '/app?onboarding=true';
+                }}
+                className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000]"
+              >
+                <span>RESTART PRODUCT TOUR</span>
+                <span>→</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

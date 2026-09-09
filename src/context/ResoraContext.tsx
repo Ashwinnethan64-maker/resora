@@ -165,16 +165,43 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    // Fetch initial cached or currentUser
-    AuthService.fetchUser()
-      .then((u: any) => {
-        if (isMounted) {
-          setUser(u);
+    // Check redirect result first (for mobile OAuth flow) then sync user
+    AuthService.handleRedirectResult()
+      .then((redirectRes) => {
+        if (!isMounted) return;
+        if (redirectRes?.user) {
+          setUser(redirectRes.user);
           setAuthLoading(false);
+          // If a pending return URL was stored, redirect there
+          const pendingReturn = sessionStorage.getItem('resora_auth_pending_redirect');
+          if (pendingReturn) {
+            sessionStorage.removeItem('resora_auth_pending_redirect');
+            window.location.replace(pendingReturn);
+            return;
+          }
         }
+
+        // Fetch initial cached or currentUser
+        AuthService.fetchUser()
+          .then((u: any) => {
+            if (isMounted) {
+              setUser(u);
+              setAuthLoading(false);
+            }
+          })
+          .catch(() => {
+            if (isMounted) setAuthLoading(false);
+          });
       })
       .catch(() => {
-        if (isMounted) setAuthLoading(false);
+        if (isMounted) {
+          AuthService.fetchUser().then((u) => {
+            if (isMounted) {
+              setUser(u);
+              setAuthLoading(false);
+            }
+          });
+        }
       });
 
     // Listen to Firebase auth state changes (sign-in, sign-out, token refresh)
@@ -190,10 +217,14 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
         // Trigger profile persistence in Supabase if configured
         AuthService.syncProfileToDatabase(mapped).catch(() => {});
       } else {
-        setUser(null);
-        localStorage.removeItem('resora_auth_user_v1');
-        document.cookie = 'resora_session=; path=/; max-age=0';
-        document.cookie = 'resora_logged_out=true; path=/; max-age=604800; SameSite=Lax';
+        // Only clear if not in the middle of a redirect check
+        const hasPendingRedirect = typeof window !== 'undefined' && Boolean(sessionStorage.getItem('resora_auth_pending_redirect'));
+        if (!hasPendingRedirect) {
+          setUser(null);
+          localStorage.removeItem('resora_auth_user_v1');
+          document.cookie = 'resora_session=; path=/; max-age=0';
+          document.cookie = 'resora_logged_out=true; path=/; max-age=604800; SameSite=Lax';
+        }
         // Clear active UI state so previous user data never flashes
         setResources([]);
         setInboxResources([]);

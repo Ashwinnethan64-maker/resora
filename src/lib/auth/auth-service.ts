@@ -6,6 +6,7 @@
 import {
   signInWithPopup,
   signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -33,6 +34,59 @@ const LOCAL_STORAGE_USER_KEY = 'resora_auth_user_v1';
 const LOCAL_STORAGE_SESSION_KEY = 'resora_auth_session_v1';
 
 export const AuthService = {
+  /**
+   * Check if the specific authenticated user has completed the onboarding tour
+   */
+  isOnboardingCompleted(userId?: string): boolean {
+    if (typeof window === 'undefined') return true;
+    const uid = userId || this.getCurrentUser()?.id;
+    if (!uid) return true;
+    return localStorage.getItem(`resora_onboarding_completed_${uid}`) === 'true';
+  },
+
+  /**
+   * Mark onboarding tour as completed for this specific authenticated user
+   */
+  async setOnboardingCompleted(userId?: string): Promise<void> {
+    if (typeof window === 'undefined') return;
+    const uid = userId || this.getCurrentUser()?.id;
+    if (!uid) return;
+    localStorage.setItem(`resora_onboarding_completed_${uid}`, 'true');
+
+    // Optionally persist to profiles table in Supabase if column exists
+    if (supabase && uid !== 'usr_local') {
+      try {
+        await supabase.from('profiles').update({
+          onboarding_completed: true,
+          updated_at: new Date().toISOString(),
+        }).eq('firebase_uid', uid);
+      } catch {
+        // Non-blocking
+      }
+    }
+  },
+
+  /**
+   * Reset onboarding tour for this specific authenticated user (allows replaying tour from Settings)
+   */
+  async resetOnboarding(userId?: string): Promise<void> {
+    if (typeof window === 'undefined') return;
+    const uid = userId || this.getCurrentUser()?.id;
+    if (!uid) return;
+    localStorage.removeItem(`resora_onboarding_completed_${uid}`);
+
+    if (supabase && uid !== 'usr_local') {
+      try {
+        await supabase.from('profiles').update({
+          onboarding_completed: false,
+          updated_at: new Date().toISOString(),
+        }).eq('firebase_uid', uid);
+      } catch {
+        // Non-blocking
+      }
+    }
+  },
+
   /**
    * Upsert user profile to Supabase database for persistent identity
    */
@@ -107,9 +161,48 @@ export const AuthService = {
   },
 
   /**
+   * Handle redirect result when returning from OAuth redirect on mobile
+   */
+  async handleRedirectResult(): Promise<{ user?: AuthUser; error?: string }> {
+    if (typeof window === 'undefined') return {};
+
+    try {
+      const result = await getRedirectResult(auth);
+      if (result && result.user) {
+        const mapped = this.mapFirebaseUser(result.user);
+        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
+        document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = 'resora_logged_out=; path=/; max-age=0';
+        sessionStorage.removeItem('resora_auth_pending_redirect');
+
+        // Sync to Supabase in background
+        this.syncProfileToDatabase(mapped).catch(() => {});
+
+        return { user: mapped };
+      }
+      return {};
+    } catch (err: any) {
+      console.error('[AuthService] handleRedirectResult error:', err);
+      sessionStorage.removeItem('resora_auth_pending_redirect');
+      const code = err?.code || '';
+      let message = 'Failed to complete Google Sign In.';
+
+      if (code === 'auth/unauthorized-domain') {
+        message = 'Domain not authorized in Firebase Console. Please add your domain to Authorized Domains.';
+      } else if (code === 'auth/network-request-failed') {
+        message = 'Network error during sign-in. Please check your internet connection.';
+      } else if (err?.message) {
+        message = err.message;
+      }
+
+      return { error: message };
+    }
+  },
+
+  /**
    * Trigger Google Sign-In via Firebase
    */
-  async signInWithGoogle(): Promise<{ user?: AuthUser; error?: string; code?: string }> {
+  async signInWithGoogle(returnUrl: string = '/app'): Promise<{ user?: AuthUser; error?: string; code?: string }> {
     if (typeof window === 'undefined') return { error: 'Window not defined' };
 
     try {
@@ -117,6 +210,7 @@ export const AuthService = {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
       if (isMobile) {
+        sessionStorage.setItem('resora_auth_pending_redirect', returnUrl);
         await signInWithRedirect(auth, googleProvider);
         return {};
       }
@@ -129,9 +223,13 @@ export const AuthService = {
       document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
       document.cookie = 'resora_logged_out=; path=/; max-age=0';
 
+      // Sync profile
+      this.syncProfileToDatabase(mapped).catch(() => {});
+
       return { user: mapped };
     } catch (err: any) {
       console.error('[AuthService] Firebase Google Sign-In error:', err);
+      sessionStorage.removeItem('resora_auth_pending_redirect');
       const code = err?.code || '';
       let message = 'Failed to complete Google Sign In. Please try again.';
 

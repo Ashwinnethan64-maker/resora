@@ -6,7 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import { useResora } from '@/context/ResoraContext';
 import { ResourceCard } from '@/components/resources/ResourceCard';
 import { ResourceSkeleton } from '@/components/resources/ResourceSkeleton';
-import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
+import { AuthService } from '@/lib/auth/auth-service';
 import { NeoSticker } from '@/components/brand/NeoSticker';
 import { PageHeader } from '@/components/ui/SectionLabel';
 import {
@@ -30,14 +31,40 @@ import {
 
 function AppHomeContent() {
   const searchParams = useSearchParams();
-  const { resources, projects, metrics, isLoading, openSaveModal } = useResora();
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const { resources, projects, metrics, isLoading, openSaveModal, user } = useResora();
+  const [isTourOpen, setIsTourOpen] = useState(false);
 
+  // Check if tour should run:
+  // 1. Explicit ?onboarding=true URL query param
+  // 2. First-time authenticated user who hasn't completed onboarding for their Firebase UID
   useEffect(() => {
-    if (searchParams.get('onboarding') === 'true') {
-      setIsOnboardingOpen(true);
+    if (!user?.id) return;
+
+    const queryOnboarding = searchParams.get('onboarding') === 'true';
+    const alreadyCompleted = AuthService.isOnboardingCompleted(user.id);
+
+    if (queryOnboarding || !alreadyCompleted) {
+      // Short delay to ensure dashboard shell has fully hydrated
+      const timer = setTimeout(() => {
+        setIsTourOpen(true);
+      }, 400);
+      return () => clearTimeout(timer);
     }
-  }, [searchParams]);
+  }, [searchParams, user?.id]);
+
+  const handleTourClose = () => {
+    if (user?.id) {
+      AuthService.setOnboardingCompleted(user.id);
+    }
+    setIsTourOpen(false);
+  };
+
+  const handleTourComplete = () => {
+    if (user?.id) {
+      AuthService.setOnboardingCompleted(user.id);
+    }
+    setIsTourOpen(false);
+  };
 
   const recentResources = resources.slice(0, 6);
   const activeProjects = projects.filter((p) => p.status !== 'archived').slice(0, 3);
@@ -63,6 +90,7 @@ function AppHomeContent() {
             </Link>
 
             <button
+              id="global-capture-btn"
               onClick={openSaveModal}
               className="btn-neo flex items-center gap-1.5 px-4 py-2.5 bg-[#FF6B6B] hover:bg-[#ff5252] text-black font-black uppercase text-xs tracking-wider border-2 border-black shadow-[2px_2px_0px_#000]"
             >
@@ -116,7 +144,7 @@ function AppHomeContent() {
           {isLoading ? (
             <ResourceSkeleton count={4} />
           ) : recentResources.length === 0 ? (
-            <div className="p-8 text-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] space-y-3">
+            <div id="library-dossier-sample" className="p-8 text-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] space-y-3">
               <p className="text-sm font-bold text-black">Your archive is empty.</p>
               <button
                 onClick={openSaveModal}
@@ -127,8 +155,10 @@ function AppHomeContent() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {recentResources.map((res) => (
-                <ResourceCard key={res.id} resource={res} />
+              {recentResources.map((res, idx) => (
+                <div key={res.id} id={idx === 0 ? 'library-dossier-sample' : undefined}>
+                  <ResourceCard resource={res} />
+                </div>
               ))}
             </div>
           )}
@@ -168,7 +198,7 @@ function AppHomeContent() {
           </div>
 
           {/* AI Intelligence Insight */}
-          <div className="p-4 bg-[#FFD93D] border-2 border-black shadow-[4px_4px_0px_#000] space-y-2">
+          <div id="resource-intelligence-sample" className="p-4 bg-[#FFD93D] border-2 border-black shadow-[4px_4px_0px_#000] space-y-2">
             <div className="flex items-center gap-2 text-xs font-mono font-black text-black uppercase">
               <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>AI Research Insight</span>
@@ -225,9 +255,10 @@ function AppHomeContent() {
         </div>
       </div>
 
-      <OnboardingModal
-        isOpen={isOnboardingOpen}
-        onClose={() => setIsOnboardingOpen(false)}
+      <OnboardingTour
+        isOpen={isTourOpen}
+        onClose={handleTourClose}
+        onComplete={handleTourComplete}
       />
     </div>
   );
