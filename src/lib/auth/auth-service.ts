@@ -33,7 +33,27 @@ export interface AuthSession {
 const LOCAL_STORAGE_USER_KEY = 'resora_auth_user_v1';
 const LOCAL_STORAGE_SESSION_KEY = 'resora_auth_session_v1';
 
+let redirectResultPromise: Promise<{ user?: AuthUser; error?: string }> | null = null;
+
 export const AuthService = {
+  /**
+   * Helper to write authentication cookies synchronously
+   */
+  setAuthCookies(userId: string): void {
+    if (typeof document === 'undefined') return;
+    document.cookie = `resora_session=${encodeURIComponent(userId)}; path=/; max-age=604800; SameSite=Lax`;
+    document.cookie = 'resora_logged_out=; path=/; max-age=0; SameSite=Lax';
+  },
+
+  /**
+   * Helper to clear authentication cookies synchronously
+   */
+  clearAuthCookies(): void {
+    if (typeof document === 'undefined') return;
+    document.cookie = 'resora_session=; path=/; max-age=0; SameSite=Lax';
+    document.cookie = 'resora_logged_out=true; path=/; max-age=604800; SameSite=Lax';
+  },
+
   /**
    * Check if the specific authenticated user has completed the onboarding tour
    */
@@ -152,8 +172,7 @@ export const AuthService = {
     if (auth.currentUser) {
       const mapped = this.mapFirebaseUser(auth.currentUser);
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
-      document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
-      document.cookie = 'resora_logged_out=; path=/; max-age=0';
+      this.setAuthCookies(mapped.id);
       return mapped;
     }
 
@@ -161,42 +180,51 @@ export const AuthService = {
   },
 
   /**
-   * Handle redirect result when returning from OAuth redirect on mobile
+   * Handle redirect result when returning from OAuth redirect on mobile.
+   * Memoized as a singleton promise so concurrent calls (ResoraContext & AuthPage)
+   * both resolve the exact same Firebase result.
    */
   async handleRedirectResult(): Promise<{ user?: AuthUser; error?: string }> {
     if (typeof window === 'undefined') return {};
 
-    try {
-      const result = await getRedirectResult(auth);
-      if (result && result.user) {
-        const mapped = this.mapFirebaseUser(result.user);
-        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
-        document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
-        document.cookie = 'resora_logged_out=; path=/; max-age=0';
-        sessionStorage.removeItem('resora_auth_pending_redirect');
-
-        // Sync to Supabase in background
-        this.syncProfileToDatabase(mapped).catch(() => {});
-
-        return { user: mapped };
-      }
-      return {};
-    } catch (err: any) {
-      console.error('[AuthService] handleRedirectResult error:', err);
-      sessionStorage.removeItem('resora_auth_pending_redirect');
-      const code = err?.code || '';
-      let message = 'Failed to complete Google Sign In.';
-
-      if (code === 'auth/unauthorized-domain') {
-        message = 'Domain not authorized in Firebase Console. Please add your domain to Authorized Domains.';
-      } else if (code === 'auth/network-request-failed') {
-        message = 'Network error during sign-in. Please check your internet connection.';
-      } else if (err?.message) {
-        message = err.message;
-      }
-
-      return { error: message };
+    if (redirectResultPromise) {
+      return redirectResultPromise;
     }
+
+    redirectResultPromise = (async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          const mapped = this.mapFirebaseUser(result.user);
+          localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
+          this.setAuthCookies(mapped.id);
+          sessionStorage.removeItem('resora_auth_pending_redirect');
+
+          // Sync to Supabase in background
+          this.syncProfileToDatabase(mapped).catch(() => {});
+
+          return { user: mapped };
+        }
+        return {};
+      } catch (err: any) {
+        console.error('[AuthService] handleRedirectResult error:', err);
+        sessionStorage.removeItem('resora_auth_pending_redirect');
+        const code = err?.code || '';
+        let message = 'Failed to complete Google Sign In.';
+
+        if (code === 'auth/unauthorized-domain') {
+          message = 'Domain not authorized in Firebase Console. Please add your domain to Authorized Domains.';
+        } else if (code === 'auth/network-request-failed') {
+          message = 'Network error during sign-in. Please check your internet connection.';
+        } else if (err?.message) {
+          message = err.message;
+        }
+
+        return { error: message };
+      }
+    })();
+
+    return redirectResultPromise;
   },
 
   /**
@@ -210,7 +238,9 @@ export const AuthService = {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
       if (isMobile) {
+        // Set pending redirect marker in sessionStorage and clear logged out cookie
         sessionStorage.setItem('resora_auth_pending_redirect', returnUrl);
+        document.cookie = 'resora_logged_out=; path=/; max-age=0; SameSite=Lax';
         await signInWithRedirect(auth, googleProvider);
         return {};
       }
@@ -220,8 +250,7 @@ export const AuthService = {
 
       // Store in cache & cookie
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
-      document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
-      document.cookie = 'resora_logged_out=; path=/; max-age=0';
+      this.setAuthCookies(mapped.id);
 
       // Sync profile
       this.syncProfileToDatabase(mapped).catch(() => {});
@@ -262,8 +291,7 @@ export const AuthService = {
       const mapped = this.mapFirebaseUser(result.user);
 
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
-      document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
-      document.cookie = 'resora_logged_out=; path=/; max-age=0';
+      this.setAuthCookies(mapped.id);
 
       return { user: mapped };
     } catch (authErr: any) {
@@ -296,8 +324,7 @@ export const AuthService = {
     mapped.name = name.trim() || mapped.name;
 
     localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
-    document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
-    document.cookie = 'resora_logged_out=; path=/; max-age=0';
+    this.setAuthCookies(mapped.id);
 
     return { user: mapped };
   },
@@ -344,6 +371,7 @@ export const AuthService = {
   async signOut(): Promise<void> {
     if (typeof window === 'undefined') return;
 
+    redirectResultPromise = null;
     try {
       await firebaseSignOut(auth);
     } catch (err) {
@@ -356,9 +384,9 @@ export const AuthService = {
     localStorage.removeItem('resora_ai_conversations_v1');
     localStorage.removeItem('resora_ai_messages_v1');
     localStorage.removeItem('resora_ai_jobs_v1');
+    sessionStorage.removeItem('resora_auth_pending_redirect');
 
     // Set cookie markers
-    document.cookie = 'resora_session=; path=/; max-age=0';
-    document.cookie = 'resora_logged_out=true; path=/; max-age=604800; SameSite=Lax';
+    this.clearAuthCookies();
   },
 };

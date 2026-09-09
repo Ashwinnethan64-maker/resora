@@ -84,6 +84,7 @@ interface ResoraContextType {
   user: import('@/lib/auth/auth-service').AuthUser | null;
   isAuthenticated: boolean;
   authLoading: boolean;
+  authStatus: 'loading' | 'authenticated' | 'unauthenticated';
   activeAiJob: {
     jobId: string;
     query: string;
@@ -108,7 +109,8 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
     }
     return null;
   });
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
+  const authLoading = authStatus === 'loading';
 
   const [resources, setResources] = useState<ResourceModel[]>([]);
   const [inboxResources, setInboxResources] = useState<ResourceModel[]>([]);
@@ -164,67 +166,60 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
   // Firebase Auth State Synchronization
   useEffect(() => {
     let isMounted = true;
+    let redirectResolved = false;
 
-    // Check redirect result first (for mobile OAuth flow) then sync user
-    AuthService.handleRedirectResult()
+    // 1. Process getRedirectResult (critical for mobile OAuth flow)
+    const redirectPromise = AuthService.handleRedirectResult()
       .then((redirectRes) => {
+        redirectResolved = true;
         if (!isMounted) return;
         if (redirectRes?.user) {
           setUser(redirectRes.user);
-          setAuthLoading(false);
-          // If a pending return URL was stored, redirect there
+          setAuthStatus('authenticated');
+          AuthService.setAuthCookies(redirectRes.user.id);
+
+          // If a pending return URL was stored on mobile, transition cleanly
           const pendingReturn = sessionStorage.getItem('resora_auth_pending_redirect');
           if (pendingReturn) {
             sessionStorage.removeItem('resora_auth_pending_redirect');
             window.location.replace(pendingReturn);
-            return;
           }
         }
-
-        // Fetch initial cached or currentUser
-        AuthService.fetchUser()
-          .then((u: any) => {
-            if (isMounted) {
-              setUser(u);
-              setAuthLoading(false);
-            }
-          })
-          .catch(() => {
-            if (isMounted) setAuthLoading(false);
-          });
       })
-      .catch(() => {
-        if (isMounted) {
-          AuthService.fetchUser().then((u) => {
-            if (isMounted) {
-              setUser(u);
-              setAuthLoading(false);
-            }
-          });
-        }
+      .catch((err) => {
+        redirectResolved = true;
+        console.warn('[ResoraContext] redirect result notice:', err);
       });
 
-    // Listen to Firebase auth state changes (sign-in, sign-out, token refresh)
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    // 2. Listen to Firebase auth state changes (sign-in, sign-out, token refresh)
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!isMounted) return;
+
+      if (!redirectResolved) {
+        // Wait for redirect result promise before finalizing auth status
+        await redirectPromise;
+      }
+
       if (!isMounted) return;
 
       if (firebaseUser) {
         const mapped = AuthService.mapFirebaseUser(firebaseUser);
         setUser(mapped);
+        setAuthStatus('authenticated');
         localStorage.setItem('resora_auth_user_v1', JSON.stringify(mapped));
-        document.cookie = `resora_session=${mapped.id}; path=/; max-age=604800; SameSite=Lax`;
-        document.cookie = 'resora_logged_out=; path=/; max-age=0';
+        AuthService.setAuthCookies(mapped.id);
         // Trigger profile persistence in Supabase if configured
         AuthService.syncProfileToDatabase(mapped).catch(() => {});
       } else {
-        // Only clear if not in the middle of a redirect check
+        // Check if there is an in-flight OAuth redirect pending on mobile
         const hasPendingRedirect = typeof window !== 'undefined' && Boolean(sessionStorage.getItem('resora_auth_pending_redirect'));
         if (!hasPendingRedirect) {
           setUser(null);
+          setAuthStatus('unauthenticated');
           localStorage.removeItem('resora_auth_user_v1');
-          document.cookie = 'resora_session=; path=/; max-age=0';
-          document.cookie = 'resora_logged_out=true; path=/; max-age=604800; SameSite=Lax';
+          AuthService.clearAuthCookies();
         }
+
         // Clear active UI state so previous user data never flashes
         setResources([]);
         setInboxResources([]);
@@ -241,7 +236,6 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
           discoveredTopics: [],
         });
       }
-      setAuthLoading(false);
     });
 
     return () => {
@@ -695,6 +689,7 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
         user,
         isAuthenticated: Boolean(user),
         authLoading,
+        authStatus,
         activeAiJob,
         trackAiJob,
         clearAiJob,

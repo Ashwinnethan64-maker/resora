@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ResoraLogo } from '@/components/brand/ResoraLogo';
 import { AuthService } from '@/lib/auth/auth-service';
+import { useResora } from '@/context/ResoraContext';
 import { ArrowRight, ShieldCheck, Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react';
 
 function GoogleIcon({ className = "w-5 h-5" }: { className?: string }) {
@@ -35,6 +36,7 @@ function AuthContent() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('from') || '/app';
   const urlError = searchParams.get('error');
+  const { authStatus, user } = useResora();
 
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [name, setName] = useState('');
@@ -42,7 +44,6 @@ function AuthContent() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
   const [errorMessage, setErrorMessage] = useState(urlError || '');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -62,7 +63,6 @@ function AuthContent() {
         if (!isMounted) return;
         if (res?.error) {
           setErrorMessage(res.error);
-          setIsInitializing(false);
           return;
         }
 
@@ -72,31 +72,27 @@ function AuthContent() {
           window.location.replace(pendingReturn);
           return;
         }
-
-        // 2. If no redirect result, check if user is already authenticated
-        const currentUser = AuthService.getCurrentUser();
-        if (currentUser) {
-          window.location.replace(redirectTo);
-          return;
-        }
-
-        setIsInitializing(false);
       })
       .catch((err) => {
         if (!isMounted) return;
         console.warn('[AuthPage] Redirect check notice:', err);
-        const currentUser = AuthService.getCurrentUser();
-        if (currentUser) {
-          window.location.replace(redirectTo);
-          return;
-        }
-        setIsInitializing(false);
       });
 
     return () => {
       isMounted = false;
     };
   }, [redirectTo]);
+
+  // If authenticated via context, seamlessly transition to destination
+  useEffect(() => {
+    if (authStatus === 'authenticated' || user) {
+      const pendingReturn = (typeof window !== 'undefined' && sessionStorage.getItem('resora_auth_pending_redirect')) || redirectTo;
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('resora_auth_pending_redirect');
+      }
+      router.replace(pendingReturn);
+    }
+  }, [authStatus, user, redirectTo, router]);
 
   const handleGoogleSignIn = async () => {
     if (isGoogleLoading) return;
@@ -143,7 +139,8 @@ function AuthContent() {
     }
   };
 
-  if (isInitializing) {
+  // During session verification or while transitioning to authenticated state, show minimal branded loader
+  if (authStatus === 'loading' || authStatus === 'authenticated') {
     return (
       <div className="min-h-screen bg-[#FFFDF5] text-black flex flex-col justify-center items-center px-4 py-12">
         <div className="w-full max-w-sm p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] text-center space-y-4">
