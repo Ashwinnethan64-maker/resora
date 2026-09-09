@@ -193,8 +193,15 @@ export const AuthService = {
 
     redirectResultPromise = (async () => {
       try {
-        const result = await getRedirectResult(auth);
+        console.log('[RESORA AUTH] Checking redirect result...');
+        const redirectPromise = getRedirectResult(auth);
+        const timeoutPromise = new Promise<null>((resolve) => {
+          setTimeout(() => resolve(null), 3500);
+        });
+
+        const result = await Promise.race([redirectPromise, timeoutPromise]);
         if (result && result.user) {
+          console.log(`[RESORA AUTH] Redirect result resolved: user present (UID: ${result.user.uid})`);
           const mapped = this.mapFirebaseUser(result.user);
           localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
           this.setAuthCookies(mapped.id);
@@ -205,9 +212,10 @@ export const AuthService = {
 
           return { user: mapped };
         }
+        console.log('[RESORA AUTH] Redirect result resolved: none');
         return {};
       } catch (err: any) {
-        console.error('[AuthService] handleRedirectResult error:', err);
+        console.error('[RESORA AUTH] handleRedirectResult error:', err);
         sessionStorage.removeItem('resora_auth_pending_redirect');
         const code = err?.code || '';
         let message = 'Failed to complete Google Sign In.';
@@ -238,6 +246,7 @@ export const AuthService = {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
       if (isMobile) {
+        console.log(`[RESORA AUTH] Initiating mobile Google Sign-In with redirect (destination: ${returnUrl})`);
         // Set pending redirect marker in sessionStorage and clear logged out cookie
         sessionStorage.setItem('resora_auth_pending_redirect', returnUrl);
         document.cookie = 'resora_logged_out=; path=/; max-age=0; SameSite=Lax';
@@ -245,7 +254,9 @@ export const AuthService = {
         return {};
       }
 
+      console.log('[RESORA AUTH] Initiating desktop Google Sign-In with popup...');
       const result = await signInWithPopup(auth, googleProvider);
+      console.log(`[RESORA AUTH] Popup sign-in successful (UID: ${result.user.uid})`);
       const mapped = this.mapFirebaseUser(result.user);
 
       // Store in cache & cookie
@@ -257,7 +268,7 @@ export const AuthService = {
 
       return { user: mapped };
     } catch (err: any) {
-      console.error('[AuthService] Firebase Google Sign-In error:', err);
+      console.error('[RESORA AUTH] Firebase Google Sign-In error:', err);
       sessionStorage.removeItem('resora_auth_pending_redirect');
       const code = err?.code || '';
       let message = 'Failed to complete Google Sign In. Please try again.';

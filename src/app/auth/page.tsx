@@ -90,9 +90,10 @@ function AuthContent() {
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('resora_auth_pending_redirect');
       }
-      router.replace(pendingReturn);
+      console.log('[RESORA AUTH] Transitioning to destination:', pendingReturn);
+      window.location.replace(pendingReturn);
     }
-  }, [authStatus, user, redirectTo, router]);
+  }, [authStatus, user, redirectTo]);
 
   const handleGoogleSignIn = async () => {
     if (isGoogleLoading) return;
@@ -124,10 +125,10 @@ function AuthContent() {
     try {
       if (mode === 'signin') {
         await AuthService.signIn(email, password);
-        router.push(redirectTo);
+        window.location.replace(redirectTo);
       } else if (mode === 'signup') {
         await AuthService.signUp(name, email, password);
-        router.push('/app?onboarding=true');
+        window.location.replace('/app?onboarding=true');
       } else {
         await AuthService.sendPasswordReset(email);
         setSuccessMessage('Password reset instructions have been sent to your email.');
@@ -140,7 +141,8 @@ function AuthContent() {
   };
 
   // During session verification or while transitioning to authenticated state, show minimal branded loader
-  if (authStatus === 'loading' || authStatus === 'authenticated') {
+  // If an error exists, bypass loader so user can see error and retry
+  if ((authStatus === 'loading' || authStatus === 'authenticated') && !errorMessage) {
     return (
       <div className="min-h-screen bg-[#FFFDF5] text-black flex flex-col justify-center items-center px-4 py-12">
         <div className="w-full max-w-sm p-8 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] text-center space-y-4">

@@ -34,9 +34,14 @@ export const auth: Auth = getAuth(app);
 
 // Explicitly ensure browser local persistence for mobile OAuth redirect & refresh continuity
 if (typeof window !== 'undefined') {
-  setPersistence(auth, browserLocalPersistence).catch((err) => {
-    console.warn('[Firebase Auth] Persistence initialization notice:', err);
-  });
+  console.log(`[RESORA AUTH] Firebase Auth initialized. Configured: ${isFirebaseConfigured}`);
+  setPersistence(auth, browserLocalPersistence)
+    .then(() => {
+      console.log('[RESORA AUTH] Firebase auth persistence configured: browserLocalPersistence');
+    })
+    .catch((err) => {
+      console.warn('[RESORA AUTH] Persistence initialization notice:', err);
+    });
 }
 
 export const googleProvider = new GoogleAuthProvider();

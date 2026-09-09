@@ -166,80 +166,132 @@ export function ResoraProvider({ children }: { children: React.ReactNode }) {
   // Firebase Auth State Synchronization
   useEffect(() => {
     let isMounted = true;
-    let redirectResolved = false;
 
-    // 1. Process getRedirectResult (critical for mobile OAuth flow)
-    const redirectPromise = AuthService.handleRedirectResult()
+    // 1. Process getRedirectResult independently (critical for mobile OAuth flow)
+    AuthService.handleRedirectResult()
       .then((redirectRes) => {
-        redirectResolved = true;
         if (!isMounted) return;
         if (redirectRes?.user) {
+          console.log(`[RESORA AUTH] handleRedirectResult success (UID: ${redirectRes.user.id})`);
           setUser(redirectRes.user);
           setAuthStatus('authenticated');
           AuthService.setAuthCookies(redirectRes.user.id);
 
-          // If a pending return URL was stored on mobile, transition cleanly
           const pendingReturn = sessionStorage.getItem('resora_auth_pending_redirect');
           if (pendingReturn) {
             sessionStorage.removeItem('resora_auth_pending_redirect');
-            window.location.replace(pendingReturn);
+            if (typeof window !== 'undefined' && window.location.pathname === '/auth') {
+              console.log(`[RESORA AUTH] Transitioning to destination: ${pendingReturn}`);
+              window.location.replace(pendingReturn);
+            }
           }
         }
       })
       .catch((err) => {
-        redirectResolved = true;
-        console.warn('[ResoraContext] redirect result notice:', err);
+        console.warn('[RESORA AUTH] redirect result notice:', err);
       });
 
-    // 2. Listen to Firebase auth state changes (sign-in, sign-out, token refresh)
+    // 2. Authoritative listener for Firebase auth state changes
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!isMounted) return;
 
-      if (!redirectResolved) {
-        // Wait for redirect result promise before finalizing auth status
-        await redirectPromise;
-      }
-
-      if (!isMounted) return;
-
       if (firebaseUser) {
+        console.log(`[RESORA AUTH] Auth state changed: user present (UID: ${firebaseUser.uid})`);
         const mapped = AuthService.mapFirebaseUser(firebaseUser);
         setUser(mapped);
         setAuthStatus('authenticated');
         localStorage.setItem('resora_auth_user_v1', JSON.stringify(mapped));
         AuthService.setAuthCookies(mapped.id);
-        // Trigger profile persistence in Supabase if configured
-        AuthService.syncProfileToDatabase(mapped).catch(() => {});
-      } else {
-        // Check if there is an in-flight OAuth redirect pending on mobile
-        const hasPendingRedirect = typeof window !== 'undefined' && Boolean(sessionStorage.getItem('resora_auth_pending_redirect'));
-        if (!hasPendingRedirect) {
-          setUser(null);
-          setAuthStatus('unauthenticated');
-          localStorage.removeItem('resora_auth_user_v1');
-          AuthService.clearAuthCookies();
+
+        const pendingReturn = typeof window !== 'undefined' ? sessionStorage.getItem('resora_auth_pending_redirect') : null;
+        if (pendingReturn) {
+          sessionStorage.removeItem('resora_auth_pending_redirect');
+          if (typeof window !== 'undefined' && window.location.pathname === '/auth') {
+            console.log(`[RESORA AUTH] Transitioning to destination: ${pendingReturn}`);
+            window.location.replace(pendingReturn);
+          }
         }
 
-        // Clear active UI state so previous user data never flashes
-        setResources([]);
-        setInboxResources([]);
-        setProjects([]);
-        setCollections([]);
-        setMetrics({
-          total: 0,
-          inbox: 0,
-          favorites: 0,
-          documents: 0,
-          projects: 0,
-          collections: 0,
-          analyzed: 0,
-          discoveredTopics: [],
-        });
+        // Trigger profile persistence in Supabase if configured
+        AuthService.syncProfileToDatabase(mapped).catch(() => {});
+        return;
       }
+
+      // firebaseUser is null: Check if a mobile OAuth redirect was in flight
+      console.log('[RESORA AUTH] Auth state changed: null (checking pending redirect or local state)');
+      const hasPendingRedirect = typeof window !== 'undefined' && Boolean(sessionStorage.getItem('resora_auth_pending_redirect'));
+
+      if (hasPendingRedirect) {
+        try {
+          const redirectRes = await AuthService.handleRedirectResult();
+          if (!isMounted) return;
+          if (redirectRes?.user) {
+            console.log(`[RESORA AUTH] Pending redirect resolved user: (UID: ${redirectRes.user.id})`);
+            setUser(redirectRes.user);
+            setAuthStatus('authenticated');
+            AuthService.setAuthCookies(redirectRes.user.id);
+            const dest = sessionStorage.getItem('resora_auth_pending_redirect') || '/app';
+            sessionStorage.removeItem('resora_auth_pending_redirect');
+            if (typeof window !== 'undefined' && window.location.pathname === '/auth') {
+              console.log(`[RESORA AUTH] Transitioning to destination: ${dest}`);
+              window.location.replace(dest);
+            }
+            return;
+          }
+        } catch (e) {
+          console.warn('[RESORA AUTH] Error checking pending redirect:', e);
+        }
+      }
+
+      if (!isMounted) return;
+
+      // Confirmed unauthenticated: clear user and finalize status
+      console.log('[RESORA AUTH] Auth status updated: unauthenticated');
+      sessionStorage.removeItem('resora_auth_pending_redirect');
+      setUser(null);
+      setAuthStatus('unauthenticated');
+      localStorage.removeItem('resora_auth_user_v1');
+      AuthService.clearAuthCookies();
+
+      // Clear active UI state so previous user data never flashes
+      setResources([]);
+      setInboxResources([]);
+      setProjects([]);
+      setCollections([]);
+      setMetrics({
+        total: 0,
+        inbox: 0,
+        favorites: 0,
+        documents: 0,
+        projects: 0,
+        collections: 0,
+        analyzed: 0,
+        discoveredTopics: [],
+      });
     });
+
+    // 3. Ultimate safety watchdog: Ensure authStatus never remains indefinitely in 'loading'
+    const safetyWatchdog = setTimeout(() => {
+      if (!isMounted) return;
+      setAuthStatus((current) => {
+        if (current === 'loading') {
+          console.warn('[RESORA AUTH] Safety timeout reached while in loading state. Finalizing auth status.');
+          const currentUser = auth.currentUser ? AuthService.mapFirebaseUser(auth.currentUser) : AuthService.getCurrentUser();
+          if (currentUser) {
+            setUser(currentUser);
+            AuthService.setAuthCookies(currentUser.id);
+            return 'authenticated';
+          }
+          sessionStorage.removeItem('resora_auth_pending_redirect');
+          return 'unauthenticated';
+        }
+        return current;
+      });
+    }, 4500);
 
     return () => {
       isMounted = false;
+      clearTimeout(safetyWatchdog);
       unsubscribe();
     };
   }, []);
