@@ -106,10 +106,10 @@ function AuthContent() {
         setErrorMessage(res.error);
         setIsGoogleLoading(false);
       } else if (res.user) {
-        // Fast synchronous navigation directly to destination (desktop popup flow)
-        window.location.href = redirectTo;
+        // Fast synchronous navigation directly to destination
+        console.log('[RESORA AUTH] Google sign-in successful, navigating to:', redirectTo);
+        window.location.replace(redirectTo);
       }
-      // On mobile, signInWithRedirect takes over and redirects the browser window
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to initialize Google Sign In.');
       setIsGoogleLoading(false);

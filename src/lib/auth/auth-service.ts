@@ -237,46 +237,54 @@ export const AuthService = {
 
   /**
    * Trigger Google Sign-In via Firebase
+   * Uses popup authentication uniformly across desktop and mobile to avoid
+   * cross-site cookie partitioning (CHIPS) issues with redirect on mobile.
+   * Falls back to redirect only if popup is blocked by the browser.
    */
   async signInWithGoogle(returnUrl: string = '/app'): Promise<{ user?: AuthUser; error?: string; code?: string }> {
     if (typeof window === 'undefined') return { error: 'Window not defined' };
 
     try {
-      // Check if mobile device
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      console.log(`[RESORA AUTH] Initiating Google Sign-In with popup (destination: ${returnUrl})...`);
+      // Clear any stale logged out cookie before initiating auth
+      document.cookie = 'resora_logged_out=; path=/; max-age=0; SameSite=Lax';
 
-      if (isMobile) {
-        console.log(`[RESORA AUTH] Initiating mobile Google Sign-In with redirect (destination: ${returnUrl})`);
-        // Set pending redirect marker in sessionStorage and clear logged out cookie
-        sessionStorage.setItem('resora_auth_pending_redirect', returnUrl);
-        document.cookie = 'resora_logged_out=; path=/; max-age=0; SameSite=Lax';
-        await signInWithRedirect(auth, googleProvider);
-        return {};
-      }
-
-      console.log('[RESORA AUTH] Initiating desktop Google Sign-In with popup...');
       const result = await signInWithPopup(auth, googleProvider);
-      console.log(`[RESORA AUTH] Popup sign-in successful (UID: ${result.user.uid})`);
+      console.log(`[RESORA AUTH] Google Sign-In successful (UID: ${result.user.uid})`);
       const mapped = this.mapFirebaseUser(result.user);
 
-      // Store in cache & cookie
+      // Store in cache & cookie synchronously
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(mapped));
       this.setAuthCookies(mapped.id);
+      sessionStorage.removeItem('resora_auth_pending_redirect');
 
       // Sync profile
       this.syncProfileToDatabase(mapped).catch(() => {});
 
       return { user: mapped };
     } catch (err: any) {
-      console.error('[RESORA AUTH] Firebase Google Sign-In error:', err);
-      sessionStorage.removeItem('resora_auth_pending_redirect');
+      console.warn('[RESORA AUTH] Firebase Google Sign-In error:', err);
       const code = err?.code || '';
+
+      // If popup is blocked by mobile browser, fallback to redirect
+      if (code === 'auth/popup-blocked') {
+        console.log('[RESORA AUTH] Popup blocked by browser. Falling back to signInWithRedirect...');
+        try {
+          sessionStorage.setItem('resora_auth_pending_redirect', returnUrl);
+          await signInWithRedirect(auth, googleProvider);
+          return {};
+        } catch (redirectErr: any) {
+          console.error('[RESORA AUTH] Redirect fallback failed:', redirectErr);
+          sessionStorage.removeItem('resora_auth_pending_redirect');
+          return { error: 'Failed to complete sign-in. Please allow popups or try again.', code: redirectErr?.code };
+        }
+      }
+
+      sessionStorage.removeItem('resora_auth_pending_redirect');
       let message = 'Failed to complete Google Sign In. Please try again.';
 
       if (code === 'auth/popup-closed-by-user') {
-        message = 'Sign-in cancelled. The authentication window was closed.';
-      } else if (code === 'auth/popup-blocked') {
-        message = 'Popup was blocked by your browser. Please allow popups for this site.';
+        message = 'Sign-in was cancelled.';
       } else if (code === 'auth/unauthorized-domain') {
         message = 'Domain not authorized in Firebase Console. Please add your domain to Authorized Domains.';
       } else if (code === 'auth/network-request-failed') {
