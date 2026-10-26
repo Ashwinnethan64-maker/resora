@@ -241,7 +241,7 @@ export default function DocumentDetailPage({ params }: DocumentDetailPageProps) 
           )}
         </div>
 
-        <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-black">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight text-black leading-tight break-words overflow-hidden">
           {resource.title}
         </h1>
 

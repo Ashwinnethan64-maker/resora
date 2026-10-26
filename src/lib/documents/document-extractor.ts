@@ -18,6 +18,7 @@ export interface DocumentExtractionResult {
   pageCount: number;
   contentHash: string;
   thumbnailUrl?: string;
+  title?: string;
   isSupported: boolean;
   status: 'completed' | 'failed' | 'unsupported';
   errorMessage?: string;
@@ -127,7 +128,7 @@ export async function extractDocumentContent(
   // 2. PDF Files (Page-aware extraction using PDFParse)
   if (mimeType === 'application/pdf' || lowerName.endsWith('.pdf')) {
     try {
-      let pdfResult: { fullText: string; pages: PageExtraction[]; thumbnailUrl?: string } | null = null;
+      let pdfResult: { fullText: string; pages: PageExtraction[]; thumbnailUrl?: string; title?: string } | null = null;
       try {
         const { PDFParse } = await import('pdf-parse');
         const parser = new PDFParse({ data: buffer });
@@ -157,6 +158,14 @@ export async function extractDocumentContent(
           });
         }
 
+        let extractedTitle: string | undefined;
+        try {
+          const info = await parser.getInfo();
+          if (info && info.info && typeof info.info.Title === 'string' && info.info.Title.trim().length > 2) {
+            extractedTitle = info.info.Title.trim();
+          }
+        } catch {}
+
         // Clean up parser resources
         try {
           await parser.destroy();
@@ -170,6 +179,7 @@ export async function extractDocumentContent(
             fullText,
             pages,
             thumbnailUrl: firstPageShot,
+            title: extractedTitle,
           };
         }
       } catch (pdfParseErr) {
@@ -200,6 +210,7 @@ export async function extractDocumentContent(
         pageCount: Math.min(pdfResult.pages.length, MAX_PAGES),
         contentHash,
         thumbnailUrl: pdfResult.thumbnailUrl,
+        title: pdfResult.title,
         isSupported: true,
         status: 'completed',
       };

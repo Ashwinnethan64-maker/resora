@@ -68,7 +68,11 @@ export async function POST(req: NextRequest) {
     // 3. Create Resource model for parent document
     const isPdf = fileName.toLowerCase().endsWith('.pdf') || mimeType === 'application/pdf';
     const resourceType = isPdf ? 'pdf' : 'document';
-    const cleanTitle = fileName.replace(/\.[^/.]+$/, '');
+    
+    // Clean and normalize title: replace raw underscores/dashes with spaces, trim extensions
+    let cleanTitle = extraction.title || fileName.replace(/\.[^/.]+$/, '');
+    cleanTitle = cleanTitle.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!cleanTitle) cleanTitle = fileName;
 
     const resource = await ResourceService.createResource({
       user_id: authenticatedUserId,

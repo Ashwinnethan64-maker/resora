@@ -221,7 +221,7 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
 
   // Default Grid View: Refined Canonical ResourceCard
   return (
-    <div className="card-neo group relative flex flex-col justify-between p-4 sm:p-5 bg-white border-3 border-black shadow-[5px_5px_0px_0px_#000]">
+    <div className="card-neo group relative flex flex-col justify-between p-4 sm:p-5 bg-white border-3 border-black shadow-[5px_5px_0px_0px_#000] min-w-0 overflow-hidden">
       {/* Corner Type Badge */}
       <div className="absolute -top-3 -right-2 z-10">
         <NeoSticker color={getStickerColor(resource.resource_type) as any} size="sm">
@@ -311,7 +311,7 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
 
         {/* Card Title & Link */}
         <Link href={`/app/library/${resource.id}`} className="block group-hover:underline">
-          <h3 className="text-base font-bold text-black line-clamp-2 tracking-tight group-hover:text-[#FF6B6B] transition-colors leading-snug">
+          <h3 className="text-sm sm:text-base font-black text-black line-clamp-2 tracking-tight group-hover:text-[#FF6B6B] transition-colors leading-snug break-words overflow-hidden" title={resource.title}>
             {resource.title}
           </h3>
         </Link>

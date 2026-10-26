@@ -227,7 +227,7 @@ export default function ResourceDetailPage() {
               )}
             </div>
 
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter text-black leading-[0.9]">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-black leading-tight break-words overflow-hidden">
               {resource.title}
             </h1>
 
