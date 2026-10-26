@@ -17,7 +17,7 @@ export async function GET(
     }
 
     const doc = await ResourceService.getDocumentByResourceId(id);
-    const resource = await ResourceService.getResource(id);
+    const resource = await ResourceService.getResourceById(id, userId);
 
     // Verify ownership (allow usr_local / guest if same or matching resource)
     if (doc && doc.user_id !== userId && doc.user_id !== 'usr_local' && userId !== 'usr_local') {
