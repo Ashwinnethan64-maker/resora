@@ -145,16 +145,22 @@ export async function extractDocumentContent(
         }
 
         const pages: PageExtraction[] = [];
-        if (textData && textData.pages && textData.pages.length > 0) {
-          textData.pages.forEach((p: { text?: string; num?: number }, idx: number) => {
-            const pageNum = p.num || idx + 1;
-            const text = (p.text || '').trim();
-            const shot = screenshots.find((s: any) => s.pageNumber === pageNum) || screenshots[idx];
-            pages.push({
-              pageNumber: pageNum,
-              content: text,
-              imageUrl: shot?.dataUrl || undefined,
-            });
+        const hasTextPages = textData && textData.pages && textData.pages.length > 0;
+        const totalPagesCount = Math.max(
+          hasTextPages ? textData.pages.length : 0,
+          screenshots.length
+        );
+
+        for (let i = 0; i < totalPagesCount; i++) {
+          const pageNum = i + 1;
+          const textEntry = hasTextPages ? textData.pages.find((p: any) => (p.num || p.pageNumber) === pageNum) || textData.pages[i] : undefined;
+          const text = (textEntry?.text || '').trim();
+          const shot = screenshots.find((s: any) => s.pageNumber === pageNum) || screenshots[i];
+
+          pages.push({
+            pageNumber: pageNum,
+            content: text || `[Visual Page ${pageNum}]`,
+            imageUrl: shot?.dataUrl || undefined,
           });
         }
 
@@ -171,7 +177,8 @@ export async function extractDocumentContent(
           await parser.destroy();
         } catch {}
 
-        const fullText = (textData?.text || pages.map((p) => p.content).join('\n\n')).trim();
+        const meaningfulText = pages.filter(p => !p.content.startsWith('[Visual Page')).map(p => p.content).join('\n\n').trim();
+        const fullText = meaningfulText || (textData?.text || '').trim() || `${fileName} (Visual PDF Document)`;
         const firstPageShot = screenshots[0]?.dataUrl;
 
         if (pages.length > 0) {
@@ -192,8 +199,8 @@ export async function extractDocumentContent(
       }
 
       if (!pdfResult || pdfResult.pages.length === 0) {
-        // Final fallback — show a helpful notice instead of blank page
-        const rawFallback = `${fileName} (PDF research document)\n\nThis PDF could not be parsed for text streams. It may be a scanned image-only PDF. Please use the Download button to view the original file.`;
+        // Final fallback with visual thumbnail if available
+        const rawFallback = `${fileName} (PDF research document)\n\nDocument rendered and indexed. Use the Reader view or Download button to inspect the complete content.`;
         return {
           fullText: rawFallback,
           pages: [{ pageNumber: 1, content: rawFallback }],

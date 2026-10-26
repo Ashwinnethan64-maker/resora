@@ -208,35 +208,40 @@ export default function ResourceDetailPage() {
 
       {/* Main Dossier Header Banner */}
       <div className="p-6 md:p-8 bg-white border-4 border-black shadow-[12px_12px_0px_0px_#000] space-y-6">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-          <div className="space-y-3 min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <NeoBadge label={typeConfig.label} type={resource.resource_type} />
-              <span className="text-xs font-mono font-black text-black flex items-center gap-1">
-                <Globe className="w-3.5 h-3.5" /> {resource.domain}
-              </span>
-              {documentMetadata && (
-                <NeoSticker color="yellow" size="sm">
-                  {documentMetadata.page_count} PAGES · {(documentMetadata.file_size / 1024).toFixed(0)} KB
-                </NeoSticker>
-              )}
-              {intelligence?.status === 'completed' && (
-                <NeoSticker color="violet" size="sm" rotate="1">
-                  SYNTHESIZED
-                </NeoSticker>
-              )}
-            </div>
+        {/* Top Badges & Metadata */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <NeoBadge label={typeConfig.label} type={resource.resource_type} />
+          <span className="text-xs font-mono font-black text-black flex items-center gap-1">
+            <Globe className="w-3.5 h-3.5" /> {resource.domain}
+          </span>
+          {documentMetadata && (
+            <NeoSticker color="yellow" size="sm">
+              {documentMetadata.page_count} PAGES · {(documentMetadata.file_size / 1024).toFixed(0)} KB
+            </NeoSticker>
+          )}
+          {intelligence?.status === 'completed' && (
+            <NeoSticker color="violet" size="sm" rotate="1">
+              SYNTHESIZED
+            </NeoSticker>
+          )}
+        </div>
 
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-black leading-tight break-words overflow-hidden">
-              {resource.title}
-            </h1>
+        {/* Title - Full Width */}
+        <div className="w-full min-w-0">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-black leading-tight break-words">
+            {resource.title}
+          </h1>
 
-            <p className="text-sm font-bold text-black/80 leading-relaxed max-w-3xl">
-              {resource.description || 'No description provided.'}
+          {resource.description && (
+            <p className="mt-2 text-sm font-bold text-black/80 leading-relaxed max-w-3xl">
+              {resource.description}
             </p>
-          </div>
+          )}
+        </div>
 
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+        {/* Action Toolbar */}
+        <div className="pt-2 border-t-2 border-black flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Favorite Action */}
             <button
               onClick={() => toggleFavorite(resource.id)}
@@ -276,7 +281,10 @@ export default function ResourceDetailPage() {
             >
               <Trash2 className="w-4 h-4 stroke-[2.5]" />
             </button>
+          </div>
 
+          {/* Primary Action Buttons */}
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Ask Resora */}
             <Link
               href={`/app/assistant?scope=document&scopeId=${resource.id}`}
@@ -286,39 +294,27 @@ export default function ResourceDetailPage() {
               <span>QUERY AI</span>
             </Link>
 
-            {/* Document Reader Trigger */}
-            {isDocumentType && (
-              <button
-                onClick={() => setIsViewerOpen(true)}
-                className="btn-neo flex items-center gap-1.5 px-4 py-3 bg-[#C4B5FD] text-black border-4 border-black font-black text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
-              >
-                <Eye className="w-4 h-4 stroke-[3]" />
-                <span>READER</span>
-              </button>
-            )}
-
-            {/* Primary Action Button */}
             {(() => {
               const target = resolveResourceTarget(resource);
               if (target.type === 'internal_document') {
                 return (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       onClick={() => setIsViewerOpen(true)}
-                      className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#FFD93D] hover:bg-[#ffe366] text-black border-4 border-black font-black text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
+                      className="btn-neo flex items-center gap-2 px-5 py-3 bg-[#C4B5FD] hover:bg-[#b29efc] text-black border-4 border-black font-black text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
                     >
                       <Eye className="w-4 h-4 stroke-[3]" />
-                      <span>READ DOCUMENT</span>
+                      <span>READER</span>
                     </button>
                     {target.downloadUrl && (
                       <a
                         href={target.downloadUrl}
                         download={resource.file_name || 'document'}
-                        className="btn-neo flex items-center gap-2 px-4 py-3 bg-white hover:bg-[#C4B5FD] text-black border-4 border-black font-black text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
+                        className="btn-neo flex items-center gap-2 px-4 py-3 bg-white hover:bg-[#FFD93D] text-black border-4 border-black font-black text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#000]"
                         title="Download Original"
                       >
                         <Download className="w-4 h-4 stroke-[3]" />
-                        <span className="hidden sm:inline">DOWNLOAD</span>
+                        <span>DOWNLOAD</span>
                       </a>
                     )}
                   </div>
