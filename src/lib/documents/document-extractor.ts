@@ -9,6 +9,7 @@ import crypto from 'crypto';
 export interface PageExtraction {
   pageNumber: number;
   content: string;
+  imageUrl?: string;
 }
 
 export interface DocumentExtractionResult {
@@ -16,6 +17,7 @@ export interface DocumentExtractionResult {
   pages: PageExtraction[];
   pageCount: number;
   contentHash: string;
+  thumbnailUrl?: string;
   isSupported: boolean;
   status: 'completed' | 'failed' | 'unsupported';
   errorMessage?: string;
@@ -122,15 +124,66 @@ export async function extractDocumentContent(
     }
   }
 
-  // 2. PDF Files (Page-aware extraction)
+  // 2. PDF Files (Page-aware extraction using PDFParse)
   if (mimeType === 'application/pdf' || lowerName.endsWith('.pdf')) {
     try {
-      // Parse PDF streams directly to extract text blocks and page separators
-      const pdfText = parsePdfBuffer(buffer);
+      let pdfResult: { fullText: string; pages: PageExtraction[]; thumbnailUrl?: string } | null = null;
+      try {
+        const { PDFParse } = await import('pdf-parse');
+        const parser = new PDFParse({ data: buffer });
+        const textData = await parser.getText();
+        let screenshots: any[] = [];
+        try {
+          // Extract screenshots/images for pages (up to first 20 pages for speed & efficiency)
+          const shotData = await parser.getScreenshot({ scale: 1.0 });
+          if (shotData && shotData.pages) {
+            screenshots = shotData.pages;
+          }
+        } catch (shotErr) {
+          console.warn('[DocumentExtractor] Screenshot rendering notice:', shotErr);
+        }
 
-      if (!pdfText.pages || pdfText.pages.length === 0) {
-        // Fallback to single-page raw text if structural parsing is sparse
-        const rawFallback = pdfText.fullText || `${fileName} (PDF research document)`;
+        const pages: PageExtraction[] = [];
+        if (textData && textData.pages && textData.pages.length > 0) {
+          textData.pages.forEach((p: { text?: string; num?: number }, idx: number) => {
+            const pageNum = p.num || idx + 1;
+            const text = (p.text || '').trim();
+            const shot = screenshots.find((s: any) => s.pageNumber === pageNum) || screenshots[idx];
+            pages.push({
+              pageNumber: pageNum,
+              content: text,
+              imageUrl: shot?.dataUrl || undefined,
+            });
+          });
+        }
+
+        // Clean up parser resources
+        try {
+          await parser.destroy();
+        } catch {}
+
+        const fullText = (textData?.text || pages.map((p) => p.content).join('\n\n')).trim();
+        const firstPageShot = screenshots[0]?.dataUrl;
+
+        if (pages.length > 0) {
+          pdfResult = {
+            fullText,
+            pages,
+            thumbnailUrl: firstPageShot,
+          };
+        }
+      } catch (pdfParseErr) {
+        console.warn('[DocumentExtractor] PDFParse failed, trying stream parser:', pdfParseErr);
+      }
+
+      // Fallback: regex-based raw stream parser (works on uncompressed/legacy PDFs)
+      if (!pdfResult || pdfResult.pages.length === 0) {
+        pdfResult = parsePdfBuffer(buffer);
+      }
+
+      if (!pdfResult || pdfResult.pages.length === 0) {
+        // Final fallback — show a helpful notice instead of blank page
+        const rawFallback = `${fileName} (PDF research document)\n\nThis PDF could not be parsed for text streams. It may be a scanned image-only PDF. Please use the Download button to view the original file.`;
         return {
           fullText: rawFallback,
           pages: [{ pageNumber: 1, content: rawFallback }],
@@ -142,10 +195,11 @@ export async function extractDocumentContent(
       }
 
       return {
-        fullText: pdfText.fullText,
-        pages: pdfText.pages,
-        pageCount: Math.min(pdfText.pages.length, MAX_PAGES),
+        fullText: pdfResult.fullText,
+        pages: pdfResult.pages,
+        pageCount: Math.min(pdfResult.pages.length, MAX_PAGES),
         contentHash,
+        thumbnailUrl: pdfResult.thumbnailUrl,
         isSupported: true,
         status: 'completed',
       };

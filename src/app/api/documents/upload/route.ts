@@ -120,6 +120,7 @@ export async function POST(req: NextRequest) {
       page_count: extraction.pageCount,
       extraction_status: extraction.status,
       extracted_text: extraction.fullText,
+      thumbnail_data_url: extraction.thumbnailUrl,
       content_hash: extraction.contentHash,
       pages: extraction.pages,
     });
@@ -149,11 +150,25 @@ export async function POST(req: NextRequest) {
       })();
     }
 
+    // Build the page records to return to the client for local-storage sync
+    const pageRecords = extraction.pages.map((p, idx) => ({
+      id: `page-${doc.id}-${p.pageNumber}`,
+      document_id: doc.id,
+      page_number: p.pageNumber,
+      content: p.content,
+      image_url: p.imageUrl,
+      created_at: doc.created_at,
+    }));
+
     return NextResponse.json({
       status: 'import_complete',
       success: true,
-      resource,
-      document: doc,
+      resource: {
+        ...resource,
+        thumbnail_url: extraction.thumbnailUrl || resource.thumbnail_url,
+      },
+      document: { ...doc, pages: pageRecords },
+      pages: pageRecords,
       extractedResources: importSummary.newResources,
       existingResources: importSummary.existingResources,
       summary: {

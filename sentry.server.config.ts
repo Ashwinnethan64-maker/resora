@@ -8,7 +8,7 @@ if (SENTRY_DSN) {
     tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
     debug: false,
     environment: process.env.APP_ENV || process.env.NODE_ENV || 'development',
-    beforeSend(event) {
+    beforeSend(event: any) {
       // Security: Strip potential secrets, passwords, auth tokens, or private research content
       if (event.request?.headers) {
         delete event.request.headers['authorization'];

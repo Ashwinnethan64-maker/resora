@@ -72,6 +72,7 @@ export interface DocumentModel {
   page_count: number;
   extraction_status: ExtractionStatus;
   extracted_text?: string;
+  thumbnail_data_url?: string;
   content_hash: string;
   created_at: string;
   updated_at: string;
@@ -82,6 +83,7 @@ export interface DocumentPageModel {
   document_id: string;
   page_number: number;
   content: string;
+  image_url?: string;
   created_at: string;
 }
 

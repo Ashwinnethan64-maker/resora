@@ -159,7 +159,8 @@ export function DocumentDropzone({ onUploadSuccess, onUploadComplete, className 
         await ResourceService.syncResource(result.resource);
       }
       if (result.document) {
-        await ResourceService.syncDocumentRecord(result.document, result.document.pages);
+        const pages = result.pages || result.document.pages || [];
+        await ResourceService.syncDocumentRecord(result.document, pages);
       }
       if (result.extractedResources && Array.isArray(result.extractedResources) && result.extractedResources.length > 0) {
         await ResourceService.syncResources(result.extractedResources);

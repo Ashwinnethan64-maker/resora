@@ -686,8 +686,9 @@ export class ResourceService {
     page_count: number;
     extraction_status: any;
     extracted_text: string;
+    thumbnail_data_url?: string;
     content_hash: string;
-    pages: { pageNumber: number; content: string }[];
+    pages: { pageNumber: number; content: string; imageUrl?: string }[];
   }): Promise<DocumentModel> {
     this.initStore();
     const docs = getLocalItem<Record<string, DocumentModel>>(STORAGE_KEYS.DOCUMENTS, SEED_DOCUMENTS);
@@ -703,6 +704,7 @@ export class ResourceService {
       page_count: docData.page_count,
       extraction_status: docData.extraction_status,
       extracted_text: docData.extracted_text,
+      thumbnail_data_url: docData.thumbnail_data_url,
       content_hash: docData.content_hash,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -718,6 +720,7 @@ export class ResourceService {
       document_id: newDoc.id,
       page_number: p.pageNumber,
       content: p.content,
+      image_url: p.imageUrl,
       created_at: new Date().toISOString(),
     }));
     setLocalItem(STORAGE_KEYS.DOCUMENT_PAGES, allPages);

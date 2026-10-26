@@ -8,7 +8,7 @@ if (SENTRY_DSN) {
     tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.05 : 1.0,
     debug: false,
     environment: process.env.APP_ENV || process.env.NODE_ENV || 'development',
-    beforeSend(event) {
+    beforeSend(event: any) {
       // Ensure user research content is not leaked in error breadcrumbs
       return event;
     },

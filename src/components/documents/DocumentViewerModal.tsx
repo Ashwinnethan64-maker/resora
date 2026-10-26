@@ -35,27 +35,110 @@ export function DocumentViewerModal({
   const [copied, setCopied] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(100);
 
+  const [viewMode, setViewMode] = useState<'both' | 'text' | 'image'>('both');
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     if (isOpen && resource) {
       setCurrentPageNum(1);
       setPageSearchQuery('');
-      ResourceService.getDocumentByResourceId(resource.id).then((doc) => {
-        setDocumentModel(doc);
-        if (doc) {
-          ResourceService.getDocumentPages(doc.id).then(setPages);
-        } else {
-          // If no formal document record, render resource.content as single page
-          setPages([
-            {
-              id: 'single-page',
-              document_id: 'default',
+      setPages([]);
+      setIsLoading(true);
+
+      const loadDoc = async () => {
+        try {
+          let doc = await ResourceService.getDocumentByResourceId(resource.id);
+          let loadedPages: DocumentPageModel[] = [];
+
+          if (doc) {
+            loadedPages = await ResourceService.getDocumentPages(doc.id);
+          }
+
+          // If local store does not have it, fetch from server API
+          if (!doc || loadedPages.length === 0) {
+            try {
+              const apiRes = await fetch(`/api/documents/${encodeURIComponent(resource.id)}`);
+              if (apiRes.ok) {
+                const data = await apiRes.json();
+                if (data.document) {
+                  doc = data.document;
+                  if (data.pages && data.pages.length > 0) {
+                    loadedPages = data.pages;
+                  }
+                  await ResourceService.syncDocumentRecord(doc!, loadedPages);
+                }
+              }
+            } catch (netErr) {
+              console.warn('[DocumentViewerModal] Server fetch error:', netErr);
+            }
+          }
+
+          setDocumentModel(doc);
+
+          if (loadedPages.length > 0) {
+            setPages(loadedPages);
+          } else if (doc && doc.extracted_text) {
+            const chunkSize = 3000;
+            const fullText = doc.extracted_text;
+            const chunks: DocumentPageModel[] = [];
+            for (let i = 0; i < fullText.length; i += chunkSize) {
+              chunks.push({
+                id: `fallback-page-${i}`,
+                document_id: doc.id,
+                page_number: Math.floor(i / chunkSize) + 1,
+                content: fullText.slice(i, i + chunkSize).trim(),
+                image_url: doc.thumbnail_data_url,
+                created_at: resource.created_at,
+              });
+            }
+            setPages(chunks.length > 0 ? chunks : [{
+              id: 'fallback-page-0',
+              document_id: doc.id,
               page_number: 1,
-              content: resource.content || resource.description || 'Document content unavailable.',
+              content: fullText,
+              image_url: doc.thumbnail_data_url,
               created_at: resource.created_at,
-            },
-          ]);
+            }]);
+          } else {
+            const fallbackText = resource.content || resource.description || '';
+            if (fallbackText.trim()) {
+              const chunkSize = 3000;
+              const chunks: DocumentPageModel[] = [];
+              for (let i = 0; i < fallbackText.length; i += chunkSize) {
+                chunks.push({
+                  id: `fallback-page-${i}`,
+                  document_id: 'default',
+                  page_number: Math.floor(i / chunkSize) + 1,
+                  content: fallbackText.slice(i, i + chunkSize).trim(),
+                  image_url: resource.thumbnail_url,
+                  created_at: resource.created_at,
+                });
+              }
+              setPages(chunks.length > 0 ? chunks : [{
+                id: 'fallback-page-0',
+                document_id: 'default',
+                page_number: 1,
+                content: fallbackText.trim(),
+                image_url: resource.thumbnail_url,
+                created_at: resource.created_at,
+              }]);
+            } else {
+              setPages([{
+                id: 'no-content',
+                document_id: 'default',
+                page_number: 1,
+                content: 'No text extracted for this document. You can download the original file to view it.',
+                image_url: resource.thumbnail_url,
+                created_at: resource.created_at,
+              }]);
+            }
+          }
+        } finally {
+          setIsLoading(false);
         }
-      });
+      };
+
+      loadDoc();
     }
   }, [isOpen, resource]);
 
@@ -232,6 +315,30 @@ export function DocumentViewerModal({
               </div>
 
               <div className="flex items-center gap-3">
+                {/* View Mode Switcher if page image is available */}
+                {activePage?.image_url && (
+                  <div className="flex items-center border border-black bg-white">
+                    <button
+                      onClick={() => setViewMode('both')}
+                      className={`px-2 py-0.5 font-mono font-bold text-[10px] uppercase ${viewMode === 'both' ? 'bg-[#FFD93D] font-black' : 'hover:bg-black/5'}`}
+                    >
+                      SPLIT
+                    </button>
+                    <button
+                      onClick={() => setViewMode('image')}
+                      className={`px-2 py-0.5 font-mono font-bold text-[10px] uppercase border-l border-black ${viewMode === 'image' ? 'bg-[#FFD93D] font-black' : 'hover:bg-black/5'}`}
+                    >
+                      IMAGE
+                    </button>
+                    <button
+                      onClick={() => setViewMode('text')}
+                      className={`px-2 py-0.5 font-mono font-bold text-[10px] uppercase border-l border-black ${viewMode === 'text' ? 'bg-[#FFD93D] font-black' : 'hover:bg-black/5'}`}
+                    >
+                      TEXT
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setZoomLevel((z) => Math.max(70, z - 10))}
@@ -260,33 +367,73 @@ export function DocumentViewerModal({
               </div>
             </div>
 
-            {/* Document Text Rendering Pane */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-10 flex justify-center bg-[#FFFDF5] bg-grid-paper">
-              <div
-                className="w-full max-w-3xl rounded-none bg-white border-4 border-black p-6 sm:p-8 shadow-[8px_8px_0px_0px_#000] text-black select-text"
-                style={{ fontSize: `${(zoomLevel / 100) * 14}px` }}
-              >
-                {activePage?.content ? (
-                  resource.file_name?.toLowerCase().endsWith('.md') ||
-                  resource.file_name?.toLowerCase().endsWith('.markdown') ||
-                  resource.url?.toLowerCase().endsWith('.md') ? (
-                    <MarkdownRenderer content={activePage.content} />
-                  ) : (
-                    <div className="font-mono leading-relaxed whitespace-pre-wrap">
-                      {activePage.content}
-                    </div>
-                  )
-                ) : (
-                  <div className="font-mono text-xs text-black/60 italic">
-                    No text extracted for this page.
+            {/* Document Content Rendering Pane (Text, Visual Image, or Split) */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 flex justify-center bg-[#FFFDF5] bg-grid-paper">
+              {isLoading ? (
+                <div className="flex items-center justify-center p-12">
+                  <div className="p-6 bg-white border-4 border-black font-mono font-black text-xs uppercase shadow-[4px_4px_0px_#000]">
+                    Loading Document Pages...
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div
+                  className={`w-full max-w-5xl grid gap-6 ${
+                    activePage?.image_url && viewMode === 'both' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'
+                  }`}
+                >
+                  {/* Page Visual Render (Image) */}
+                  {activePage?.image_url && (viewMode === 'both' || viewMode === 'image') && (
+                    <div className="rounded-none bg-white border-4 border-black p-3 sm:p-4 shadow-[8px_8px_0px_0px_#000] flex flex-col items-center justify-center">
+                      <div className="text-[10px] font-mono font-black uppercase text-black mb-2 self-start bg-[#C4B5FD] px-2 py-0.5 border border-black">
+                        VISUAL PAGE {activePage.page_number}
+                      </div>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={activePage.image_url}
+                        alt={`Page ${activePage.page_number}`}
+                        className="max-w-full max-h-[70vh] object-contain border border-black/20 shadow-sm"
+                        style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Page Text Render */}
+                  {(viewMode === 'both' || viewMode === 'text' || !activePage?.image_url) && (
+                    <div
+                      className="rounded-none bg-white border-4 border-black p-6 sm:p-8 shadow-[8px_8px_0px_0px_#000] text-black select-text flex flex-col"
+                      style={{ fontSize: `${(zoomLevel / 100) * 14}px` }}
+                    >
+                      <div className="text-[10px] font-mono font-black uppercase text-black mb-3 pb-2 border-b-2 border-black flex items-center justify-between">
+                        <span className="bg-[#FFD93D] px-2 py-0.5 border border-black">EXTRACTED TEXT</span>
+                        <span className="text-black/60">{activePage?.content ? activePage.content.split(/\s+/).length : 0} words</span>
+                      </div>
+
+                      {activePage?.content ? (
+                        resource.file_name?.toLowerCase().endsWith('.md') ||
+                        resource.file_name?.toLowerCase().endsWith('.markdown') ||
+                        resource.url?.toLowerCase().endsWith('.md') ? (
+                          <MarkdownRenderer content={activePage.content} />
+                        ) : (
+                          <div className="font-mono leading-relaxed whitespace-pre-wrap flex-1">
+                            {activePage.content}
+                          </div>
+                        )
+                      ) : (
+                        <div className="font-mono text-xs text-black/60 italic py-6 text-center">
+                          No text extracted for this page.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Bottom Status Bar */}
             <div className="px-4 py-2 border-t-2 border-black bg-white flex items-center justify-between text-[11px] text-black font-mono font-black uppercase">
-              <span className="bg-[#FFD93D] px-2 py-0.5 border border-black">Status: Text Indexed</span>
+              <span className="bg-[#FFD93D] px-2 py-0.5 border border-black">
+                {activePage?.image_url ? 'Status: Text & Visual Pages Rendered' : 'Status: Text Indexed'}
+              </span>
               <span className="bg-[#C4B5FD] px-2 py-0.5 border border-black">Page-Aware Extraction</span>
             </div>
           </main>

@@ -61,22 +61,67 @@ export default function DocumentDetailPage({ params }: DocumentDetailPageProps) 
           setResource(found);
 
           const { ResourceService } = await import('@/lib/services/resource-service');
-          const doc = await ResourceService.getDocumentByResourceId(found.id);
-          if (doc && isMounted) {
-            const docPages = await ResourceService.getDocumentPages(doc.id);
-            if (isMounted) {
-              setPages(docPages);
+          let doc = await ResourceService.getDocumentByResourceId(found.id);
+          let docPages: DocumentPageModel[] = [];
+          if (doc) {
+            docPages = await ResourceService.getDocumentPages(doc.id);
+          }
+
+          if (!doc || docPages.length === 0) {
+            try {
+              const apiRes = await fetch(`/api/documents/${encodeURIComponent(found.id)}`);
+              if (apiRes.ok) {
+                const data = await apiRes.json();
+                if (data.document) {
+                  doc = data.document;
+                  if (data.pages && data.pages.length > 0) {
+                    docPages = data.pages;
+                  }
+                  await ResourceService.syncDocumentRecord(doc!, docPages);
+                }
+              }
+            } catch (netErr) {
+              console.warn('[DocPage] Server fetch error:', netErr);
             }
-          } else if (found.content && isMounted) {
-            setPages([
-              {
-                id: `page_virt_${found.id}`,
-                document_id: found.id,
+          }
+
+          if (isMounted) {
+            if (docPages.length > 0) {
+              setPages(docPages);
+            } else if (doc && doc.extracted_text) {
+              const chunkSize = 3000;
+              const fullText = doc.extracted_text;
+              const chunks: DocumentPageModel[] = [];
+              for (let i = 0; i < fullText.length; i += chunkSize) {
+                chunks.push({
+                  id: `fallback-page-${i}`,
+                  document_id: doc.id,
+                  page_number: Math.floor(i / chunkSize) + 1,
+                  content: fullText.slice(i, i + chunkSize).trim(),
+                  image_url: doc.thumbnail_data_url,
+                  created_at: found.created_at,
+                });
+              }
+              setPages(chunks.length > 0 ? chunks : [{
+                id: 'fallback-page-0',
+                document_id: doc.id,
                 page_number: 1,
-                content: found.content,
+                content: fullText,
+                image_url: doc.thumbnail_data_url,
                 created_at: found.created_at,
-              },
-            ]);
+              }]);
+            } else if (found.content) {
+              setPages([
+                {
+                  id: `page_virt_${found.id}`,
+                  document_id: found.id,
+                  page_number: 1,
+                  content: found.content,
+                  image_url: found.thumbnail_url,
+                  created_at: found.created_at,
+                },
+              ]);
+            }
           }
         }
       } catch (err) {
@@ -328,24 +373,50 @@ export default function DocumentDetailPage({ params }: DocumentDetailPageProps) 
             </div>
           </div>
 
-          <div className="flex-1 p-6 sm:p-10 overflow-y-auto">
+          <div className="flex-1 p-4 sm:p-8 overflow-y-auto flex justify-center bg-[#FFFDF5]">
             <div
-              className="max-w-3xl mx-auto bg-white border-4 border-black p-6 sm:p-8 shadow-[6px_6px_0px_#000]"
-              style={{ fontSize: `${(zoomLevel / 100) * 14}px` }}
+              className={`w-full max-w-5xl grid gap-6 ${
+                activePage?.image_url ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'
+              }`}
             >
-              {activePage?.content ? (
-                isMarkdown ? (
-                  <MarkdownRenderer content={activePage.content} />
-                ) : (
-                  <div className="font-mono leading-relaxed whitespace-pre-wrap select-text">
-                    {activePage.content}
+              {activePage?.image_url && (
+                <div className="rounded-none bg-white border-4 border-black p-4 shadow-[6px_6px_0px_#000] flex flex-col items-center justify-center">
+                  <div className="text-[10px] font-mono font-black uppercase text-black mb-2 self-start bg-[#C4B5FD] px-2 py-0.5 border border-black">
+                    VISUAL PAGE {activePage.page_number}
                   </div>
-                )
-              ) : (
-                <div className="font-mono text-xs text-black/60 italic">
-                  No text extracted for this section.
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={activePage.image_url}
+                    alt={`Page ${activePage.page_number}`}
+                    className="max-w-full max-h-[70vh] object-contain border border-black/20 shadow-sm"
+                    style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
+                  />
                 </div>
               )}
+
+              <div
+                className="w-full bg-white border-4 border-black p-6 sm:p-8 shadow-[6px_6px_0px_#000] flex flex-col"
+                style={{ fontSize: `${(zoomLevel / 100) * 14}px` }}
+              >
+                <div className="text-[10px] font-mono font-black uppercase text-black mb-3 pb-2 border-b-2 border-black flex items-center justify-between">
+                  <span className="bg-[#FFD93D] px-2 py-0.5 border border-black">EXTRACTED TEXT</span>
+                  <span className="text-black/60">{activePage?.content ? activePage.content.split(/\s+/).length : 0} words</span>
+                </div>
+
+                {activePage?.content ? (
+                  isMarkdown ? (
+                    <MarkdownRenderer content={activePage.content} />
+                  ) : (
+                    <div className="font-mono leading-relaxed whitespace-pre-wrap select-text flex-1">
+                      {activePage.content}
+                    </div>
+                  )
+                ) : (
+                  <div className="font-mono text-xs text-black/60 italic py-6 text-center">
+                    No text extracted for this section.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
