@@ -83,6 +83,8 @@ export function resolveResourceTarget(resource: ResourceModel): ResolvedResource
       href: `/app/documents/${encodeURIComponent(resource.id)}`,
       isExternal: false,
       label: 'READ DOCUMENT',
+      downloadUrl: `/api/documents/${encodeURIComponent(resource.id)}/download`,
+      readerUrl: `/app/documents/${encodeURIComponent(resource.id)}`,
     };
   }
 

@@ -94,8 +94,18 @@ export async function POST(req: NextRequest) {
       use_cases: ['Research', 'Learn'],
     });
 
-    // 4. Upload raw file buffer to Supabase private storage bucket if configured
+    // 4. Upload raw file buffer to Supabase private storage bucket if configured, and always persist local copy
     const storagePath = `${resource.user_id}/${resource.id}/${fileName}`;
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const localUploadDir = path.join(process.cwd(), 'public', 'uploads', 'documents', resource.id);
+      fs.mkdirSync(localUploadDir, { recursive: true });
+      fs.writeFileSync(path.join(localUploadDir, fileName), buffer);
+    } catch (fsErr) {
+      console.warn('[Storage] Local document disk write notice:', fsErr);
+    }
+
     try {
       const supabaseServer = getSupabaseServerClient();
       if (supabaseServer) {

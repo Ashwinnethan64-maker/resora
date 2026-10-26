@@ -136,7 +136,7 @@ export async function extractDocumentContent(
         let screenshots: any[] = [];
         try {
           // Extract screenshots/images for pages (up to first 20 pages for speed & efficiency)
-          const shotData = await parser.getScreenshot({ scale: 1.0 });
+          const shotData = await parser.getScreenshot({ scale: 1.0, imageDataUrl: true });
           if (shotData && shotData.pages) {
             screenshots = shotData.pages;
           }
