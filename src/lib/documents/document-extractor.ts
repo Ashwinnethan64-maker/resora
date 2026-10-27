@@ -178,10 +178,10 @@ export async function extractDocumentContent(
         } catch {}
 
         const meaningfulText = pages.filter(p => !p.content.startsWith('[Visual Page')).map(p => p.content).join('\n\n').trim();
-        const fullText = meaningfulText || (textData?.text || '').trim() || `${fileName} (Visual PDF Document)`;
+        const fullText = meaningfulText || (textData?.text || '').trim();
         const firstPageShot = screenshots[0]?.dataUrl;
 
-        if (pages.length > 0) {
+        if (pages.length > 0 && meaningfulText) {
           pdfResult = {
             fullText,
             pages,
@@ -190,17 +190,66 @@ export async function extractDocumentContent(
           };
         }
       } catch (pdfParseErr) {
-        console.warn('[DocumentExtractor] PDFParse failed, trying stream parser:', pdfParseErr);
+        console.warn('[DocumentExtractor] PDFParse failed, trying pdfjs-dist:', pdfParseErr);
       }
 
-      // Fallback: regex-based raw stream parser (works on uncompressed/legacy PDFs)
-      if (!pdfResult || pdfResult.pages.length === 0) {
-        pdfResult = parsePdfBuffer(buffer);
+      // High-accuracy fallback: pdfjs-dist legacy engine (works on all PDF specifications)
+      if (!pdfResult || pdfResult.pages.length === 0 || !pdfResult.fullText.trim()) {
+        try {
+          const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+          const uint8 = new Uint8Array(buffer);
+          const loadingTask = pdfjs.getDocument({
+            data: uint8,
+            useSystemFonts: true,
+            isEvalSupported: false,
+            disableFontFace: true,
+          });
+          const pdfDoc = await loadingTask.promise;
+          const pdfjsPages: PageExtraction[] = [];
+          let combinedText = '';
+
+          const pageLimit = Math.min(pdfDoc.numPages, MAX_PAGES);
+          for (let pNum = 1; pNum <= pageLimit; pNum++) {
+            const page = await pdfDoc.getPage(pNum);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items
+              .map((item: any) => ('str' in item ? item.str : ''))
+              .join(' ')
+              .replace(/\s+/g, ' ')
+              .trim();
+
+            pdfjsPages.push({
+              pageNumber: pNum,
+              content: pageText || `Page ${pNum}`,
+            });
+            if (pageText) {
+              combinedText += `\n--- Page ${pNum} ---\n` + pageText;
+            }
+          }
+
+          if (pdfjsPages.length > 0 && combinedText.trim()) {
+            pdfResult = {
+              fullText: combinedText.trim(),
+              pages: pdfjsPages,
+              thumbnailUrl: pdfResult?.thumbnailUrl,
+              title: pdfResult?.title,
+            };
+          }
+        } catch (pdfjsErr) {
+          console.warn('[DocumentExtractor] pdfjs-dist extraction notice:', pdfjsErr);
+        }
       }
 
-      if (!pdfResult || pdfResult.pages.length === 0) {
-        // Final fallback with visual thumbnail if available
-        const rawFallback = `${fileName} (PDF research document)\n\nDocument rendered and indexed. Use the Reader view or Download button to inspect the complete content.`;
+      // Regex fallback: uncompressed raw PDF streams
+      if (!pdfResult || pdfResult.pages.length === 0 || !pdfResult.fullText.trim()) {
+        const streamResult = parsePdfBuffer(buffer);
+        if (streamResult.pages.length > 0 && streamResult.fullText.trim()) {
+          pdfResult = streamResult;
+        }
+      }
+
+      if (!pdfResult || pdfResult.pages.length === 0 || !pdfResult.fullText.trim()) {
+        const rawFallback = `${fileName} (PDF research document)\n\nDocument indexed. Use the Reader view or Download button to inspect the complete content.`;
         return {
           fullText: rawFallback,
           pages: [{ pageNumber: 1, content: rawFallback }],

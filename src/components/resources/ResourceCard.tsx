@@ -310,8 +310,16 @@ export function ResourceCard({ resource, viewMode = 'grid', onOrganize }: Resour
         </div>
 
         {/* Card Title & Link */}
-        <Link href={`/app/library/${resource.id}`} className="block group-hover:underline">
-          <h3 className="text-sm sm:text-base font-black text-black line-clamp-2 tracking-tight group-hover:text-[#FF6B6B] transition-colors leading-snug break-words overflow-hidden" title={resource.title}>
+        <Link href={`/app/library/${resource.id}`} className="block group-hover:underline min-w-0">
+          <h3
+            className="font-black text-black line-clamp-2 tracking-tight group-hover:text-[#FF6B6B] transition-colors leading-snug overflow-hidden w-full"
+            style={{
+              fontSize: resource.title && resource.title.length > 40 ? '0.75rem' : resource.title && resource.title.length > 25 ? '0.8125rem' : undefined,
+              wordBreak: 'break-word',
+              overflowWrap: 'anywhere',
+            }}
+            title={resource.title}
+          >
             {resource.title}
           </h3>
         </Link>

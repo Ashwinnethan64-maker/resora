@@ -29,12 +29,22 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['pdf-parse'],
+  serverExternalPackages: ['pdf-parse', 'pdfjs-dist'],
   async headers() {
     return [
       {
         source: '/:path*',
         headers: securityHeaders,
+      },
+      // Override for uploaded files — allow inline display in iframes
+      {
+        source: '/uploads/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Cache-Control', value: 'private, max-age=3600' },
+          { key: 'Content-Disposition', value: 'inline' },
+        ],
       },
     ];
   },
